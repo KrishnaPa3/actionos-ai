@@ -27,6 +27,9 @@
     font-weight: normal;
     font-style: normal;
 }
+@import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&display=swap');
+
+
 
 /* 
    THEME
@@ -100,7 +103,7 @@
 html,
 body{
     margin:0;
-    font-family:var(--sans);
+    font-family:var(--mono);
 }
 
 *,
@@ -122,6 +125,7 @@ body{
     border-inline:1px solid var(--border);
 
     text-align:center;
+      --mono: 'Space Mono', monospace;
 }
 
 /* 

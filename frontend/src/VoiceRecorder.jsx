@@ -1,30 +1,53 @@
 import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import WaveSurfer from "wavesurfer.js";
+
+import Card from "./components/ui/Card";
+import Button from "./components/ui/Button";
+import PageHeader from "./components/ui/PageHeader";
+
+import {
+  CircleDot,
+  Square,
+  Upload,
+  Play,
+  FileText,
+} from "./components/ui/icons";
+
 import "./VoiceRecorder.css";
 
 function VoiceRecorder() {
+
   const navigate = useNavigate();
 
   const [recording, setRecording] = useState(false);
+
   const [audioURL, setAudioURL] = useState(null);
+
   const [seconds, setSeconds] = useState(0);
 
   const [uploadStatus, setUploadStatus] = useState("");
+
   const [transcript, setTranscript] = useState("");
+
   const [extraction, setExtraction] = useState(null);
 
   const mediaRecorderRef = useRef(null);
+
   const audioChunksRef = useRef([]);
+
   const timerRef = useRef(null);
 
   const waveformRef = useRef(null);
+
   const wavesurferRef = useRef(null);
 
   // =====================================
-  // Reusable Upload Function
+  // Upload Audio
   // =====================================
+
   const uploadAudio = async (audioFile, filename) => {
+
     sessionStorage.removeItem("actionos_results");
 
     const formData = new FormData();
@@ -32,6 +55,7 @@ function VoiceRecorder() {
     formData.append("file", audioFile, filename);
 
     try {
+
       setUploadStatus("Uploading audio...");
 
       const response = await fetch(
@@ -43,56 +67,79 @@ function VoiceRecorder() {
       );
 
       const data = await response.json();
-     
-      
+
       console.log("Backend Response:", data);
-sessionStorage.setItem(
-  "current_session",
-  data.session_id
-);
-      if (!response.ok) {
-        throw new Error(data.detail || "Upload failed.");
-      }
 
-      setTranscript(data.transcript || "");
-      setExtraction(data.extraction || null);
       sessionStorage.setItem(
-  "actionos_results",
-  JSON.stringify({
-    transcript: data.transcript,
-    extraction: data.extraction,
-    audioUrl: data.audio_url,
-  })
-);
-
-      setUploadStatus(
-        "✅ Upload & extraction completed successfully."
+        "current_session",
+        data.session_id
       );
 
-      // Automatically open Results page
+      if (!response.ok) {
+
+        throw new Error(
+          data.detail || "Upload failed."
+        );
+
+      }
+
+      setTranscript(
+        data.transcript || ""
+      );
+
+      setExtraction(
+        data.extraction || null
+      );
+
       sessionStorage.setItem(
-  "current_session",
-  data.session_id
-);
+        "actionos_results",
 
-navigate(`/results/${data.session_id}`);
+        JSON.stringify({
 
+          transcript: data.transcript,
+
+          extraction: data.extraction,
+
+          audioUrl: data.audio_url,
+
+        })
+
+      );
+
+      setUploadStatus(
+        "Upload & extraction completed successfully."
+      );
+
+      sessionStorage.setItem(
+        "current_session",
+        data.session_id
+      );
+
+     
     } catch (error) {
+
       console.error(error);
 
       setUploadStatus(
-        `❌ Upload failed: ${error.message}`
+        `Upload failed: ${error.message}`
       );
+
     }
+
   };
 
   // =====================================
   // Recording
   // =====================================
+
   const startRecording = async () => {
-    sessionStorage.removeItem("actionos_results");
+
+    sessionStorage.removeItem(
+      "actionos_results"
+    );
 
     try {
+
       const stream =
         await navigator.mediaDevices.getUserMedia({
           audio: true,
@@ -106,8 +153,14 @@ navigate(`/results/${data.session_id}`);
 
       audioChunksRef.current = [];
 
-      mediaRecorder.ondataavailable = (event) => {
-        audioChunksRef.current.push(event.data);
+      mediaRecorder.ondataavailable = (
+        event
+      ) => {
+
+        audioChunksRef.current.push(
+          event.data
+        );
+
       };
 
       mediaRecorder.onstop = async () => {
@@ -128,33 +181,45 @@ navigate(`/results/${data.session_id}`);
           audioBlob,
           `recording-${Date.now()}.webm`
         );
+
       };
 
       mediaRecorder.start();
 
       setRecording(true);
+
       setSeconds(0);
 
       setUploadStatus("");
+
       setTranscript("");
+
       setExtraction(null);
 
       timerRef.current = setInterval(() => {
+
         setSeconds((prev) => prev + 1);
+
       }, 1000);
 
     } catch (error) {
+
       console.error(error);
+
       alert("Microphone access denied.");
+
     }
+
   };
 
   const stopRecording = () => {
+
     mediaRecorderRef.current?.stop();
 
     clearInterval(timerRef.current);
 
     setRecording(false);
+
   };
 
   // =====================================
@@ -167,7 +232,9 @@ navigate(`/results/${data.session_id}`);
       return;
 
     if (wavesurferRef.current) {
+
       wavesurferRef.current.destroy();
+
     }
 
     wavesurferRef.current =
@@ -175,176 +242,303 @@ navigate(`/results/${data.session_id}`);
 
         container: waveformRef.current,
 
-        waveColor: "#7c3aed",
+        waveColor: "#4F8CFF",
 
-        progressColor: "#22c55e",
+        progressColor: "#7CFFB2",
 
-        cursorColor: "#ffffff",
+        cursorColor: "#FFFFFF",
 
-        height: 100,
+        height: 90,
+
+        barWidth: 3,
+
+        barGap: 2,
+
+        barRadius: 4,
 
       });
 
-    wavesurferRef.current.load(audioURL);
+    wavesurferRef.current.load(
+      audioURL
+    );
 
     return () => {
 
       if (wavesurferRef.current) {
+
         wavesurferRef.current.destroy();
+
       }
 
     };
 
   }, [audioURL]);
-
     return (
-    <div className="container">
-      <div className="card">
 
-        <h1 className="title">ActionOS</h1>
+    <div
+      style={{
+        maxWidth: "950px",
+        margin: "40px auto",
+        padding: "20px",
+      }}
+    >
 
-        <p className="subtitle">
-          VOICE POWERED PRODUCTIVITY
-        </p>
+      <PageHeader
+        icon={<CircleDot size={30} />}
+        title="Record Meeting"
+      />
 
-        <div className="timer">
-          {String(Math.floor(seconds / 60)).padStart(2, "0")}
-          :
-          {String(seconds % 60).padStart(2, "0")}
-        </div>
+      <Card>
 
-        {!recording ? (
-          <button
-            className="record-btn start"
-            onClick={startRecording}
-          >
-            🎤 Record
-          </button>
-        ) : (
-          <button
-            className="record-btn stop"
-            onClick={stopRecording}
-          >
-            ⏹ Stop Recording
-          </button>
-        )}
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            gap: "24px",
+          }}
+        >
 
-        <p>
-          {recording ? "🔴 Recording..." : "⚪ Ready"}
-        </p>
-
-        <p>{uploadStatus}</p>
-
-        {transcript && (
           <div
             style={{
-              marginTop: "20px",
-              padding: "15px",
-              border: "1px solid #444",
-              borderRadius: "8px",
-              textAlign: "left",
-              width: "100%",
+              fontSize: "56px",
+              fontFamily: '"Space Mono", monospace',
+              fontWeight: 700,
             }}
           >
-            <h3 className="section-title">
-              Transcript
-            </h3>
 
-            <p>{transcript}</p>
+            {String(Math.floor(seconds / 60)).padStart(2, "0")}
+            :
+            {String(seconds % 60).padStart(2, "0")}
+
           </div>
-        )}
 
-        {/* Results after upload/recording */}
+          {!recording ? (
 
-        {extraction && (
-          <div className="post-upload-actions">
+            <Button
+              size="lg"
+              variant="primary"
+              icon={<CircleDot size={20} />}
+              onClick={startRecording}
+            >
+              Start Recording
+            </Button>
 
-            <p className="success-message">
-              ✅ Upload & Extraction Complete
+          ) : (
+
+            <Button
+              size="lg"
+              variant="danger"
+              icon={<Square size={20} />}
+              onClick={stopRecording}
+            >
+              Stop Recording
+            </Button>
+
+          )}
+
+          <p
+            style={{
+              fontFamily: '"Space Mono", monospace',
+              margin: 0,
+            }}
+          >
+            {recording ? "🔴 Recording..." : "Ready to Record"}
+          </p>
+
+          {uploadStatus && (
+
+            <p
+              style={{
+                fontFamily: '"Space Mono", monospace',
+                textAlign: "center",
+                margin: 0,
+              }}
+            >
+              {uploadStatus}
             </p>
 
-            <div className="action-buttons">
-
-              <button
-                className="record-btn start"
-                onClick={() => navigate(`/results/${sessionStorage.getItem("current_session")}`)
-}
-              >
-                📋 View Results
-              </button>
-
-              <button
-                className="record-btn stop"
-                onClick={startRecording}
-              >
-                🎤 Record Again
-              </button>
-
-            </div>
-
-          </div>
-        )}
-
-        {/* Upload Section */}
-
-        <div className="upload">
-
-          <input
-            type="file"
-            accept="audio/*"
-
-            onChange={async (e) => {
-
-              const file = e.target.files[0];
-
-              if (!file) return;
-
-              setAudioURL(
-                URL.createObjectURL(file)
-              );
-
-              setTranscript("");
-
-              setExtraction(null);
-
-              await uploadAudio(
-                file,
-                file.name
-              );
-
-            }}
-          />
+          )}
 
         </div>
 
-        {/* Waveform */}
+      </Card>
 
-        {audioURL && (
-          <>
+      <Card
+        style={{
+          marginTop: "24px",
+        }}
+      >
 
-            <div
-              ref={waveformRef}
+        <PageHeader
+          icon={<Upload size={22} />}
+          title="Upload Recording"
+          subtitle="Already have an audio file? Upload it here."
+        />
+
+        <Button
+          variant="secondary"
+          icon={<Upload size={18} />}
+        >
+
+          <label
+            style={{
+              cursor: "pointer",
+            }}
+          >
+
+            Choose Audio File
+
+            <input
+              type="file"
+              accept="audio/*"
               style={{
-                width: "100%",
-                marginTop: "20px",
+                display: "none",
+              }}
+              onChange={async (e) => {
+
+                const file = e.target.files[0];
+
+                if (!file) return;
+
+                setAudioURL(
+                  URL.createObjectURL(file)
+                );
+
+                setTranscript("");
+
+                setExtraction(null);
+
+                await uploadAudio(
+                  file,
+                  file.name
+                );
+
               }}
             />
 
-            <button
-              className="record-btn start"
+          </label>
+
+        </Button>
+
+      </Card>
+
+      {audioURL && (
+
+        <Card
+          style={{
+            marginTop: "24px",
+          }}
+        >
+
+          <PageHeader
+            icon={<Play size={22} />}
+            title="Playback"
+            subtitle="Review your recording."
+          />
+
+          <div
+            ref={waveformRef}
+            style={{
+              width: "100%",
+              marginBottom: "20px",
+            }}
+          />
+
+          <Button
+            variant="primary"
+            icon={<Play size={18} />}
+            onClick={() =>
+              wavesurferRef.current?.playPause()
+            }
+          >
+            Play / Pause
+          </Button>
+
+        </Card>
+
+      )}
+
+      {transcript && (
+
+        <Card
+          style={{
+            marginTop: "24px",
+          }}
+        >
+
+          <PageHeader
+            icon={<FileText size={22} />}
+            title="Transcript"
+            subtitle="Generated from your recording."
+          />
+
+          <p
+            style={{
+              fontFamily: '"Space Mono", monospace',
+              lineHeight: 1.8,
+              whiteSpace: "pre-wrap",
+            }}
+          >
+            {transcript}
+          </p>
+
+        </Card>
+
+      )}
+
+      {extraction && (
+
+        <Card
+          style={{
+            marginTop: "24px",
+          }}
+        >
+
+          <PageHeader
+            icon={<FileText size={22} />}
+            title="Meeting Ready"
+            subtitle="Your meeting has been processed."
+          />
+
+          <div
+            style={{
+              display: "flex",
+              gap: "16px",
+              flexWrap: "wrap",
+            }}
+          >
+
+            <Button
+              variant="primary"
+              icon={<FileText size={18} />}
               onClick={() =>
-                wavesurferRef.current?.playPause()
+                navigate(
+                  `/results/${sessionStorage.getItem("current_session")}`
+                )
               }
             >
-              ▶ Play / Pause
-            </button>
+              View Results
+            </Button>
 
-          </>
-        )}
+            <Button
+              variant="secondary"
+              icon={<CircleDot size={18} />}
+              onClick={startRecording}
+            >
+              Record Again
+            </Button>
 
-      </div>
+          </div>
+
+        </Card>
+
+      )}
+
     </div>
+
   );
+
 }
 
 export default VoiceRecorder;

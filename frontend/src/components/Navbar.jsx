@@ -1,5 +1,16 @@
 import { useNavigate, useLocation } from "react-router-dom";
 import { useEffect, useState } from "react";
+
+import Button from "./ui/Button";
+
+import {
+  Target,
+  House,
+  LayoutDashboard,
+  History,
+  FileText,
+} from "./ui/icons";
+
 import "./Navbar.css";
 
 export default function Navbar() {
@@ -15,56 +26,95 @@ export default function Navbar() {
 
   const openResults = () => {
     if (!currentSession) return;
-
     navigate(`/results/${currentSession}`);
   };
 
   return (
     <nav className="navbar">
+      {/* Logo */}
+
       <div
         className="nav-logo"
         onClick={() => navigate("/")}
+        style={{
+          display: "flex",
+          alignItems: "center",
+          gap: "12px",
+          cursor: "pointer",
+          userSelect: "none",
+        }}
       >
-        ACTIONOS
+        <Target size={28} />
+
+        <span
+          style={{
+            fontSize: "22px",
+            fontWeight: "700",
+            letterSpacing: "0.5px",
+          }}
+        >
+          ActionOS
+        </span>
       </div>
 
-      <div className="nav-links">
+      {/* Navigation */}
 
-        <button
-          className={location.pathname === "/" ? "active" : ""}
+      <div
+        className="nav-links"
+        style={{
+          display: "flex",
+          alignItems: "center",
+          gap: "12px",
+        }}
+      >
+        <Button
+          size="sm"
+          variant={location.pathname === "/" ? "primary" : "ghost"}
+          icon={<House size={18} />}
           onClick={() => navigate("/")}
         >
           Home
-        </button>
+        </Button>
 
-        <button
-          className={
+        <Button
+          size="sm"
+          variant={
             location.pathname.startsWith("/results")
-              ? "active"
-              : ""
+              ? "primary"
+              : "ghost"
           }
+          icon={<FileText size={18} />}
           onClick={openResults}
           disabled={!currentSession}
-          style={{
-            opacity: currentSession ? 1 : 0.45,
-            cursor: currentSession ? "pointer" : "not-allowed",
-          }}
-          title={
-            currentSession
-              ? "Open latest meeting"
-              : "Record or upload a meeting first"
-          }
         >
           Results
-        </button>
+        </Button>
 
-        <button
-          className={location.pathname === "/dashboard" ? "active" : ""}
+        <Button
+          size="sm"
+          variant={
+            location.pathname === "/sessions"
+              ? "primary"
+              : "ghost"
+          }
+          icon={<History size={18} />}
+          onClick={() => navigate("/sessions")}
+        >
+          Sessions
+        </Button>
+
+        <Button
+          size="sm"
+          variant={
+            location.pathname === "/dashboard"
+              ? "primary"
+              : "ghost"
+          }
+          icon={<LayoutDashboard size={18} />}
           onClick={() => navigate("/dashboard")}
         >
           Dashboard
-        </button>
-
+        </Button>
       </div>
     </nav>
   );

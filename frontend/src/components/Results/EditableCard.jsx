@@ -1,48 +1,98 @@
-import "./EditableCard.css";
+import Card from "../ui/Card";
+import { COLORS } from "../ui/colors";
 
 export default function EditableCard({
-  title,
-  children,
-  onEdit,
-  onConfirm,
-  onDelete,
+
+    title,
+
+    children,
+
+    actions
+
 }) {
-  return (
-    <div className="editable-card">
 
-      <div className="card-header">
-        <h3>{title}</h3>
-      </div>
+    return (
 
-      <div className="card-body">
-        {children}
-      </div>
-
-      <div className="card-actions">
-
-        <button
-          className="edit-btn"
-          onClick={onEdit}
+        <Card
+            hover
+            style={{
+                marginBottom: "18px",
+                fontFamily: '"Space Mono", monospace'
+            }}
         >
-          ✏ Edit
-        </button>
 
-        <button
-          className="confirm-btn"
-          onClick={onConfirm}
-        >
-          ✔ Confirm
-        </button>
+            <div
+                style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "flex-start",
 
-        <button
-          className="delete-btn"
-          onClick={onDelete}
-        >
-          🗑 Delete
-        </button>
+                    gap: "28px",
 
-      </div>
+                    marginBottom: "24px"
+                }}
+            >
 
-    </div>
-  );
+                <h3
+                    style={{
+                        flex: 1,
+
+                        margin: 0,
+
+                        color: COLORS.text,
+
+                        fontFamily: '"Space Mono", monospace',
+
+                        fontSize: "24px",
+
+                        fontWeight: 700,
+
+                        lineHeight: 1.35,
+
+                        overflowWrap: "anywhere",
+
+                        wordBreak: "break-word"
+                    }}
+                >
+
+                    {title}
+
+                </h3>
+
+                <div
+                    style={{
+                        display: "flex",
+                        alignItems: "center",
+
+                        gap: "8px",
+
+                        flexShrink: 0
+                    }}
+                >
+
+                    {actions}
+
+                </div>
+
+            </div>
+
+            <div
+                style={{
+                    display: "flex",
+                    flexDirection: "column",
+
+                    gap: "8px",
+
+                    fontFamily: '"Space Mono", monospace'
+                }}
+            >
+
+                {children}
+
+            </div>
+
+        </Card>
+
+    );
+
 }

@@ -2,6 +2,16 @@ import "./ResultsPage.css";
 import { useParams } from "react-router-dom";
 import { useEffect, useState } from "react";
 
+import Card from "../components/ui/Card";
+import Button from "../components/ui/Button";
+import PageHeader from "../components/ui/PageHeader";
+
+import {
+  FileText,
+  Pencil,
+  Save,
+} from "../components/ui/icons";
+
 import SummarySection from "../components/results/SummarySection";
 import TaskSection from "../components/results/TaskSection";
 import ReminderSection from "../components/results/ReminderSection";
@@ -16,6 +26,9 @@ export default function ResultsPage() {
   const [meeting, setMeeting] = useState(null);
   const [loading, setLoading] = useState(true);
 
+  const [editing, setEditing] = useState(false);
+  const [meetingName, setMeetingName] = useState("");
+
   useEffect(() => {
 
     async function loadMeeting() {
@@ -28,9 +41,8 @@ export default function ResultsPage() {
 
         const data = await response.json();
 
-        console.log("Meeting Loaded:", data);
-
         setMeeting(data);
+        setMeetingName(data.meeting_name);
 
       } catch (err) {
 
@@ -48,54 +60,213 @@ export default function ResultsPage() {
 
   }, [sessionId]);
 
+  async function saveMeetingName() {
+
+    try {
+
+      const response = await fetch(
+
+        `http://127.0.0.1:8000/session/${sessionId}/rename`,
+
+        {
+
+          method: "PATCH",
+
+          headers: {
+
+            "Content-Type": "application/json",
+
+          },
+
+          body: JSON.stringify({
+
+            meeting_name: meetingName,
+
+          }),
+
+        }
+
+      );
+
+      const data = await response.json();
+
+      setMeeting(data.session);
+
+      setEditing(false);
+
+    } catch (err) {
+
+      console.error(err);
+
+    }
+
+  }
+
   if (loading) {
-    return <p>Loading meeting...</p>;
+
+    return <h2>Loading meeting...</h2>;
+
   }
 
   if (!meeting) {
-    return <p>Meeting not found.</p>;
+
+    return <h2>Meeting not found.</h2>;
+
   }
 
   return (
 
     <div
       style={{
-        marginTop: "20px",
-        padding: "15px",
-        border: "1px solid #444",
-        borderRadius: "8px",
-        textAlign: "left",
-        width: "100%",
+        maxWidth: "1100px",
+        margin: "40px auto",
+        padding: "0 20px",
       }}
     >
 
-      <h2 className="section-title">
-        {meeting.meeting_name}
-      </h2>
+      <PageHeader
 
-      <SummarySection
-        summary={meeting.summary}
+        icon={<FileText size={30} />}
+
+        title={
+
+          editing ? (
+
+            <input
+
+              value={meetingName}
+
+              onChange={(e) => setMeetingName(e.target.value)}
+
+              style={{
+
+                fontSize: "28px",
+
+                padding: "10px",
+
+                width: "450px",
+
+              }}
+
+            />
+
+          ) : (
+
+            meeting.meeting_name
+
+          )
+
+        }
+
+        subtitle={
+
+          meeting.created_at
+
+            ? new Date(meeting.created_at).toLocaleString()
+
+            : ""
+
+        }
+
+        right={
+
+          editing ? (
+
+            <Button
+
+              variant="success"
+
+              icon={<Save size={18} />}
+
+              onClick={saveMeetingName}
+
+            >
+
+              Save
+
+            </Button>
+
+          ) : (
+
+            <Button
+
+              variant="outline"
+
+              icon={<Pencil size={18} />}
+
+              onClick={() => setEditing(true)}
+
+            >
+
+              Rename
+
+            </Button>
+
+          )
+
+        }
+
       />
 
-      <TaskSection
-        tasks={meeting.tasks}
-      />
+      <Card style={{ marginBottom: "24px" }}>
 
-      <ReminderSection
-        reminders={meeting.reminders}
-      />
+        <SummarySection
 
-      <ActionPlanSection
-        actionPlans={meeting.action_plan}
-      />
+          summary={meeting.summary}
 
-      <DecisionSection
-        decisions={meeting.decisions || []}
-      />
+        />
 
-      <RiskSection
-        risks={meeting.risks || []}
-      />
+      </Card>
+
+      <Card style={{ marginBottom: "24px" }}>
+
+        <TaskSection
+
+          tasks={meeting.tasks}
+
+        />
+
+      </Card>
+
+      <Card style={{ marginBottom: "24px" }}>
+
+        <ReminderSection
+
+          reminders={meeting.reminders}
+
+        />
+
+      </Card>
+
+      <Card style={{ marginBottom: "24px" }}>
+
+        <ActionPlanSection
+
+          actionPlans={meeting.action_plan}
+
+        />
+
+      </Card>
+
+      <Card style={{ marginBottom: "24px" }}>
+
+        <DecisionSection
+
+          decisions={meeting.decisions || []}
+
+        />
+
+      </Card>
+
+      <Card>
+
+        <RiskSection
+
+          risks={meeting.risks || []}
+
+        />
+
+      </Card>
 
     </div>
 
