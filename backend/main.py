@@ -5,6 +5,8 @@ from supabase_client import supabase
 from faster_whisper import WhisperModel
 from pydantic import BaseModel
 from datetime import datetime
+from services.date_service import resolve_due_date
+from services.action_service import build_action_payload
 
 import shutil
 import os
@@ -90,7 +92,9 @@ def generate_meeting_name():
 
 @app.get("/")
 def root():
-    return {"message": "ActionOS Backend Running"}
+    return {
+        "message": "ActionOS Backend Running"
+    }
 
 
 @app.post("/upload-audio")
@@ -107,18 +111,10 @@ async def upload_audio(file: UploadFile = File(...)):
         unique_name
     )
 
-    # -----------------------------
-    # Save locally
-    # -----------------------------
-
     with open(file_path, "wb") as buffer:
         shutil.copyfileobj(file.file, buffer)
 
     audio_url = None
-
-    # -----------------------------
-    # Upload to Supabase Storage
-    # -----------------------------
 
     try:
 
@@ -152,22 +148,12 @@ async def upload_audio(file: UploadFile = File(...)):
 
     except Exception:
 
-        print("\n========== STORAGE ERROR ==========")
-
         import traceback
         traceback.print_exc()
 
-        audio_url = None
-
-    # -----------------------------
-    # Whisper
-    # -----------------------------
-
     print("\nRunning Whisper...")
 
-    segments, info = whisper_model.transcribe(
-        file_path
-    )
+    segments, info = whisper_model.transcribe(file_path)
 
     transcript = " ".join(
         segment.text
@@ -176,49 +162,20 @@ async def upload_audio(file: UploadFile = File(...)):
 
     print("Whisper complete!")
 
-    # -----------------------------
-    # AI Extraction
-    # -----------------------------
-
-    if not transcript:
-
-        structured_data = {
-
-            "summary": [],
-
-            "tasks": [],
-
-            "reminders": [],
-
-            "action_plans": [],
-
-            "decisions": [],
-
-            "risks": []
-
-        }
-
-    else:
-
-        structured_data = extract_structured_data(
-            transcript
-        )
-
-    session_id = str(uuid.uuid4())
-
     meeting_name = generate_meeting_name()
 
-    # -----------------------------
-    # Save Session
-    # -----------------------------
+    print("\n========== CREATING SESSION ==========")
 
-    print("\n========== SAVING SESSION ==========")
+    session_id = None
+    session_created_at = None
 
     try:
 
-        payload = {
+        # --------------------------------------------------
+        # STEP 1 - Create session FIRST
+        # --------------------------------------------------
 
-            "session_id": session_id,
+        empty_payload = {
 
             "meeting_name": meeting_name,
 
@@ -226,35 +183,17 @@ async def upload_audio(file: UploadFile = File(...)):
 
             "transcript": transcript,
 
-            "summary": structured_data.get(
-                "summary",
-                []
-            ),
+            "summary": [],
 
-            "tasks": structured_data.get(
-                "tasks",
-                []
-            ),
+            "tasks": [],
 
-            "reminders": structured_data.get(
-                "reminders",
-                []
-            ),
+            "reminders": [],
 
-            "action_plan": structured_data.get(
-                "action_plans",
-                []
-            ),
+            "action_plan": [],
 
-            "decisions": structured_data.get(
-                "decisions",
-                []
-            ),
+            "decisions": [],
 
-            "risks": structured_data.get(
-                "risks",
-                []
-            ),
+            "risks": [],
 
             "archived": False,
 
@@ -265,20 +204,134 @@ async def upload_audio(file: UploadFile = File(...)):
         response = (
             supabase
             .table("sessions")
-            .insert(payload)
+            .insert(empty_payload)
             .execute()
         )
 
-        print(response.data)
+        session = response.data[0]
+
+        session_id = session["id"]
+
+        session_created_at = datetime.fromisoformat(
+            session["created_at"].replace("Z", "+00:00")
+        )
+
+        print(f"Session UUID: {session_id}")
+        print(f"Meeting Timestamp: {session_created_at}")
+
+        # --------------------------------------------------
+        # STEP 2 - Extract using meeting timestamp
+        # --------------------------------------------------
+
+        if not transcript:
+
+            structured_data = {
+
+                "summary": [],
+
+                "tasks": [],
+
+                "reminders": [],
+
+                "action_plans": [],
+
+                "decisions": [],
+
+                "risks": []
+
+            }
+
+        else:
+
+            structured_data = extract_structured_data(
+                transcript,
+                session_created_at
+            )
+
+        # --------------------------------------------------
+        # STEP 3 - Update session with extraction
+        # --------------------------------------------------
+
+        (
+            supabase
+            .table("sessions")
+            .update({
+
+                "summary": structured_data.get(
+                    "summary",
+                    []
+                ),
+
+                "tasks": structured_data.get(
+                    "tasks",
+                    []
+                ),
+
+                "reminders": structured_data.get(
+                    "reminders",
+                    []
+                ),
+
+                "action_plan": structured_data.get(
+                    "action_plans",
+                    []
+                ),
+
+                "decisions": structured_data.get(
+                    "decisions",
+                    []
+                ),
+
+                "risks": structured_data.get(
+                    "risks",
+                    []
+                )
+
+            })
+            .eq("id", session_id)
+            .execute()
+        )
+
+        # --------------------------------------------------
+        # STEP 4 - Save actions
+        # --------------------------------------------------
+
+        tasks = structured_data.get("tasks", [])
+
+        for task in tasks:
+
+            if not isinstance(task, dict):
+
+                task = {
+                    "task": str(task)
+                }
+
+            action_payload = build_action_payload(
+
+                task,
+
+                session_id,
+
+                session_created_at
+
+            )
+
+            (
+                supabase
+                .table("actions")
+                .insert(action_payload)
+                .execute()
+            )
 
         verify = (
             supabase
             .table("sessions")
             .select("*")
-            .eq("session_id", session_id)
+            .eq("id", session_id)
             .execute()
         )
 
+        print("\nSaved Session:")
         print(verify.data)
 
     except Exception:
@@ -288,21 +341,26 @@ async def upload_audio(file: UploadFile = File(...)):
         import traceback
         traceback.print_exc()
 
-    # -----------------------------
-    # Cleanup
-    # -----------------------------
+        return {
 
-    try:
-        os.remove(file_path)
+            "success": False,
 
-    except Exception as e:
-        print(e)
+            "message": "Failed to save meeting."
+
+        }
+
+    finally:
+
+        try:
+            os.remove(file_path)
+        except Exception:
+            pass
 
     return {
 
         "success": True,
 
-        "session_id": session_id,
+        "id": session_id,
 
         "meeting_name": meeting_name,
 
@@ -321,6 +379,7 @@ async def upload_audio(file: UploadFile = File(...)):
 
 class ExtractRequest(BaseModel):
     transcript: str
+    meeting_datetime: datetime
 
 
 class RenameMeetingRequest(BaseModel):
@@ -353,7 +412,8 @@ async def extract_text(request: ExtractRequest):
         }
 
     return extract_structured_data(
-        request.transcript
+        transcript=request.transcript,
+        meeting_datetime=request.meeting_datetime
     )
 
 
@@ -368,7 +428,7 @@ async def get_session(session_id: str):
         supabase
         .table("sessions")
         .select("*")
-        .eq("session_id", session_id)
+        .eq("id", session_id)
         .execute()
     )
 
@@ -385,6 +445,22 @@ async def get_session(session_id: str):
     return response.data[0]
 
 
+@app.get("/session/{session_id}/actions")
+async def get_session_actions(session_id: str):
+
+    response = (
+        supabase
+        .table("actions")
+        .select("*")
+        .eq("session_id", session_id)
+        .order("created_at")
+        .execute()
+    )
+
+    return {
+        "success": True,
+        "actions": response.data
+    }
 # ----------------------------------------------------
 # Rename Meeting
 # ----------------------------------------------------
@@ -405,12 +481,12 @@ async def rename_meeting(
             "updated_at": datetime.utcnow().isoformat()
 
         })
-        .eq("session_id", session_id)
+        .eq("id", session_id)
         .execute()
     )
 
     if len(response.data) == 0:
-
+        print(response.data[0])
         return {
 
             "success": False,
@@ -446,16 +522,50 @@ async def get_sessions():
         .execute()
     )
 
-    print("========== SESSIONS ==========")
-    print(response.data)
-    print("==============================")
-
     return {
+
         "success": True,
+
         "count": len(response.data),
+
         "sessions": response.data
+
     }
 
+
+from fastapi import HTTPException
+
+@app.delete("/sessions/{session_id}")
+async def delete_session(session_id: str):
+    try:
+        # Delete all actions belonging to this meeting
+        (
+            supabase
+            .table("actions")
+            .delete()
+            .eq("session_id", session_id)
+            .execute()
+        )
+
+        # Delete the meeting
+        (
+            supabase
+            .table("sessions")
+            .delete()
+            .eq("id", session_id)
+            .execute()
+        )
+
+        return {
+            "success": True,
+            "message": "Meeting and associated actions deleted successfully."
+        }
+
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=str(e)
+        )
 # ----------------------------------------------------
 # Archive Session
 # ----------------------------------------------------
@@ -473,7 +583,7 @@ async def archive_session(session_id: str):
             "updated_at": datetime.utcnow().isoformat()
 
         })
-        .eq("session_id", session_id)
+        .eq("id", session_id)
         .execute()
     )
 
@@ -499,7 +609,7 @@ async def archive_session(session_id: str):
 
 
 # ----------------------------------------------------
-# Delete Session (Soft Delete)
+# Delete Session
 # ----------------------------------------------------
 
 @app.patch("/session/{session_id}/delete")
@@ -515,7 +625,7 @@ async def delete_session(session_id: str):
             "updated_at": datetime.utcnow().isoformat()
 
         })
-        .eq("session_id", session_id)
+        .eq("id", session_id)
         .execute()
     )
 

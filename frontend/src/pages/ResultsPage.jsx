@@ -22,7 +22,7 @@ import RiskSection from "../components/results/RiskSection";
 export default function ResultsPage() {
 
   const { sessionId } = useParams();
-
+  const [actions, setActions] = useState([]);
   const [meeting, setMeeting] = useState(null);
   const [loading, setLoading] = useState(true);
 
@@ -38,6 +38,13 @@ export default function ResultsPage() {
         const response = await fetch(
           `http://127.0.0.1:8000/session/${sessionId}`
         );
+        const actionsResponse = await fetch(
+    `http://127.0.0.1:8000/session/${sessionId}/actions`
+);
+
+const actionsData = await actionsResponse.json();
+
+setActions(actionsData.actions);
 
         const data = await response.json();
 
@@ -222,7 +229,7 @@ export default function ResultsPage() {
 
         <TaskSection
 
-          tasks={meeting.tasks}
+          tasks={actions}
 
         />
 

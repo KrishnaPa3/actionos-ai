@@ -57,46 +57,76 @@ export default function TaskSection({ tasks }) {
                 {tasks.map((task, index) => (
 
                     <EditableCard
-    key={index}
-    title={task.task}
+                        key={task.id ?? index}
+                        title={task.title || task.task || "Untitled Task"}
 
-    actions={
+                        actions={
 
-        <ActionButtons
+                            <ActionButtons
 
-    compact
+                                compact
 
-    onEdit={() => console.log("Edit", index)}
+                                onEdit={() => console.log("Edit", index)}
 
-    onConfirm={() => console.log("Complete", index)}
+                                onConfirm={() => console.log("Complete", index)}
 
-    onDelete={() => console.log("Delete", index)}
+                                onDelete={() => console.log("Delete", index)}
 
-/>
+                            />
 
-    }
+                        }
 
->
+                    >
 
-    <InfoRow
-        icon={<User size={16} />}
-        label="Owner"
-        value={task.owner || "Unassigned"}
-    />
+                        <InfoRow
+                            icon={<User size={16} />}
+                            label="Owner"
+                            value={task.owner || "Unassigned"}
+                        />
 
-    <InfoRow
-        icon={<Calendar size={16} />}
-        label="Due"
-        value={task.due_date || "Not specified"}
-    />
+                        <InfoRow
+                            icon={<Calendar size={16} />}
+                            label="Due"
+                            value={
+                                task.due_date
+                                    ? (() => {
 
-    <InfoRow
-        icon={<Flag size={16} />}
-        label="Priority"
-        value={<PriorityBadge priority={task.priority} />}
-    />
+                                        const due = new Date(task.due_date);
 
-</EditableCard>
+                                        if (isNaN(due.getTime())) {
+                                            return task.due_text || "Not specified";
+                                        }
+
+                                        const date = due.toLocaleDateString("en-GB");
+
+                                        const hasTime =
+                                            due.getHours() !== 0 ||
+                                            due.getMinutes() !== 0;
+
+                                        return hasTime
+                                            ? `${date} • ${due.toLocaleTimeString([], {
+                                                hour: "2-digit",
+                                                minute: "2-digit",
+                                                hour12: true,
+                                            })}`
+                                            : date;
+
+                                    })()
+                                    : (task.due_text || "Not specified")
+                            }
+                        />
+
+                        <InfoRow
+                            icon={<Flag size={16} />}
+                            label="Priority"
+                            value={
+                                <PriorityBadge
+                                    priority={task.priority}
+                                />
+                            }
+                        />
+
+                    </EditableCard>
 
                 ))}
 

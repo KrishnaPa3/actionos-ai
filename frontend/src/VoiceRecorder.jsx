@@ -72,7 +72,7 @@ function VoiceRecorder() {
 
       sessionStorage.setItem(
         "current_session",
-        data.session_id
+        data.id
       );
 
       if (!response.ok) {
@@ -112,7 +112,7 @@ function VoiceRecorder() {
 
       sessionStorage.setItem(
         "current_session",
-        data.session_id
+        data.id
       );
 
      

@@ -1,4 +1,5 @@
 import json
+from datetime import datetime
 
 from openai import OpenAI
 
@@ -10,23 +11,55 @@ client = OpenAI(
     api_key="ollama"
 )
 
-def extract_structured_data(transcript: str):
+
+def extract_structured_data(
+    transcript: str,
+    meeting_datetime: datetime
+):
+    """
+    Extract structured meeting intelligence from a transcript.
+
+    Args:
+        transcript: Raw transcript text.
+        meeting_datetime: Datetime of the meeting/recording.
+                          Used by the LLM to resolve relative dates.
+
+    Returns:
+        Dict matching ExtractionResult schema.
+    """
+
+    user_prompt = f"""
+Meeting Timestamp:
+{meeting_datetime.isoformat()}
+
+Transcript:
+{transcript}
+"""
 
     response = client.chat.completions.create(
         model="qwen3:8b",
         messages=[
-            {"role": "system", "content": SYSTEM_PROMPT},
-            {"role": "user", "content": transcript}
+            {
+                "role": "system",
+                "content": SYSTEM_PROMPT
+            },
+            {
+                "role": "user",
+                "content": user_prompt
+            }
         ],
         temperature=0
     )
 
-    content = response.choices[0].message.content
+    content = response.choices[0].message.content.strip()
 
     try:
         data = json.loads(content)
-    except Exception:
-        raise ValueError("Model returned invalid JSON")
+
+    except json.JSONDecodeError as e:
+        raise ValueError(
+            f"Model returned invalid JSON:\n\n{content}"
+        ) from e
 
     validated = ExtractionResult.model_validate(data)
 
