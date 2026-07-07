@@ -1,12 +1,12 @@
 from services.extraction_service import extract_structured_data
-from fastapi import FastAPI, UploadFile, File
+from fastapi import FastAPI, UploadFile, File, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from supabase_client import supabase
 from faster_whisper import WhisperModel
 from pydantic import BaseModel
-from datetime import datetime
+from datetime import datetime, timezone
 from services.date_service import resolve_due_date
-from services.action_service import build_action_payload
+from services.action_service import build_action_payload, build_risk_payload
 
 import shutil
 import os
@@ -185,15 +185,7 @@ async def upload_audio(file: UploadFile = File(...)):
 
             "summary": [],
 
-            "tasks": [],
-
-            "reminders": [],
-
             "action_plan": [],
-
-            "decisions": [],
-
-            "risks": [],
 
             "archived": False,
 
@@ -231,8 +223,6 @@ async def upload_audio(file: UploadFile = File(...)):
 
                 "tasks": [],
 
-                "reminders": [],
-
                 "action_plans": [],
 
                 "decisions": [],
@@ -251,7 +241,7 @@ async def upload_audio(file: UploadFile = File(...)):
         # --------------------------------------------------
         # STEP 3 - Update session with extraction
         # --------------------------------------------------
-
+       
         (
             supabase
             .table("sessions")
@@ -259,16 +249,6 @@ async def upload_audio(file: UploadFile = File(...)):
 
                 "summary": structured_data.get(
                     "summary",
-                    []
-                ),
-
-                "tasks": structured_data.get(
-                    "tasks",
-                    []
-                ),
-
-                "reminders": structured_data.get(
-                    "reminders",
                     []
                 ),
 
@@ -280,18 +260,12 @@ async def upload_audio(file: UploadFile = File(...)):
                 "decisions": structured_data.get(
                     "decisions",
                     []
-                ),
-
-                "risks": structured_data.get(
-                    "risks",
-                    []
                 )
 
             })
             .eq("id", session_id)
             .execute()
         )
-
         # --------------------------------------------------
         # STEP 4 - Save actions
         # --------------------------------------------------
@@ -323,6 +297,65 @@ async def upload_audio(file: UploadFile = File(...)):
                 .execute()
             )
 
+        # --------------------------------------------------
+        # STEP 5 - Save risks
+        # --------------------------------------------------
+
+        risks = structured_data.get("risks", [])
+
+        for risk in risks:
+
+            if not isinstance(risk, dict):
+                continue
+
+            risk_payload = build_risk_payload(
+                risk,
+                session_id
+            )
+
+            (
+                supabase
+                .table("risks")
+                .insert(risk_payload)
+                .execute()
+            )
+
+        # --------------------------------------------------
+        # STEP 6 - Save decisions
+        # --------------------------------------------------
+
+        decisions = structured_data.get("decisions", [])
+
+        for decision in decisions:
+
+            if not isinstance(decision, dict):
+                continue
+
+            decision_payload = {
+
+                "session_id": session_id,
+
+                "title": decision.get("title", ""),
+
+                "reason": decision.get("reason", ""),
+
+                "confidence": decision.get("confidence", 0.0),
+
+                "decision_status": "pending"
+
+            }
+
+            (
+                supabase
+                .table("decisions")
+                .insert(decision_payload)
+                .execute()
+            )
+
+        # --------------------------------------------------
+        # STEP 7 - Verify save
+        # --------------------------------------------------
+
         verify = (
             supabase
             .table("sessions")
@@ -333,7 +366,6 @@ async def upload_audio(file: UploadFile = File(...)):
 
         print("\nSaved Session:")
         print(verify.data)
-
     except Exception:
 
         print("\n========== DATABASE ERROR ==========")
@@ -373,6 +405,7 @@ async def upload_audio(file: UploadFile = File(...)):
         "extraction": structured_data
 
     }
+        
 # ----------------------------------------------------
 # Request Models
 # ----------------------------------------------------
@@ -384,6 +417,22 @@ class ExtractRequest(BaseModel):
 
 class RenameMeetingRequest(BaseModel):
     meeting_name: str
+
+class UpdateActionRequest(BaseModel):
+    title: str
+    owner: str
+    due_date: str | None = None
+    priority: str
+    description: str | None = None
+class UpdateRiskRequest(BaseModel):
+    title: str
+    impact: str | None = None
+    mitigation: str | None = None
+    risk_score: int
+class UpdateDecisionRequest(BaseModel):
+    title: str
+    reason: str | None = None
+    confidence: float
 
 
 # ----------------------------------------------------
@@ -401,7 +450,7 @@ async def extract_text(request: ExtractRequest):
 
             "tasks": [],
 
-            "reminders": [],
+           
 
             "action_plans": [],
 
@@ -453,6 +502,7 @@ async def get_session_actions(session_id: str):
         .table("actions")
         .select("*")
         .eq("session_id", session_id)
+        .eq("deleted", False)
         .order("created_at")
         .execute()
     )
@@ -460,6 +510,390 @@ async def get_session_actions(session_id: str):
     return {
         "success": True,
         "actions": response.data
+    }
+@app.patch("/actions/{action_id}/complete")
+async def complete_action(action_id: str):
+
+    # Get current task
+    response = (
+        supabase
+        .table("actions")
+        .select("*")
+        .eq("id", action_id)
+        .execute()
+    )
+
+    if len(response.data) == 0:
+        raise HTTPException(
+            status_code=404,
+            detail="Task not found"
+        )
+
+    action = response.data[0]
+
+    # Toggle status
+    new_status = (
+        "completed"
+        if action["status"] == "pending"
+        else "pending"
+    )
+
+    update_data = {
+        "status": new_status,
+        "completed_at": (
+            datetime.now(timezone.utc).isoformat()
+            if new_status == "completed"
+            else None
+        )
+    }
+
+    update = (
+        supabase
+        .table("actions")
+        .update(update_data)
+        .eq("id", action_id)
+        .execute()
+    )
+    print(update.data)
+
+    return {
+        "success": True,
+        "message": f"Task marked as {new_status}",
+        "action": update.data[0]
+    }
+
+@app.patch("/actions/{action_id}")
+async def update_action(
+    action_id: str,
+    request: UpdateActionRequest
+):
+
+    response = (
+        supabase
+        .table("actions")
+        .update({
+            "title": request.title,
+            "owner": request.owner,
+            "due_date": request.due_date,
+            "priority": request.priority,
+            "description": request.description
+        })
+        .eq("id", action_id)
+        .execute()
+    )
+
+    if len(response.data) == 0:
+        raise HTTPException(
+            status_code=404,
+            detail="Task not found"
+        )
+
+    return {
+        "success": True,
+        "message": "Task updated",
+        "action": response.data[0]
+    }
+
+@app.delete("/actions/{action_id}")
+async def delete_action(action_id: str):
+
+    # Check if task exists
+    response = (
+        supabase
+        .table("actions")
+        .select("*")
+        .eq("id", action_id)
+        .execute()
+    )
+
+    if len(response.data) == 0:
+        raise HTTPException(
+            status_code=404,
+            detail="Task not found"
+        )
+
+    # Soft delete
+    update = (
+        supabase
+        .table("actions")
+        .update({
+            "deleted": True
+        })
+        .eq("id", action_id)
+        .execute()
+    )
+
+    return {
+        "success": True,
+        "message": "Task deleted",
+        "action": update.data[0]
+    }
+@app.get("/session/{session_id}/risks")
+async def get_session_risks(session_id: str):
+
+    response = (
+        supabase
+        .table("risks")
+        .select("*")
+        .eq("session_id", session_id)
+        .eq("deleted", False)
+        .order("created_at")
+        .execute()
+    )
+
+    return {
+        "success": True,
+        "risks": response.data
+    }
+@app.patch("/risks/{risk_id}")
+async def update_risk(
+    risk_id: str,
+    request: UpdateRiskRequest
+):
+
+    response = (
+        supabase
+        .table("risks")
+        .update({
+
+            "title": request.title,
+
+            "impact": request.impact,
+
+            "mitigation": request.mitigation,
+
+            "risk_score": request.risk_score,
+
+            "updated_at": datetime.now(timezone.utc).isoformat()
+
+        })
+        .eq("id", risk_id)
+        .execute()
+    )
+
+    if len(response.data) == 0:
+
+        raise HTTPException(
+
+            status_code=404,
+
+            detail="Risk not found"
+
+        )
+
+    return {
+
+        "success": True,
+
+        "message": "Risk updated",
+
+        "risk": response.data[0]
+
+    }
+@app.patch("/risks/{risk_id}/resolve")
+async def resolve_risk(risk_id: str):
+
+    response = (
+        supabase
+        .table("risks")
+        .select("*")
+        .eq("id", risk_id)
+        .execute()
+    )
+
+    if len(response.data) == 0:
+        raise HTTPException(
+            status_code=404,
+            detail="Risk not found"
+        )
+
+    risk = response.data[0]
+
+    new_status = (
+        "Resolved"
+        if risk["status"] == "Open"
+        else "Open"
+    )
+
+    update = (
+        supabase
+        .table("risks")
+        .update({
+            "status": new_status,
+            "updated_at": datetime.now(timezone.utc).isoformat()
+        })
+        .eq("id", risk_id)
+        .execute()
+    )
+
+    return {
+        "success": True,
+        "message": f"Risk marked as {new_status}",
+        "risk": update.data[0]
+    }
+
+@app.delete("/risks/{risk_id}")
+async def delete_risk(risk_id: str):
+
+    # Check if risk exists
+    response = (
+        supabase
+        .table("risks")
+        .select("*")
+        .eq("id", risk_id)
+        .execute()
+    )
+
+    if len(response.data) == 0:
+        raise HTTPException(
+            status_code=404,
+            detail="Risk not found"
+        )
+
+    # Soft delete
+    update = (
+        supabase
+        .table("risks")
+        .update({
+            "deleted": True,
+            "updated_at": datetime.now(timezone.utc).isoformat()
+        })
+        .eq("id", risk_id)
+        .execute()
+    )
+
+    return {
+        "success": True,
+        "message": "Risk deleted",
+        "risk": update.data[0]
+    }
+@app.get("/session/{session_id}/decisions")
+async def get_session_decisions(session_id: str):
+
+    response = (
+        supabase
+        .table("decisions")
+        .select("*")
+        .eq("session_id", session_id)
+        .eq("deleted", False)
+        .order("created_at")
+        .execute()
+    )
+
+    return {
+        "success": True,
+        "decisions": response.data
+    }
+@app.patch("/decisions/{decision_id}")
+async def update_decision(
+    decision_id: str,
+    request: UpdateDecisionRequest
+):
+
+    response = (
+        supabase
+        .table("decisions")
+        .update({
+            "title": request.title,
+            "reason": request.reason,
+            "confidence": request.confidence,
+            "updated_at": datetime.now(timezone.utc).isoformat()
+        })
+        .eq("id", decision_id)
+        .execute()
+    )
+
+    if len(response.data) == 0:
+        raise HTTPException(
+            status_code=404,
+            detail="Decision not found"
+        )
+
+    return {
+        "success": True,
+        "message": "Decision updated",
+        "decision": response.data[0]
+    }
+@app.patch("/decisions/{decision_id}/accept")
+async def accept_decision(decision_id: str):
+
+    response = (
+        supabase
+        .table("decisions")
+        .update({
+            "decision_status": "accepted",
+            "updated_at": datetime.now(timezone.utc).isoformat()
+        })
+        .eq("id", decision_id)
+        .execute()
+    )
+
+    if len(response.data) == 0:
+        raise HTTPException(
+            status_code=404,
+            detail="Decision not found"
+        )
+
+    return {
+        "success": True,
+        "decision": response.data[0]
+    }
+@app.patch("/decisions/{decision_id}/reject")
+async def reject_decision(decision_id: str):
+
+    response = (
+        supabase
+        .table("decisions")
+        .update({
+            "decision_status": "rejected",
+            "updated_at": datetime.now(timezone.utc).isoformat()
+        })
+        .eq("id", decision_id)
+        .execute()
+    )
+
+    if len(response.data) == 0:
+        raise HTTPException(
+            status_code=404,
+            detail="Decision not found"
+        )
+
+    return {
+        "success": True,
+        "decision": response.data[0]
+    }
+@app.delete("/decisions/{decision_id}")
+async def delete_decision(decision_id: str):
+
+    response = (
+        supabase
+        .table("decisions")
+        .select("*")
+        .eq("id", decision_id)
+        .execute()
+    )
+
+    if len(response.data) == 0:
+        raise HTTPException(
+            status_code=404,
+            detail="Decision not found"
+        )
+
+    update = (
+        supabase
+        .table("decisions")
+        .update({
+            "deleted": True,
+            "updated_at": datetime.now(timezone.utc).isoformat()
+        })
+        .eq("id", decision_id)
+        .execute()
+    )
+
+    return {
+        "success": True,
+        "message": "Decision deleted",
+        "decision": update.data[0]
     }
 # ----------------------------------------------------
 # Rename Meeting
@@ -515,98 +949,154 @@ async def get_sessions():
 
     response = (
         supabase
-        .table("sessions")
+        .table("session_dashboard")
         .select("*")
         .eq("deleted", False)
         .order("created_at", desc=True)
         .execute()
     )
 
+    sessions = response.data
+
+    # Populate live task list for each meeting
+    for session in sessions:
+
+        tasks = (
+            supabase
+            .table("actions")
+            .select("*")
+            .eq("session_id", session["id"])
+            .eq("deleted", False)
+            .execute()
+        )
+
+        session["tasks"] = tasks.data
+        
+   
     return {
 
         "success": True,
 
-        "count": len(response.data),
+        "count": len(sessions),
 
-        "sessions": response.data
+        "sessions": sessions
 
     }
 
 
-from fastapi import HTTPException
+@app.delete("/session/{session_id}/action-plan/{index}")
+async def delete_action_plan(session_id: str, index: int):
 
-@app.delete("/sessions/{session_id}")
-async def delete_session(session_id: str):
-    try:
-        # Delete all actions belonging to this meeting
-        (
-            supabase
-            .table("actions")
-            .delete()
-            .eq("session_id", session_id)
-            .execute()
-        )
+    response = (
+        supabase.table("sessions")
+        .select("action_plan")
+        .eq("id", session_id)
+        .single()
+        .execute()
+    )
 
-        # Delete the meeting
-        (
-            supabase
-            .table("sessions")
-            .delete()
-            .eq("id", session_id)
-            .execute()
-        )
-
-        return {
-            "success": True,
-            "message": "Meeting and associated actions deleted successfully."
-        }
-
-    except Exception as e:
+    if not response.data:
         raise HTTPException(
-            status_code=500,
-            detail=str(e)
+            status_code=404,
+            detail="Session not found"
         )
+
+    action_plans = response.data.get("action_plan") or []
+
+    if index < 0 or index >= len(action_plans):
+        raise HTTPException(
+            status_code=404,
+            detail="Action plan not found"
+        )
+
+    action_plans.pop(index)
+
+    supabase.table("sessions").update(
+        {
+            "action_plan": action_plans
+        }
+    ).eq(
+        "id",
+        session_id
+    ).execute()
+
+    return {
+        "message": "Action plan deleted successfully"
+    }
+from schemas.extraction import ActionPlan
+
+@app.put("/session/{session_id}/action-plan/{index}")
+async def update_action_plan(
+    session_id: str,
+    index: int,
+    updated_plan: ActionPlan
+):
+
+    response = (
+        supabase.table("sessions")
+        .select("action_plan")
+        .eq("id", session_id)
+        .single()
+        .execute()
+    )
+
+    if not response.data:
+        raise HTTPException(
+            status_code=404,
+            detail="Session not found"
+        )
+
+    action_plans = response.data.get("action_plan") or []
+
+    if index < 0 or index >= len(action_plans):
+        raise HTTPException(
+            status_code=404,
+            detail="Action plan not found"
+        )
+
+    action_plans[index] = updated_plan.model_dump()
+
+    supabase.table("sessions").update(
+        {
+            "action_plan": action_plans
+        }
+    ).eq(
+        "id",
+        session_id
+    ).execute()
+
+    return {
+        "message": "Action plan updated successfully"
+    }
 # ----------------------------------------------------
 # Archive Session
 # ----------------------------------------------------
 
-@app.patch("/session/{session_id}/archive")
-async def archive_session(session_id: str):
+@app.delete("/sessions/{session_id}")
+async def delete_session(session_id: str):
 
+    # Delete actions first
+    (
+        supabase
+        .table("actions")
+        .delete()
+        .eq("session_id", session_id)
+        .execute()
+    )
+
+    # Delete the session
     response = (
         supabase
         .table("sessions")
-        .update({
-
-            "archived": True,
-
-            "updated_at": datetime.utcnow().isoformat()
-
-        })
+        .delete()
         .eq("id", session_id)
         .execute()
     )
 
-    if len(response.data) == 0:
-
-        return {
-
-            "success": False,
-
-            "error": "Session not found"
-
-        }
-
     return {
-
         "success": True,
-
-        "message": "Session archived.",
-
-        "session": response.data[0]
-
+        "message": "Meeting deleted successfully"
     }
-
 
 # ----------------------------------------------------
 # Delete Session
@@ -621,7 +1111,7 @@ async def delete_session(session_id: str):
         .update({
 
             "deleted": True,
-
+ 
             "updated_at": datetime.utcnow().isoformat()
 
         })

@@ -10,13 +10,7 @@ EXTRACTION_SCHEMA = {
         "due_confidence": 0.0
     }
 ],
-    "reminders": [
-        {
-            "title": "",
-            "remind_at": "",
-            "confidence": 0.0
-        }
-    ],
+    
     "action_plans": [
         {
             "goal": "",

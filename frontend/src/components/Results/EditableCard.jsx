@@ -4,10 +4,10 @@ import { COLORS } from "../ui/colors";
 export default function EditableCard({
 
     title,
-
+    badge,
     children,
-
-    actions
+    actions,
+    style = {}
 
 }) {
 
@@ -17,7 +17,9 @@ export default function EditableCard({
             hover
             style={{
                 marginBottom: "18px",
-                fontFamily: '"Space Mono", monospace'
+                fontFamily: '"Space Mono", monospace',
+                transition: "all 0.35s ease",
+                ...style
             }}
         >
 
@@ -26,46 +28,49 @@ export default function EditableCard({
                     display: "flex",
                     justifyContent: "space-between",
                     alignItems: "flex-start",
-
-                    gap: "28px",
-
+                    gap: "24px",
                     marginBottom: "24px"
                 }}
             >
 
-                <h3
+                {/* Left Side */}
+                <div
                     style={{
                         flex: 1,
-
-                        margin: 0,
-
-                        color: COLORS.text,
-
-                        fontFamily: '"Space Mono", monospace',
-
-                        fontSize: "24px",
-
-                        fontWeight: 700,
-
-                        lineHeight: 1.35,
-
-                        overflowWrap: "anywhere",
-
-                        wordBreak: "break-word"
+                        minWidth: 0,
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "12px",
+                        flexWrap: "wrap"
                     }}
                 >
 
-                    {title}
+                    <h3
+                        style={{
+                            margin: 0,
+                            color: COLORS.text,
+                            fontFamily: '"Space Mono", monospace',
+                            fontSize: "24px",
+                            fontWeight: 700,
+                            lineHeight: 1.35,
+                            overflowWrap: "anywhere",
+                            wordBreak: "break-word",
+                            transition: "all .3s ease"
+                        }}
+                    >
+                        {title}
+                    </h3>
 
-                </h3>
+                    {badge}
 
+                </div>
+
+                {/* Right Side */}
                 <div
                     style={{
                         display: "flex",
                         alignItems: "center",
-
                         gap: "8px",
-
                         flexShrink: 0
                     }}
                 >
@@ -80,9 +85,7 @@ export default function EditableCard({
                 style={{
                     display: "flex",
                     flexDirection: "column",
-
                     gap: "8px",
-
                     fontFamily: '"Space Mono", monospace'
                 }}
             >

@@ -4,7 +4,8 @@ import {
     Pencil,
     BadgeCheck,
     Trash2,
-    RotateCcw
+    RotateCcw,
+    ExternalLink
 } from "../ui/icons";
 
 export default function ActionButtons({
@@ -13,11 +14,21 @@ export default function ActionButtons({
     onConfirm,
     onDelete,
     onRestore,
+    onOpenMeeting,
+
+    onAccept,
+    onReject,
+
+    completed = false,
 
     showEdit = true,
     showConfirm = true,
     showDelete = true,
     showRestore = false,
+    showOpenMeeting = false,
+
+    showAccept = false,
+    showReject = false,
 
     compact = false
 
@@ -29,7 +40,8 @@ export default function ActionButtons({
             style={{
                 display: "flex",
                 gap: "8px",
-                alignItems: "center"
+                alignItems: "center",
+                flexWrap: "wrap"
             }}
         >
 
@@ -47,16 +59,54 @@ export default function ActionButtons({
 
             )}
 
-            {showConfirm && (
+            {/* Only show Complete if a handler exists */}
+
+            {showConfirm && onConfirm && (
+
+                <Button
+                    size="sm"
+                    variant={completed ? "secondary" : "success"}
+                    icon={
+                        completed
+                            ? <RotateCcw size={16} />
+                            : <BadgeCheck size={16} />
+                    }
+                    onClick={onConfirm}
+                    title={completed ? "Mark Pending" : "Complete"}
+                >
+                    {!compact && (
+                        completed
+                            ? "Mark Pending"
+                            : "Complete"
+                    )}
+                </Button>
+
+            )}
+
+            {showAccept && (
 
                 <Button
                     size="sm"
                     variant="success"
                     icon={<BadgeCheck size={16} />}
-                    onClick={onConfirm}
-                    title="Complete"
+                    onClick={onAccept}
+                    title="Agree"
                 >
-                    {!compact && "Complete"}
+                    {!compact && "Agree"}
+                </Button>
+
+            )}
+
+            {showReject && (
+
+                <Button
+                    size="sm"
+                    variant="danger"
+                    icon={<RotateCcw size={16} />}
+                    onClick={onReject}
+                    title="Disagree"
+                >
+                    {!compact && "Disagree"}
                 </Button>
 
             )}
@@ -71,6 +121,20 @@ export default function ActionButtons({
                     title="Delete"
                 >
                     {!compact && "Delete"}
+                </Button>
+
+            )}
+
+            {showOpenMeeting && (
+
+                <Button
+                    size="sm"
+                    variant="outline"
+                    icon={<ExternalLink size={16} />}
+                    onClick={onOpenMeeting}
+                    title="Open Meeting"
+                >
+                    {!compact && "Meeting"}
                 </Button>
 
             )}

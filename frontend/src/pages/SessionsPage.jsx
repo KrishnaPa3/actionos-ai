@@ -12,7 +12,6 @@ import {
     History,
     Mic,
     CheckSquare,
-    Bell,
     ClipboardList,
     TriangleAlert
 } from "../components/ui/icons";
@@ -24,14 +23,16 @@ export default function SessionsPage() {
     const [meetings, setMeetings] = useState([]);
     const [filteredMeetings, setFilteredMeetings] = useState([]);
     const [search, setSearch] = useState("");
-    const [toast, setToast] = useState(""); 
+    const [toast, setToast] = useState("");
     const [loading, setLoading] = useState(true);
     const [meetingToDelete, setMeetingToDelete] = useState(null);
 
     const navigate = useNavigate();
 
     async function loadMeetings() {
+
         try {
+
             const response = await fetch(
                 "http://127.0.0.1:8000/sessions"
             );
@@ -42,49 +43,71 @@ export default function SessionsPage() {
             setFilteredMeetings(data.sessions);
 
         } catch (err) {
+
             console.error(err);
+
         } finally {
+
             setLoading(false);
+
         }
+
     }
 
     const deleteMeeting = async () => {
-    if (!meetingToDelete) return;
 
-    try {
-        const response = await fetch(
-            `http://127.0.0.1:8000/sessions/${meetingToDelete.id}`,
-            {
-                method: "DELETE",
+        if (!meetingToDelete) return;
+
+        try {
+
+            const response = await fetch(
+
+                `http://127.0.0.1:8000/sessions/${meetingToDelete.id}`,
+
+                {
+                    method: "DELETE",
+                }
+
+            );
+
+            const data = await response.json();
+
+            console.log(data);
+
+            if (!response.ok) {
+
+                throw new Error(
+                    data.detail || "Delete failed"
+                );
+
             }
-        );
 
-        const data = await response.json();
+            setMeetingToDelete(null);
 
-        console.log(data);
+            await loadMeetings();
 
-        if (!response.ok) {
-            throw new Error(data.detail || "Delete failed");
+            setToast("✓ Meeting deleted successfully");
+
+            setTimeout(() => {
+
+                setToast("");
+
+            }, 3000);
+
+        } catch (err) {
+
+            console.error(err);
+
+            alert(err.message);
+
         }
 
-       setMeetingToDelete(null);
-
-await loadMeetings();
-
-setToast("✓ Meeting deleted successfully");
-
-setTimeout(() => {
-    setToast("");
-}, 3000);
-
-    } catch (err) {
-        console.error(err);
-        alert(err.message);
-    }
-};
+    };
 
     useEffect(() => {
+
         loadMeetings();
+
     }, []);
 
     useEffect(() => {
@@ -100,7 +123,9 @@ setTimeout(() => {
     }, [search, meetings]);
 
     if (loading) {
+
         return (
+
             <h2
                 style={{
                     color: COLORS.text,
@@ -110,164 +135,168 @@ setTimeout(() => {
             >
                 Loading meetings...
             </h2>
+
         );
+
     }
 
     return (
         <div
+    style={{
+        maxWidth: "950px",
+        margin: "40px auto",
+        padding: "0 20px"
+    }}
+>
+
+    <PageHeader
+        icon={<History size={30} />}
+        title="Meeting History"
+        subtitle={`${meetings.length} meetings stored`}
+    />
+
+    <SearchBar
+        value={search}
+        onChange={setSearch}
+        placeholder="Search meetings..."
+    />
+
+    {filteredMeetings.length === 0 && (
+        <EmptyState
+            title="No meetings found"
+            description="Record your first meeting to get started."
+        />
+    )}
+
+    {filteredMeetings.map((meeting) => (
+
+        <Card
+            key={meeting.id}
+            onClick={() =>
+                navigate(`/results/${meeting.id}`)
+            }
             style={{
-                maxWidth: "950px",
-                margin: "40px auto",
-                padding: "0 20px"
+                marginBottom: "18px"
             }}
         >
 
-            <PageHeader
-                icon={<History size={30} />}
-                title="Meeting History"
-                subtitle={`${meetings.length} meetings stored`}
-            />
+            <h2
+                style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "10px",
+                    color: COLORS.text,
+                    marginBottom: "10px"
+                }}
+            >
+                <Mic size={22} />
+                {meeting.meeting_name}
+            </h2>
 
-            <SearchBar
-                value={search}
-                onChange={setSearch}
-                placeholder="Search meetings..."
-            />
+            <p
+                style={{
+                    color: COLORS.textSecondary,
+                    marginBottom: "18px"
+                }}
+            >
+                {new Date(
+                    meeting.created_at
+                ).toLocaleString()}
+            </p>
 
-            {filteredMeetings.length === 0 && (
-                <EmptyState
-                    title="No meetings found"
-                    description="Record your first meeting to get started."
+            <div
+                style={{
+                    display: "flex",
+                    gap: "14px",
+                    flexWrap: "wrap"
+                }}
+            >
+                <StatBadge
+                    icon={<CheckSquare size={16} />}
+                    value={meeting.task_count || 0}
+                    label="Tasks"
                 />
-            )}
 
-            {filteredMeetings.map((meeting) => (
+               <StatBadge
+    icon={<ClipboardList size={16} />}
+    value={meeting.decision_count || 0}
+    label="Decisions"
+/>
 
-                <Card
-                    key={meeting.id}
-                    onClick={() =>
-                        navigate(`/results/${meeting.id}`)
-                    }
+                <StatBadge
+                    icon={<TriangleAlert size={16} />}
+                    value={meeting.risk_count || 0}
+                    label="Risks"
+                />
+
+                {/* NEW ACTION PLANS BADGE */}
+                <StatBadge
+                    icon={<ClipboardList size={16} />}
+                    value={meeting.action_plan_count || 0}
+                    label="Action Plans"
+                />
+            </div>
+
+            <div
+                style={{
+                    display: "flex",
+                    justifyContent: "flex-end",
+                    marginTop: "20px"
+                }}
+            >
+                <button
+                    onClick={(e) => {
+                        e.stopPropagation();
+                        setMeetingToDelete(meeting);
+                    }}
                     style={{
-                        marginBottom: "18px"
+                        background: "#dc2626",
+                        color: "white",
+                        border: "none",
+                        borderRadius: "8px",
+                        padding: "8px 16px",
+                        cursor: "pointer",
+                        fontWeight: 600,
+                        fontFamily: "'Space Mono', monospace",
+                        fontSize: "16px",
                     }}
                 >
+                    🗑 Delete
+                </button>
+            </div>
 
-                    <h2
-                        style={{
-                            display: "flex",
-                            alignItems: "center",
-                            gap: "10px",
-                            color: COLORS.text,
-                            marginBottom: "10px"
-                        }}
-                    >
-                        <Mic size={22} />
-                        {meeting.meeting_name}
-                    </h2>
+        </Card>
 
-                    <p
-                        style={{
-                            color: COLORS.textSecondary,
-                            marginBottom: "18px"
-                        }}
-                    >
-                        {new Date(
-                            meeting.created_at
-                        ).toLocaleString()}
-                    </p>
-
-                    <div
-                        style={{
-                            display: "flex",
-                            gap: "14px",
-                            flexWrap: "wrap"
-                        }}
-                    >
-                        <StatBadge
-                            icon={<CheckSquare size={16} />}
-                            value={meeting.tasks?.length || 0}
-                            label="Tasks"
-                        />
-
-                        <StatBadge
-                            icon={<Bell size={16} />}
-                            value={meeting.reminders?.length || 0}
-                            label="Reminders"
-                        />
-
-                        <StatBadge
-                            icon={<ClipboardList size={16} />}
-                            value={meeting.decisions?.length || 0}
-                            label="Decisions"
-                        />
-
-                        <StatBadge
-                            icon={<TriangleAlert size={16} />}
-                            value={meeting.risks?.length || 0}
-                            label="Risks"
-                        />
-                    </div>
-
-                    <div
-                        style={{
-                            display: "flex",
-                            justifyContent: "flex-end",
-                            marginTop: "20px"
-                        }}
-                    >
-                        <button
-    onClick={(e) => {
-        e.stopPropagation();
-        setMeetingToDelete(meeting);
-    }}
-    style={{
-        background: "#dc2626",
-        color: "white",
-        border: "none",
-        borderRadius: "8px",
-        padding: "8px 16px",
-        cursor: "pointer",
-        fontWeight: 600,
-        fontFamily: "'Space Mono', monospace",
-        fontSize: "16px",
-    }}
->
-    🗑 Delete
-</button>
-                    </div>
-
-                </Card>
-
-            ))}
-
-            <DeleteMeetingModal
+    ))}
+                <DeleteMeetingModal
                 open={meetingToDelete !== null}
                 meeting={meetingToDelete}
                 onCancel={() => setMeetingToDelete(null)}
                 onConfirm={deleteMeeting}
             />
-{toast && (
-    <div
-        style={{
-            position: "fixed",
-            bottom: "24px",
-            right: "24px",
-            background: "#16a34a",
-            color: "#fff",
-            padding: "12px 18px",
-            borderRadius: "10px",
-            boxShadow: "0 10px 20px rgba(0,0,0,0.2)",
-            fontFamily: "'Space Mono', monospace",
-            fontSize: "14px",
-            fontWeight: 600,
-            zIndex: 9999,
-            animation: "fadeIn 0.3s ease",
-        }}
-    >
-        {toast}
-    </div>
-)}
+
+            {toast && (
+                <div
+                    style={{
+                        position: "fixed",
+                        bottom: "24px",
+                        right: "24px",
+                        background: "#16a34a",
+                        color: "#fff",
+                        padding: "12px 18px",
+                        borderRadius: "10px",
+                        boxShadow: "0 10px 20px rgba(0,0,0,0.2)",
+                        fontFamily: "'Space Mono', monospace",
+                        fontSize: "14px",
+                        fontWeight: 600,
+                        zIndex: 9999,
+                        animation: "fadeIn 0.3s ease",
+                    }}
+                >
+                    {toast}
+                </div>
+            )}
+
         </div>
     );
 }

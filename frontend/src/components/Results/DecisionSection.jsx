@@ -1,13 +1,24 @@
 import EditableCard from "./EditableCard";
 import SectionHeader from "./SectionHeader";
 import EmptySection from "./EmptySection";
-import ActionButtons from "./ActionButtons";
-
+import DecisionButtons from "./DecisionButtons";
 import {
     BadgeCheck
 } from "../ui/icons";
 
-export default function DecisionSection({ decisions }) {
+export default function DecisionSection({
+
+    decisions,
+
+    onAcceptDecision,
+
+    onRejectDecision,
+
+    onEditDecision,
+
+    onDeleteDecision
+
+})  {
 
     if (!decisions || decisions.length === 0) {
 
@@ -53,36 +64,51 @@ export default function DecisionSection({ decisions }) {
 
                     <EditableCard
                         key={index}
-                        title={decision}
+                        title={decision.title}
 
                         actions={
 
-                            <ActionButtons
+                       <DecisionButtons
 
-                                compact
+    onAgree={() =>
+        onAcceptDecision(decision)
+    }
 
-                                showConfirm={false}
+    onDisagree={() =>
+        onRejectDecision(decision)
+    }
 
-                                onEdit={() =>
-                                    console.log("Edit decision", index)
-                                }
+    onEdit={() =>
+        onEditDecision(decision)
+    }
 
-                                onDelete={() =>
-                                    console.log("Delete decision", index)
-                                }
+    onDelete={() =>
+        onDeleteDecision(decision)
+    }
 
-                            />
-
+/>
                         }
 
                     >
 
                         <div
                             style={{
-                                lineHeight: 1.7
+                                display: "flex",
+                                flexDirection: "column",
+                                gap: "8px",
+                                lineHeight: 1.6
                             }}
                         >
-                            This decision was extracted from the meeting.
+
+                            <div>
+                                <strong>Reason:</strong> {decision.reason}
+                            </div>
+
+                            <div>
+                                <strong>Confidence:</strong>{" "}
+                                {(decision.confidence * 100).toFixed(0)}%
+                            </div>
+
                         </div>
 
                     </EditableCard>

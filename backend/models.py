@@ -17,9 +17,13 @@ class ActionPlan(BaseModel):
     goal: str
     steps: List[str]
 
+class Decision(BaseModel):
+    title: str
+    reason: str = ""
+    confidence: float = 0.0
+
 class ExtractionResult(BaseModel):
     tasks: List[Task]
-    reminders: List[Reminder]
     action_plans: List[ActionPlan]
     summary: List[str]
     decisions: List[str]

@@ -21,24 +21,29 @@ class Task(BaseModel):
     # Confidence that the due date was resolved correctly
     due_confidence: float = Field(default=0.0, ge=0.0, le=1.0)
 
-
-class Reminder(BaseModel):
+class Risk(BaseModel):
     title: str
-    owner: str
 
-    # Original natural language
-    due_text: Optional[str] = None
+    impact: str
 
-    # AI-resolved ISO datetime
-    due_date_iso: Optional[str] = None
+    mitigation: str
 
-    due_confidence: float = Field(default=0.0, ge=0.0, le=1.0)
+    risk_score: int = Field(ge=0, le=100)
 
+    confidence: float = Field(ge=0.0, le=1.0)
 
+class Decision(BaseModel):
+    title: str
+    reason: str = ""
+    confidence: float = 0.0
+
+class ActionStep(BaseModel):
+    step: str
+    owner: str | None = None
 class ActionPlan(BaseModel):
-    title: str
-    owner: str
-    steps: List[str]
+    objective: str
+    steps: list[ActionStep]
+    confidence: float
 
 
 class ExtractionResult(BaseModel):
@@ -46,10 +51,8 @@ class ExtractionResult(BaseModel):
 
     tasks: List[Task]
 
-    reminders: List[Reminder]
-
     action_plans: List[ActionPlan]
 
-    decisions: List[str]
+    decisions: List[Decision] = Field(default_factory=list)
 
-    risks: List[str]
+    risks: List[Risk] = Field(default_factory=list)

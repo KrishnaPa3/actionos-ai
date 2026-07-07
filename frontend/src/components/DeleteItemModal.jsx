@@ -1,26 +1,31 @@
-export default function DeleteMeetingModal({
+export default function DeleteItemModal({
     open,
-    meeting,
+    item,
+    itemType = "Item",
     onCancel,
     onConfirm,
 }) {
+
     if (!open) return null;
 
     return (
+
         <div style={overlayStyle}>
+
             <div style={modalStyle}>
 
-              <h2 style={titleStyle}>
-    🚨 THIS IS DELETE MEETING
-</h2>
+                <h2 style={titleStyle}>
+                    Delete {itemType}
+                </h2>
 
                 <p style={textStyle}>
                     Are you sure you want to delete
                     <br />
-                    <strong>{meeting?.meeting_name}</strong>?
+                    <strong>{item?.title}</strong>?
                 </p>
 
                 <div style={buttonRow}>
+
                     <button
                         onClick={onCancel}
                         style={cancelStyle}
@@ -34,11 +39,15 @@ export default function DeleteMeetingModal({
                     >
                         Delete
                     </button>
+
                 </div>
 
             </div>
+
         </div>
+
     );
+
 }
 
 const overlayStyle = {

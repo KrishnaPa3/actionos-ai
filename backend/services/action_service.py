@@ -103,3 +103,13 @@ def build_action_payload(
         "speaker_name": task.get("speaker_name")
 
     }
+def build_risk_payload(risk, session_id):
+    return {
+        "session_id": session_id,
+        "title": risk.get("title", ""),
+        "impact": risk.get("impact"),
+        "mitigation": risk.get("mitigation"),
+        "risk_score": risk.get("risk_score", 0),
+        "confidence": risk.get("confidence", 0.0),
+        "status": "Open"
+    }

@@ -4,13 +4,16 @@ import InfoRow from "./InfoRow";
 import ActionButtons from "./ActionButtons";
 
 import {
-    ClipboardList,
-    Calendar,
-    User
+    ClipboardList
 } from "../ui/icons";
 
-export default function ActionPlanSection({ actionPlans }) {
+export default function ActionPlanSection({
+    actionPlans,
+    onEdit = () => {},
+    onDelete = () => {}
+}) {
 
+    
     if (!actionPlans || actionPlans.length === 0) {
 
         return (
@@ -68,32 +71,38 @@ export default function ActionPlanSection({ actionPlans }) {
                                 marginBottom: "16px"
                             }}
                         >
-                            {plan.title || plan.action || "Action Plan"}
+                            {plan.objective || plan.title || "Action Plan"}
                         </h3>
 
-                        <InfoRow
-                            icon={<User size={16} />}
-                            label="Owner"
-                            value={plan.owner || "Unassigned"}
-                        />
+                        {plan.steps?.map((step, stepIndex) => (
 
-                        <InfoRow
-                            icon={<Calendar size={16} />}
-                            label="Due"
-                            value={plan.due_date || "Not specified"}
-                        />
+                            <InfoRow
+                                key={stepIndex}
+                                icon={<ClipboardList size={16} />}
+                                label={`Step ${stepIndex + 1}`}
+                                value={
+                                    typeof step === "string"
+                                        ? step
+                                        : step.owner
+                                            ? `${step.step} (${step.owner})`
+                                            : step.step
+                                }
+                            />
 
-                        <ActionButtons
-
-    compact
-
-    onEdit={() => console.log("Edit", index)}
-
-    onConfirm={() => console.log("Complete", index)}
-
-    onDelete={() => console.log("Delete", index)}
-
-/>
+                        ))}
+<div
+    style={{
+        display: "flex",
+        justifyContent: "flex-end",
+        marginTop: "20px"
+    }}
+>
+    <ActionButtons
+        compact
+        onEdit={() => onEdit(index)}
+        onDelete={() => onDelete(index)}
+    />
+</div>
 
                     </div>
 

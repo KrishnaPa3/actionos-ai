@@ -75,5 +75,9 @@ export {
     RotateCcw,
     Flag,
     Save,
-  CircleDot
+  CircleDot, 
+  ExternalLink,
+  Gauge,
+  ShieldAlert,
+  ShieldCheck,
 } from "lucide-react";
