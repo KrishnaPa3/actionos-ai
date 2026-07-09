@@ -1,0 +1,238 @@
+/* ===========================
+   Task List Page
+=========================== */
+
+.task-list-container {
+    max-width: 1600px;
+    margin: 0 auto;
+    padding: 48px;
+    display: flex;
+    flex-direction: column;
+    gap: 32px;
+}
+
+/* ===========================
+   Header
+=========================== */
+
+.task-list-header {
+    text-align: center;
+}
+
+.task-list-header h1 {
+    font-family: var(--display);
+    font-size: 3.6rem;
+    color: #F5F7FA;
+    margin-bottom: 10px;
+}
+
+.task-list-header p {
+    font-size: 1rem;
+    color: #94A3B8;
+    max-width: 720px;
+    margin: 0 auto;
+    line-height: 1.7;
+}
+
+/* ===========================
+   Toolbar
+=========================== */
+
+.task-toolbar {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+/* ===========================
+   Search
+=========================== */
+
+.task-search-bar input {
+    width: 100%;
+    height: 58px;
+
+    padding: 0 24px;
+
+    background: #0F172A;
+
+    border: 1px solid #30415F;
+    border-radius: 16px;
+
+    color: white;
+
+    font-family: var(--body);
+    font-size: 0.95rem;
+
+    transition: .25s;
+}
+
+.task-search-bar input:focus {
+    outline: none;
+
+    border-color: #4F8CFF;
+
+    box-shadow: 0 0 0 3px rgba(79,140,255,.15);
+}
+
+/* ===========================
+   Filters
+=========================== */
+
+.task-filters {
+
+    display: grid;
+
+    grid-template-columns: repeat(6, minmax(150px, 1fr));
+
+    gap: 18px;
+}
+
+.task-filters select {
+
+    width: 100%;
+    height: 54px;
+
+    padding: 0 18px;
+
+    background: #0F172A;
+
+    border: 1px solid #30415F;
+    border-radius: 14px;
+
+    color: white;
+
+    font-family: var(--body);
+    font-size: .95rem;
+
+    cursor: pointer;
+
+    transition: .25s;
+}
+
+.task-filters select:hover {
+    border-color: #4F8CFF;
+}
+
+.task-filters select:focus {
+
+    outline: none;
+
+    border-color: #4F8CFF;
+
+    box-shadow: 0 0 0 3px rgba(79,140,255,.15);
+}
+
+/* ===========================
+   Task List
+=========================== */
+
+.task-table {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+}
+
+/* ===========================
+   Empty State
+=========================== */
+
+.task-empty-state {
+
+    background: #172033;
+
+    border: 1px dashed #3A4C70;
+    border-radius: 18px;
+
+    padding: 70px 40px;
+
+    text-align: center;
+
+    color: #94A3B8;
+}
+
+.task-empty-state h3 {
+    color: white;
+    margin-bottom: 10px;
+}
+
+/* ===========================
+   Responsive
+=========================== */
+
+@media (max-width: 1200px) {
+
+    .task-filters {
+
+        grid-template-columns: repeat(3, 1fr);
+    }
+
+}
+
+@media (max-width: 768px) {
+
+    .task-list-container {
+        padding: 24px;
+    }
+
+    .task-list-header h1 {
+        font-size: 2.8rem;
+    }
+
+    .task-filters {
+
+        grid-template-columns: 1fr;
+    }
+
+}
+/* ===========================
+   Date Filter
+=========================== */
+
+.date-filter{
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+}
+
+.date-picker{
+    width:180px;
+
+    padding:12px 16px;
+
+    background:#0F172A;
+
+    border:1px solid #30415F;
+
+    border-radius:10px;
+
+    color:white;
+
+    font-family:var(--body);
+
+    font-size:.95rem;
+
+    transition:.25s;
+}
+
+.date-picker:hover{
+    border-color:#4F8CFF;
+}
+
+.date-picker:focus{
+    outline:none;
+
+    border-color:#4F8CFF;
+
+    box-shadow:0 0 0 3px rgba(79,140,255,.18);
+}
+
+/* Calendar icon */
+
+.date-picker::-webkit-calendar-picker-indicator{
+    cursor:pointer;
+
+    filter:invert(1);
+
+    opacity:.8;
+}

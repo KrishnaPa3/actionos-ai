@@ -1,5 +1,5 @@
 import "./ResultsPage.css";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 
 import Card from "../components/ui/Card";
@@ -23,8 +23,8 @@ import DeleteItemModal from "../components/DeleteItemModal";
 
 export default function ResultsPage() {
 
-  const { sessionId } = useParams();
-
+const { sessionId } = useParams();
+const navigate = useNavigate();
   const [actions, setActions] = useState([]);
   const [meeting, setMeeting] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -653,10 +653,48 @@ async function updateDecision(decisionId, updatedDecision) {
     }
 
 }
-
 useEffect(() => {
 
-    loadMeeting();
+    async function initialize() {
+
+        // If a meeting ID exists, load it normally
+        if (sessionId) {
+            loadMeeting();
+            return;
+        }
+
+        // Otherwise get the newest meeting
+        try {
+
+            const response = await fetch(
+                "http://127.0.0.1:8000/sessions"
+            );
+
+            const data = await response.json();
+
+            if (data.sessions && data.sessions.length > 0) {
+
+                navigate(
+                    `/results/${data.sessions[0].id}`,
+                    { replace: true }
+                );
+
+            } else {
+
+                setLoading(false);
+
+            }
+
+        } catch (err) {
+
+            console.error(err);
+            setLoading(false);
+
+        }
+
+    }
+
+    initialize();
 
 }, [sessionId]);
 

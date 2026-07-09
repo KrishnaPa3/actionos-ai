@@ -1,5 +1,4 @@
 import { useNavigate, useLocation } from "react-router-dom";
-import { useEffect, useState } from "react";
 
 import Button from "./ui/Button";
 
@@ -9,6 +8,7 @@ import {
   LayoutDashboard,
   History,
   FileText,
+  ListChecks,
 } from "./ui/icons";
 
 import "./Navbar.css";
@@ -17,22 +17,13 @@ export default function Navbar() {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const [currentSession, setCurrentSession] = useState(null);
-
-  useEffect(() => {
-    const sessionId = sessionStorage.getItem("current_session");
-    setCurrentSession(sessionId);
-  }, [location]);
-
   const openResults = () => {
-    if (!currentSession) return;
-    navigate(`/results/${currentSession}`);
+    navigate("/results");
   };
 
   return (
     <nav className="navbar">
       {/* Logo */}
-
       <div
         className="nav-logo"
         onClick={() => navigate("/")}
@@ -58,7 +49,6 @@ export default function Navbar() {
       </div>
 
       {/* Navigation */}
-
       <div
         className="nav-links"
         style={{
@@ -85,22 +75,8 @@ export default function Navbar() {
           }
           icon={<FileText size={18} />}
           onClick={openResults}
-          disabled={!currentSession}
         >
           Results
-        </Button>
-
-        <Button
-          size="sm"
-          variant={
-            location.pathname === "/sessions"
-              ? "primary"
-              : "ghost"
-          }
-          icon={<History size={18} />}
-          onClick={() => navigate("/sessions")}
-        >
-          Sessions
         </Button>
 
         <Button
@@ -114,6 +90,32 @@ export default function Navbar() {
           onClick={() => navigate("/dashboard")}
         >
           Dashboard
+        </Button>
+
+        <Button
+          size="sm"
+          variant={
+            location.pathname === "/tasks"
+              ? "primary"
+              : "ghost"
+          }
+          icon={<ListChecks size={18} />}
+          onClick={() => navigate("/tasks")}
+        >
+          Task List
+        </Button>
+
+        <Button
+          size="sm"
+          variant={
+            location.pathname === "/sessions"
+              ? "primary"
+              : "ghost"
+          }
+          icon={<History size={18} />}
+          onClick={() => navigate("/sessions")}
+        >
+          Sessions
         </Button>
       </div>
     </nav>

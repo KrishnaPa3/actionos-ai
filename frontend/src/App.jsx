@@ -5,6 +5,8 @@ import VoiceRecorder from "./VoiceRecorder";
 import ResultsPage from "./pages/ResultsPage";
 import Dashboard from "./pages/Dashboard";
 import SessionsPage from "./pages/SessionsPage";
+import TaskList from "./pages/TaskList";
+
 function App() {
   return (
     <BrowserRouter>
@@ -12,9 +14,16 @@ function App() {
 
       <Routes>
         <Route path="/" element={<VoiceRecorder />} />
-        <Route path="/results/:sessionId" element={<ResultsPage />}/>
+
+        <Route path="/results" element={<ResultsPage />} />
+        <Route path="/results/:sessionId" element={<ResultsPage />} />
+
         <Route path="/dashboard" element={<Dashboard />} />
-        <Route path="/sessions" element={<SessionsPage />} />      </Routes>
+
+        <Route path="/tasks" element={<TaskList />} />
+
+        <Route path="/sessions" element={<SessionsPage />} />
+      </Routes>
     </BrowserRouter>
   );
 }

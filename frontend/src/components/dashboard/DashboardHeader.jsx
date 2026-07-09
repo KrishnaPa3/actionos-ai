@@ -1,22 +1,23 @@
 export default function DashboardHeader() {
-  const today = new Date().toLocaleDateString("en-US", {
+  const today = new Date().toLocaleDateString("en-GB", {
     weekday: "long",
-    year: "numeric",
-    month: "long",
     day: "numeric",
+    month: "long",
+    year: "numeric",
   });
 
   return (
     <header className="dashboard-header">
-      <div>
-        <h1 className="dashboard-title">ACTIONOS</h1>
+      <div className="dashboard-header-left">
+        <h1 className="dashboard-title">Action Center</h1>
+
         <p className="dashboard-subtitle">
-          Welcome back. Here's your action center.
+          Manage tasks, reminders and action plans extracted from your meetings.
         </p>
       </div>
 
-      <div className="dashboard-date">
-        {today}
+      <div className="dashboard-header-right">
+        <span className="dashboard-date">{today}</span>
       </div>
     </header>
   );

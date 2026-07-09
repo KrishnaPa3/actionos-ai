@@ -4,7 +4,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from supabase_client import supabase
 from faster_whisper import WhisperModel
 from pydantic import BaseModel
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from services.date_service import resolve_due_date
 from services.action_service import build_action_payload, build_risk_payload
 
@@ -510,6 +510,167 @@ async def get_session_actions(session_id: str):
     return {
         "success": True,
         "actions": response.data
+    }
+
+from typing import Optional
+
+@app.get("/actions")
+async def get_all_actions(
+    search: str | None = None,
+    priority: str | None = None,
+    status: str | None = None,
+    owner: str | None = None,
+    session: str | None = None,
+    date_mode: str | None = None,
+    date: str | None = None,
+    end: str | None = None,
+):
+
+    # Build base query
+    query = (
+        supabase
+        .table("actions")
+        .select("""
+            *,
+            sessions (
+                id,
+                meeting_name
+            )
+        """)
+        .eq("deleted", False)
+    )
+
+    # -----------------------------
+    # Standard Filters
+    # -----------------------------
+
+    if priority:
+        query = query.eq("priority", priority)
+
+    if status:
+        query = query.eq("status", status)
+
+    if owner:
+        query = query.eq("owner", owner)
+
+    if session:
+        query = query.eq("session_id", session)
+
+    if search:
+        query = query.ilike("title", f"%{search}%")
+
+    # -----------------------------
+    # Date Filter
+    # -----------------------------
+
+    if date_mode and date:
+
+        selected_date = datetime.strptime(
+            date,
+            "%Y-%m-%d"
+        ).replace(tzinfo=timezone.utc)
+
+        start_of_day = selected_date.replace(
+            hour=0,
+            minute=0,
+            second=0,
+            microsecond=0
+        )
+
+        end_of_day = selected_date.replace(
+            hour=23,
+            minute=59,
+            second=59,
+            microsecond=999999
+        )
+
+        if date_mode == "on":
+
+            query = (
+                query
+                .gte("due_date", start_of_day.isoformat())
+                .lte("due_date", end_of_day.isoformat())
+            )
+
+        elif date_mode == "before":
+
+            query = query.lt(
+                "due_date",
+                start_of_day.isoformat()
+            )
+
+        elif date_mode == "after":
+
+            query = query.gt(
+                "due_date",
+                end_of_day.isoformat()
+            )
+
+        elif date_mode == "between" and end:
+
+            end_date = datetime.strptime(
+                end,
+                "%Y-%m-%d"
+            ).replace(tzinfo=timezone.utc)
+
+            end_of_range = end_date.replace(
+                hour=23,
+                minute=59,
+                second=59,
+                microsecond=999999
+            )
+
+            query = (
+                query
+                .gte("due_date", start_of_day.isoformat())
+                .lte("due_date", end_of_range.isoformat())
+            )
+
+    # -----------------------------
+    # Execute Query
+    # -----------------------------
+
+    response = (
+        query
+        .order("created_at", desc=True)
+        .execute()
+    )
+
+    return {
+        "success": True,
+        "count": len(response.data),
+        "actions": response.data
+    }
+@app.get("/actions/filters")
+async def get_action_filters():
+
+    # Owners
+    owner_response = (
+        supabase
+        .table("actions")
+        .select("owner")
+        .eq("deleted", False)
+        .execute()
+    )
+
+    owners = sorted({
+        row["owner"]
+        for row in owner_response.data
+        if row.get("owner")
+    })
+
+    # Sessions
+    session_response = (
+        supabase
+        .table("sessions")
+        .select("id, meeting_name")
+        .order("meeting_name")
+        .execute()
+    )
+
+    return {
+        "owners": owners,
+        "sessions": session_response.data
     }
 @app.patch("/actions/{action_id}/complete")
 async def complete_action(action_id: str):
