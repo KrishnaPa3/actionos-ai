@@ -80,4 +80,6 @@ export {
   Gauge,
   ShieldAlert,
   ShieldCheck,
+  Plus,
+  
 } from "lucide-react";

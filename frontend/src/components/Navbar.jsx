@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 
 import Button from "./ui/Button";
@@ -9,6 +10,12 @@ import {
   History,
   FileText,
   ListChecks,
+  BellRing,
+  Calendar,
+  Plus,
+  Trash2,
+  MoreVertical,
+  ExternalLink,
 } from "./ui/icons";
 
 import "./Navbar.css";
@@ -17,12 +24,75 @@ export default function Navbar() {
   const navigate = useNavigate();
   const location = useLocation();
 
+  const [reminders, setReminders] = useState([]);
+  const [showReminders, setShowReminders] = useState(false);
+  const [activeMenu, setActiveMenu] = useState(null);
+
   const openResults = () => {
     navigate("/results");
   };
 
+  const loadReminders = async () => {
+    try {
+      const response = await fetch("http://127.0.0.1:8000/reminders");
+      const data = await response.json();
+      setReminders(data);
+    } catch (error) {
+      console.error("Failed to load reminders", error);
+    }
+  };
+
+ useEffect(() => {
+
+  loadReminders();
+
+  const interval = setInterval(loadReminders, 30000);
+
+  const handleReminderUpdate = () => {
+    loadReminders();
+  };
+
+  window.addEventListener(
+    "remindersUpdated",
+    handleReminderUpdate
+  );
+
+  return () => {
+
+    clearInterval(interval);
+
+    window.removeEventListener(
+      "remindersUpdated",
+      handleReminderUpdate
+    );
+
+  };
+
+}, []);
+
+ const openTask = (reminder) => {
+
+  navigate(
+
+    `/results/${reminder.session_id}`,
+
+    {
+      state: {
+        highlightActionId: reminder.action_id,
+      },
+    }
+
+  );
+
+  setShowReminders(false);
+
+  setActiveMenu(null);
+
+};
+
   return (
     <nav className="navbar">
+
       {/* Logo */}
       <div
         className="nav-logo"
@@ -49,6 +119,7 @@ export default function Navbar() {
       </div>
 
       {/* Navigation */}
+
       <div
         className="nav-links"
         style={{
@@ -57,7 +128,7 @@ export default function Navbar() {
           gap: "12px",
         }}
       >
-        <Button
+              <Button
           size="sm"
           variant={location.pathname === "/" ? "primary" : "ghost"}
           icon={<House size={18} />}
@@ -117,7 +188,128 @@ export default function Navbar() {
         >
           Sessions
         </Button>
+
+        {/* Reminder Bell */}
+
+        <div
+          className="notificationBell"
+          onClick={() => {
+            setShowReminders(!showReminders);
+            setActiveMenu(null);
+          }}
+        >
+          <BellRing size={20} />
+
+          {reminders.length > 0 && (
+            <span className="notificationCount">
+              {reminders.length}
+            </span>
+          )}
+        </div>
+
+        {/* Reminder Popup */}
+
+        {showReminders && (
+
+          <div className="reminderPopup">
+
+            <div className="reminderPopupHeader">
+
+              <span
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "8px",
+                }}
+              >
+                <BellRing size={18} />
+                Reminders
+              </span>
+
+              <span className="reminderCount">
+                {reminders.length}
+              </span>
+
+            </div>
+
+            {reminders.length === 0 ? (
+
+              <div className="emptyReminder">
+                You're all caught up.
+              </div>
+
+            ) : (
+
+              reminders.map((reminder) => (
+
+                <div
+                  key={reminder.id}
+                  className="reminderCard"
+                >
+
+                  <div className="reminderHeader">
+
+                    <div>
+
+                      <div className="reminderTitle">
+                        {reminder.title}
+                      </div>
+
+                      <div
+    className={
+        reminder.is_default
+            ? "autoReminderBadge"
+            : "manualReminderBadge"
+    }
+>
+
+    {reminder.is_default
+        ? "Auto Reminder"
+        : "Custom Reminder"}
+
+</div>
+
+                    </div>
+                                        
+
+                  </div>
+
+                  <div className="reminderDue">
+
+                    🕒{" "}
+
+                    {new Date(
+                      reminder.due_date
+                    ).toLocaleString()}
+
+                  </div>
+
+                  <button
+                    className="openReminder"
+                    onClick={() => openTask(reminder)}
+                  >
+                    <ExternalLink size={16} />
+
+                    <span>
+                      Open Task
+                    </span>
+
+                  </button>
+
+                </div>
+
+              ))
+
+            )}
+
+          </div>
+
+        )}
+
       </div>
+
     </nav>
+
   );
+
 }

@@ -1,0 +1,489 @@
+/* ==========================================
+   Reminder Panel
+========================================== */
+
+.reminderPanel{
+
+    margin-top:18px;
+
+    border:1px solid #22314D;
+
+    border-radius:16px;
+
+    background:#101827;
+
+    overflow:hidden;
+
+    transition:.25s;
+
+    font-family:"Space Mono", monospace;
+
+    color:#E8EEF9;
+
+}
+
+.reminderPanel:hover{
+
+    border-color:#2E4C75;
+
+}
+
+
+/* ==========================================
+   Header
+========================================== */
+
+.reminderPanelHeader{
+
+    width:100%;
+
+    display:flex;
+
+    justify-content:space-between;
+
+    align-items:center;
+
+    padding:16px 18px;
+
+    background:none;
+
+    border:none;
+
+    cursor:pointer;
+
+    transition:.2s;
+
+    color:#E8EEF9;
+
+    font-family:"Space Mono", monospace;
+
+}
+
+.reminderPanelHeader:hover{
+
+    background:#141F31;
+
+}
+
+.reminderPanelTitle{
+
+    display:flex;
+
+    align-items:center;
+
+    gap:10px;
+
+    font-size:14px;
+
+    font-weight:700;
+
+    color:#E8EEF9;
+
+    font-family:"Space Mono", monospace;
+
+}
+
+.reminderPanelTitle svg{
+
+    color:#4F8CFF;
+
+}
+
+
+/* ==========================================
+   Body
+========================================== */
+
+.reminderPanelBody{
+
+    border-top:1px solid #22314D;
+
+    padding:10px;
+
+}
+
+
+/* ==========================================
+   Reminder Item
+========================================== */
+
+.reminderItem{
+
+    display:flex;
+
+    justify-content:space-between;
+
+    align-items:center;
+
+    padding:14px;
+
+    margin-bottom:8px;
+
+    border-radius:12px;
+
+    transition:.2s;
+
+}
+
+.reminderItem:last-of-type{
+
+    margin-bottom:10px;
+
+}
+
+.reminderItem:hover{
+
+    background:#162339;
+
+}
+
+.reminderLabel{
+
+    font-family:"Space Mono", monospace;
+
+    font-size:13px;
+
+    font-weight:700;
+
+    color:#FFFFFF;
+
+}
+
+.reminderTime{
+
+    margin-top:4px;
+
+    font-family:"Space Mono", monospace;
+
+    font-size:12px;
+
+    color:#9DB2D3;
+
+}
+
+
+/* ==========================================
+   Reminder Menu Button
+========================================== */
+
+.reminderMore{
+
+    width:34px;
+
+    height:34px;
+
+    display:flex;
+
+    align-items:center;
+
+    justify-content:center;
+
+    border:none;
+
+    border-radius:10px;
+
+    background:transparent;
+
+    color:#8EA4C9;
+
+    cursor:pointer;
+
+    transition:.2s;
+
+}
+
+.reminderMore:hover{
+
+    background:#24344F;
+
+    color:white;
+
+}
+
+
+/* ==========================================
+   Add Reminder
+========================================== */
+
+.addReminderButton{
+
+    width:100%;
+
+    display:flex;
+
+    justify-content:center;
+
+    align-items:center;
+
+    gap:8px;
+
+    margin-top:4px;
+
+    padding:12px;
+
+    border:1.5px dashed #355784;
+
+    border-radius:12px;
+
+    background:transparent;
+
+    color:#7FAEFF;
+
+    cursor:pointer;
+
+    transition:.25s;
+
+    font-family:"Space Mono", monospace;
+
+    font-size:13px;
+
+    font-weight:700;
+
+}
+
+.addReminderButton:hover{
+
+    background:#162339;
+
+    border-color:#4F8CFF;
+
+    color:#FFFFFF;
+
+}
+
+
+/* ==========================================
+   Divider
+========================================== */
+
+.reminderItem + .reminderItem{
+
+    border-top:1px solid rgba(255,255,255,.05);
+
+    padding-top:16px;
+
+}
+
+
+/* ==========================================
+   Inputs (Future Add Reminder UI)
+========================================== */
+
+.reminderPanel input,
+
+.reminderPanel select{
+
+    width:100%;
+
+    padding:10px 12px;
+
+    margin-top:8px;
+
+    border-radius:10px;
+
+    border:1px solid #2B3F60;
+
+    background:#141F31;
+
+    color:white;
+
+    font-family:"Space Mono", monospace;
+
+    outline:none;
+
+}
+
+.reminderPanel input:focus,
+
+.reminderPanel select:focus{
+
+    border-color:#4F8CFF;
+
+}
+/* ==========================================
+   Delete Confirmation
+========================================== */
+
+.deleteReminderConfirm{
+
+    margin-top:14px;
+
+    padding:14px;
+
+    border-radius:14px;
+
+    background:#141F31;
+
+    border:1px solid #2D466E;
+
+    animation:fadeDelete .18s ease;
+
+}
+
+@keyframes fadeDelete{
+
+    from{
+
+        opacity:0;
+
+        transform:translateY(-4px);
+
+    }
+
+    to{
+
+        opacity:1;
+
+        transform:translateY(0);
+
+    }
+
+}
+
+.deleteReminderHeader{
+
+    display:flex;
+
+    align-items:center;
+
+    gap:10px;
+
+    color:#E8EEF9;
+
+    font-weight:600;
+
+    margin-bottom:8px;
+
+}
+
+.deleteReminderIcon{
+
+    color:#F59E0B;
+
+    flex-shrink:0;
+
+}
+
+.deleteReminderText{
+
+    color:#9DB2D3;
+
+    font-size:13px;
+
+    line-height:1.5;
+
+    margin-bottom:14px;
+
+}
+
+.deleteReminderButtons{
+
+    display:flex;
+
+    justify-content:flex-end;
+
+    gap:10px;
+
+}
+
+.cancelDeleteReminder{
+
+    background:#17253A;
+
+    color:#D8E5FF;
+
+    border:1px solid #2D466E;
+
+    border-radius:10px;
+
+    padding:8px 16px;
+
+    cursor:pointer;
+
+    transition:.2s;
+
+}
+
+.cancelDeleteReminder:hover{
+
+    background:#20324D;
+
+}
+
+.confirmDeleteReminder{
+
+    background:#B91C1C;
+
+    color:white;
+
+    border:none;
+
+    border-radius:10px;
+
+    padding:8px 16px;
+
+    cursor:pointer;
+
+    transition:.2s;
+
+}
+
+.confirmDeleteReminder:hover{
+
+    background:#991B1B;
+
+}
+
+
+/* ==========================================
+   Dropdown Improvements
+========================================== */
+
+.reminderDropdown button{
+
+    display:flex;
+
+    align-items:center;
+
+    gap:10px;
+
+}
+
+.reminderDropdown svg{
+
+    flex-shrink:0;
+
+}
+
+.snoozeDropdown button{
+
+    text-align:left;
+
+}
+/* ==========================================
+   Reschedule Reminder
+========================================== */
+
+.rescheduleReminderForm{
+
+    margin-top:14px;
+
+    padding:16px;
+
+    border:1px solid #2D466E;
+
+    border-radius:14px;
+
+    background:#141F31;
+
+    animation:fadeDelete .2s ease;
+
+}
+
+.rescheduleReminderForm input{
+
+    width:100%;
+
+    margin-top:8px;
+
+}

@@ -7,6 +7,7 @@ import PriorityBadge from "./PriorityBadge";
 import EmptySection from "./EmptySection";
 import ActionButtons from "./ActionButtons";
 import { useNavigate } from "react-router-dom"; 
+import ReminderPanel from "../ReminderPanel";
 import {
     CheckSquare,
     User,
@@ -666,10 +667,15 @@ const navigate = useNavigate();
                                         }
 
                                     />
+                                    
 
                                 )
 
                             }
+                            <ReminderPanel
+    actionId={task.id}
+    dueDate={task.due_date}
+/>
 
                         </EditableCard>
 

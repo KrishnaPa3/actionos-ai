@@ -290,12 +290,66 @@ async def upload_audio(file: UploadFile = File(...)):
 
             )
 
-            (
+            action_response = (
                 supabase
                 .table("actions")
                 .insert(action_payload)
                 .execute()
             )
+
+            new_action = action_response.data[0]
+
+            print("\n========================")
+            print("NEW ACTION")
+            print("========================")
+            print(new_action)
+
+            # ------------------------------------------
+            # Create default reminder (1 hour before)
+            # ------------------------------------------
+
+            if new_action.get("due_date"):
+
+                print("CREATING DEFAULT REMINDER...")
+
+                try:
+
+                    due_time = datetime.fromisoformat(
+                        new_action["due_date"].replace("Z", "+00:00")
+                    )
+
+                    reminder_time = due_time - timedelta(hours=1)
+
+                    now = datetime.now(timezone.utc)
+
+                    # If reminder would already be in the past,
+                    # schedule it 1 minute from now.
+                    if reminder_time <= now:
+
+                        reminder_time = (
+                            now + timedelta(minutes=1)
+                        )
+
+                    (
+                        supabase
+                        .table("reminders")
+                        .insert({
+    "action_id": new_action["id"],
+    "reminder_time": reminder_time.isoformat(),
+    "label": "Due Soon",
+    "is_default": True
+})
+                        .execute()
+                    )
+
+                    print("Default reminder created.")
+
+                except Exception as e:
+
+                    print(
+                        "Reminder creation failed:",
+                        e
+                    )
 
         # --------------------------------------------------
         # STEP 5 - Save risks
@@ -341,43 +395,8 @@ async def upload_audio(file: UploadFile = File(...)):
 
                 "confidence": decision.get("confidence", 0.0),
 
-                "decision_status": "pending"
-
-            }
-
-            (
-                supabase
-                .table("decisions")
-                .insert(decision_payload)
-                .execute()
-            )
-
-        # --------------------------------------------------
-        # STEP 7 - Verify save
-        # --------------------------------------------------
-
-        verify = (
-            supabase
-            .table("sessions")
-            .select("*")
-            .eq("id", session_id)
-            .execute()
-        )
-
-        print("\nSaved Session:")
-        print(verify.data)
-    except Exception:
-
-        print("\n========== DATABASE ERROR ==========")
-
-        import traceback
-        traceback.print_exc()
-
-        return {
-
-            "success": False,
-
-            "message": "Failed to save meeting."
+                "decision_status": "pending",
+                "message" : "Failed to save meeting."
 
         }
 
@@ -433,7 +452,14 @@ class UpdateDecisionRequest(BaseModel):
     title: str
     reason: str | None = None
     confidence: float
-
+class ReminderCreate(BaseModel):
+    label: str
+    reminder_time: str
+class ReminderUpdate(BaseModel):
+    reminder_time: str
+class SnoozeRequest(BaseModel):
+    duration: str
+    custom_time: str | None = None
 
 # ----------------------------------------------------
 # Extract Endpoint
@@ -641,6 +667,87 @@ async def get_all_actions(
         "count": len(response.data),
         "actions": response.data
     }
+@app.post("/reminders/{reminder_id}/snooze")
+async def snooze_reminder(
+    reminder_id: str,
+    request: SnoozeRequest
+):
+
+    now = datetime.now(timezone.utc)
+
+    if request.duration == "15m":
+        new_time = now + timedelta(minutes=15)
+
+    elif request.duration == "30m":
+        new_time = now + timedelta(minutes=30)
+
+    elif request.duration == "1h":
+        new_time = now + timedelta(hours=1)
+
+    elif request.duration == "tomorrow":
+
+        tomorrow = now + timedelta(days=1)
+
+        new_time = tomorrow.replace(
+            hour=9,
+            minute=0,
+            second=0,
+            microsecond=0,
+        )
+
+    elif request.duration == "custom":
+
+        if not request.custom_time:
+
+            raise HTTPException(
+                status_code=400,
+                detail="custom_time required"
+            )
+
+        new_time = datetime.fromisoformat(
+            request.custom_time.replace("Z", "+00:00")
+        )
+
+    else:
+
+        raise HTTPException(
+            status_code=400,
+            detail="Invalid snooze option"
+        )
+
+    response = (
+        supabase
+        .table("reminders")
+        .update({
+            "reminder_time": new_time.isoformat(),
+            "dismissed": False,
+            "updated_at": now.isoformat(),
+        })
+        .eq("id", reminder_id)
+        .execute()
+    )
+
+    return response.data[0]
+@app.post("/actions/{action_id}/reminders")
+async def create_reminder(
+    action_id: str,
+    reminder: ReminderCreate
+):
+
+    response = (
+        supabase
+        .table("reminders")
+        .insert({
+    "action_id": action_id,
+    "label": reminder.label,
+    "reminder_time": reminder.reminder_time,
+    "dismissed": False,
+    "is_default": False,
+})
+        .execute()
+    )
+
+    return response.data[0]
 @app.get("/actions/filters")
 async def get_action_filters():
 
@@ -672,6 +779,73 @@ async def get_action_filters():
         "owners": owners,
         "sessions": session_response.data
     }
+@app.get("/reminders")
+async def get_reminders():
+
+    now = datetime.now(timezone.utc)
+    next_24h = now + timedelta(hours=24)
+
+    response = (
+        supabase
+        .table("reminders")
+        .select("""
+            *,
+            actions(
+                id,
+                title,
+                owner,
+                priority,
+                status,
+                due_date,
+                session_id,
+                sessions(
+                    meeting_name
+                )
+            )
+        """)
+        .eq("dismissed", False)
+        .or_(
+            f"and(is_default.eq.true,reminder_time.lte.{next_24h.isoformat()}),is_default.eq.false"
+        )
+        .execute()
+    )
+
+    reminders = []
+
+    for reminder in response.data:
+
+        action = reminder.get("actions") or {}
+        session = action.get("sessions") or {}
+
+        reminders.append({
+
+    "id": reminder["id"],
+
+    "action_id": action.get("id"),
+
+    "session_id": action.get("session_id"),
+
+    "title": action.get("title"),
+
+    "owner": action.get("owner"),
+
+    "priority": action.get("priority"),
+
+    "status": action.get("status"),
+
+    "due_date": action.get("due_date"),
+
+    "reminder_time": reminder["reminder_time"],
+
+    "label": reminder.get("label"),
+
+    "meeting_name": session.get("meeting_name"),
+
+    "is_default": reminder.get("is_default", False),
+
+})
+
+    return reminders
 @app.patch("/actions/{action_id}/complete")
 async def complete_action(action_id: str):
 
@@ -715,6 +889,52 @@ async def complete_action(action_id: str):
         .eq("id", action_id)
         .execute()
     )
+
+    # ------------------------------------
+    # Reminder handling
+    # ------------------------------------
+
+    if new_status == "completed":
+
+        (
+            supabase
+            .table("reminders")
+            .delete()
+            .eq("action_id", action_id)
+            .execute()
+        )
+
+    elif new_status == "pending":
+
+        if action.get("due_date"):
+
+            due_time = datetime.fromisoformat(
+                action["due_date"].replace("Z", "+00:00")
+            )
+
+            reminder_time = due_time - timedelta(hours=24)
+
+            now = datetime.now(timezone.utc)
+
+            if reminder_time <= now:
+
+                reminder_time = (
+                    now + timedelta(minutes=1)
+                )
+
+            (
+                supabase
+                .table("reminders")
+                .insert({
+                    "action_id": action_id,
+                    "label": "Due Soon",
+                    "reminder_time": reminder_time.isoformat(),
+                    "dismissed": False,
+                    "is_default": True,
+                })
+                .execute()
+            )
+
     print(update.data)
 
     return {
@@ -722,7 +942,45 @@ async def complete_action(action_id: str):
         "message": f"Task marked as {new_status}",
         "action": update.data[0]
     }
+@app.patch("/reminders/{reminder_id}")
+async def update_reminder(
+    reminder_id: str,
+    reminder: ReminderUpdate
+):
 
+    response = (
+        supabase
+        .table("reminders")
+        .update({
+            "reminder_time": reminder.reminder_time,
+            "updated_at": datetime.now(timezone.utc).isoformat(),
+        })
+        .eq("id", reminder_id)
+        .execute()
+    )
+
+    if not response.data:
+        raise HTTPException(
+            status_code=404,
+            detail="Reminder not found"
+        )
+
+    return response.data[0]
+@app.get("/actions/{action_id}/reminders")
+async def get_action_reminders(action_id: str):
+
+    response = (
+        supabase
+        .table("reminders")
+        .select("*")
+        .eq("action_id", action_id)
+        .order("reminder_time")
+        .execute()
+    )
+
+    return {
+        "reminders": response.data
+    }
 @app.patch("/actions/{action_id}")
 async def update_action(
     action_id: str,
@@ -788,6 +1046,20 @@ async def delete_action(action_id: str):
         "success": True,
         "message": "Task deleted",
         "action": update.data[0]
+    }
+@app.delete("/reminders/{reminder_id}")
+async def delete_reminder(reminder_id: str):
+
+    (
+        supabase
+        .table("reminders")
+        .delete()
+        .eq("id", reminder_id)
+        .execute()
+    )
+
+    return {
+        "success": True
     }
 @app.get("/session/{session_id}/risks")
 async def get_session_risks(session_id: str):

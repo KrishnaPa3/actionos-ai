@@ -113,10 +113,15 @@ async function completeTask(task) {
 
         await loadMeeting();
 
-        setToast({
-            message: "Task completed",
-            type: "success"
-        });
+// Tell the Navbar that reminders changed
+window.dispatchEvent(
+    new Event("remindersUpdated")
+);
+
+setToast({
+    message: "Task completed",
+    type: "success"
+});
 
         setTimeout(() => {
 

@@ -27,6 +27,7 @@ const navigate = useNavigate();
       {tasks.map((task) => (
        <TaskRow
     key={task.id}
+    actionId={task.id}
     type="task"
     title={task.title}
     priority={task.priority}

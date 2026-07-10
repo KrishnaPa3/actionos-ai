@@ -1,6 +1,7 @@
 import { useNavigate } from "react-router-dom";
 
 import Button from "../ui/Button";
+import ReminderPanel from "../ReminderPanel";
 
 import {
   ListChecks,
@@ -18,6 +19,7 @@ import {
 import "./TaskRow.css";
 
 export default function TaskRow({
+  actionId,
   type = "task",
   title,
   priority = "Medium",
@@ -30,13 +32,15 @@ export default function TaskRow({
   const navigate = useNavigate();
 
   const isReminder = type === "reminder";
-const formattedDueDate = dueDate
-  ? new Date(dueDate).toLocaleDateString("en-GB", {
-      day: "2-digit",
-      month: "2-digit",
-      year: "2-digit",
-    })
-  : "No Due Date";
+
+  const formattedDueDate = dueDate
+    ? new Date(dueDate).toLocaleDateString("en-GB", {
+        day: "2-digit",
+        month: "2-digit",
+        year: "2-digit",
+      })
+    : "No Due Date";
+
   const openSourceMeeting = () => {
     if (!sessionId) return;
 
@@ -97,6 +101,14 @@ const formattedDueDate = dueDate
 
         </div>
 
+        {/* Reminder Panel */}
+        {!isReminder && (
+          <ReminderPanel
+            actionId={actionId}
+            dueDate={dueDate}
+          />
+        )}
+
       </div>
 
       {/* RIGHT */}
@@ -141,6 +153,7 @@ const formattedDueDate = dueDate
         </div>
 
       </div>
+
     </article>
   );
 }

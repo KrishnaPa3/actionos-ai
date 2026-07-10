@@ -1,4 +1,5 @@
 .navbar{
+
     background:#0B1120;
 
     display:flex;
@@ -16,6 +17,7 @@
     top:0;
 
     z-index:1000;
+
 }
 
 .nav-logo{
@@ -29,13 +31,19 @@
     letter-spacing:3px;
 
     cursor:pointer;
+
 }
 
 .nav-links{
 
     display:flex;
 
+    align-items:center;
+
     gap:18px;
+
+    position:relative;
+
 }
 
 .nav-links button{
@@ -53,14 +61,392 @@
     font-size:.9rem;
 
     transition:.25s;
+
 }
 
 .nav-links button:hover{
 
     color:#4F8CFF;
+
 }
 
 .active{
 
     color:#4F8CFF !important;
+
+}
+
+
+/* ===========================================
+   Notification Bell
+=========================================== */
+
+.notificationBell{
+
+    position:relative;
+
+    width:44px;
+
+    height:44px;
+
+    display:flex;
+
+    align-items:center;
+
+    justify-content:center;
+
+    border-radius:12px;
+
+    cursor:pointer;
+
+    font-size:22px;
+
+    transition:.25s;
+
+    color:#d7e3ff;
+
+}
+
+.notificationBell:hover{
+
+    background:#172238;
+
+}
+
+.notificationCount{
+
+    position:absolute;
+
+    top:-4px;
+
+    right:-2px;
+
+    min-width:18px;
+
+    height:18px;
+
+    padding:0 5px;
+
+    display:flex;
+
+    justify-content:center;
+
+    align-items:center;
+
+    border-radius:999px;
+
+    background:#ef4444;
+
+    color:white;
+
+    font-size:11px;
+
+    font-weight:700;
+
+}
+
+
+/* ===========================================
+   Reminder Popup
+=========================================== */
+
+.reminderPopup{
+
+    position:absolute;
+
+    top:72px;
+
+    right:0;
+
+    width:380px;
+
+    background:#111827;
+
+    border:1px solid #25314b;
+
+    border-radius:18px;
+
+    overflow:hidden;
+
+    box-shadow:
+        0 24px 60px rgba(0,0,0,.45);
+
+    animation:popupFade .18s ease;
+
+    z-index:9999;
+
+}
+
+@keyframes popupFade{
+
+    from{
+
+        opacity:0;
+
+        transform:translateY(-10px);
+
+    }
+
+    to{
+
+        opacity:1;
+
+        transform:translateY(0);
+
+    }
+
+}
+
+
+/* ===========================================
+   Header
+=========================================== */
+
+.reminderPopupHeader{
+
+    display:flex;
+
+    justify-content:space-between;
+
+    align-items:center;
+
+    padding:18px 22px;
+
+    border-bottom:1px solid #25314b;
+
+    color:white;
+
+    font-weight:700;
+
+    font-size:18px;
+
+}
+
+.reminderPopupHeader .reminderCount{
+
+    position:static;
+
+    width:26px;
+
+    height:26px;
+
+    border-radius:999px;
+
+    background:#2563eb;
+
+    color:white;
+
+    display:flex;
+
+    align-items:center;
+
+    justify-content:center;
+
+    font-size:13px;
+
+}
+
+
+/* ===========================================
+   Empty State
+=========================================== */
+
+.emptyReminder{
+
+    padding:40px 20px;
+
+    text-align:center;
+
+    color:#8ea2c8;
+
+    font-size:15px;
+
+}
+
+
+/* ===========================================
+   Reminder Card
+=========================================== */
+
+.reminderCard{
+
+    padding:18px 22px;
+
+    border-bottom:1px solid #25314b;
+
+    transition:.2s;
+
+}
+
+.reminderCard:last-child{
+
+    border-bottom:none;
+
+}
+
+.reminderCard:hover{
+
+    background:#162035;
+
+}
+
+
+/* ===========================================
+   Card Header
+=========================================== */
+
+.reminderHeader{
+
+    display:flex;
+
+    justify-content:space-between;
+
+    align-items:flex-start;
+
+}
+
+.reminderTitle{
+
+    color:white;
+
+    font-size:15px;
+
+    font-weight:700;
+
+    line-height:1.4;
+
+}
+
+.reminderMeeting{
+
+    margin-top:6px;
+
+    color:#8ea2c8;
+
+    font-size:13px;
+
+}
+
+.reminderDue{
+
+    margin-top:14px;
+
+    color:#c8d6f0;
+
+    font-size:13px;
+
+}
+
+
+/* ===========================================
+   3 Dot Menu
+=========================================== */
+
+.reminderMenu{
+
+    width:34px;
+
+    height:34px;
+
+    border:none;
+
+    background:transparent;
+
+    border-radius:10px;
+
+    color:#8ea2c8;
+
+    cursor:pointer;
+
+    font-size:18px;
+
+    transition:.2s;
+
+}
+
+.reminderMenu:hover{
+
+    background:#24344f;
+
+    color:white;
+
+}
+
+
+/* ===========================================
+   Open Button
+=========================================== */
+
+.openReminder{
+
+    width:100%;
+
+    margin-top:16px;
+
+    padding:11px;
+
+    border:none;
+
+    border-radius:10px;
+
+    background:#2563eb;
+
+    color:white;
+
+    font-weight:600;
+
+    cursor:pointer;
+
+    transition:.25s;
+
+}
+
+.openReminder:hover{
+
+    background:#1d4ed8;
+
+    transform:translateY(-1px);
+
+}
+
+.openReminder:active{
+
+    transform:translateY(0);
+
+}
+.autoReminderBadge,
+.manualReminderBadge {
+
+    display:inline-flex;
+
+    align-items:center;
+
+    margin-top:6px;
+
+    padding:4px 10px;
+
+    border-radius:999px;
+
+    font-size:11px;
+
+    font-weight:600;
+
+    letter-spacing:.3px;
+
+}
+
+.autoReminderBadge{
+
+    background:#1F2F4D;
+
+    color:#69A7FF;
+
+}
+
+.manualReminderBadge{
+
+    background:#203326;
+
+    color:#6EDB91;
+
 }
