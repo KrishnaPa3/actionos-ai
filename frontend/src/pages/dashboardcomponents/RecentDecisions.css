@@ -1,0 +1,199 @@
+.recentDecisionsCard{
+
+    display:flex;
+
+    flex-direction:column;
+
+    background:#101827;
+
+    border:1px solid #22314D;
+
+    border-radius:16px;
+
+    padding:24px;
+
+    min-height:0;
+
+}
+
+.recentDecisionsHeader{
+
+    display:flex;
+
+    justify-content:space-between;
+
+    align-items:center;
+
+    margin-bottom:20px;
+
+    flex-shrink:0;
+
+}
+
+.recentDecisionsHeader h2{
+
+    margin:0;
+
+    color:#E8EEF9;
+
+    font-size:1.25rem;
+
+}
+
+.recentDecisionsHeader span{
+
+    color:#94A3B8;
+
+    font-size:.9rem;
+
+}
+
+.recentDecisionsBody{
+
+    max-height:310px;
+
+    overflow-y:auto;
+
+    padding-right:6px;
+
+}
+
+.recentDecisionsBody::-webkit-scrollbar{
+
+    width:6px;
+
+}
+
+.recentDecisionsBody::-webkit-scrollbar-track{
+
+    background:transparent;
+
+}
+
+.recentDecisionsBody::-webkit-scrollbar-thumb{
+
+    background:#2F4364;
+
+    border-radius:999px;
+
+}
+
+.recentDecisionsBody::-webkit-scrollbar-thumb:hover{
+
+    background:#4B6B9A;
+
+}
+
+.decisionCard{
+
+    padding:16px 18px;
+
+    margin-bottom:14px;
+
+    background:#151F2F;
+
+    border-left:4px solid;
+
+    border-radius:10px;
+
+    transition:.2s ease;
+
+    cursor:pointer;
+
+}
+
+.decisionCard:last-child{
+
+    margin-bottom:0;
+
+}
+
+.decisionCard:hover{
+
+    transform:translateX(5px);
+
+}
+
+.decisionCard.accepted{
+
+    border-color:#22C55E;
+
+}
+
+.decisionCard.pending{
+
+    border-color:#F59E0B;
+
+}
+
+.decisionCard.rejected{
+
+    border-color:#EF4444;
+
+}
+
+.decisionStatus{
+
+    display:flex;
+
+    align-items:center;
+
+    gap:6px;
+
+    margin-bottom:10px;
+
+    font-size:.8rem;
+
+    font-weight:600;
+
+}
+
+.accepted .decisionStatus{
+
+    color:#4ADE80;
+
+}
+
+.pending .decisionStatus{
+
+    color:#FBBF24;
+
+}
+
+.rejected .decisionStatus{
+
+    color:#F87171;
+
+}
+
+.decisionCard h3{
+
+    margin:0;
+
+    color:#E8EEF9;
+
+    font-size:1rem;
+
+    font-weight:600;
+
+}
+
+.decisionCard p{
+
+    margin-top:8px;
+
+    color:#94A3B8;
+
+    font-size:.9rem;
+
+}
+
+.emptyDecisions{
+
+    text-align:center;
+
+    padding:40px 0;
+
+    color:#94A3B8;
+
+}

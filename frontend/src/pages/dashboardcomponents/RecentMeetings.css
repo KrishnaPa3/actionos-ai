@@ -1,0 +1,145 @@
+.recentMeetingsCard{
+
+    background:#101827;
+
+    border:1px solid #22314D;
+
+    border-radius:16px;
+
+    padding:24px;
+
+}
+
+.recentMeetingsHeader{
+
+    display:flex;
+
+    justify-content:space-between;
+
+    align-items:center;
+
+    margin-bottom:20px;
+
+}
+
+.recentMeetingsHeader h2{
+
+    margin:0;
+
+    color:#E8EEF9;
+
+    font-size:1.25rem;
+
+}
+
+.recentMeetingsHeader span{
+
+    color:#94A3B8;
+
+    font-size:.9rem;
+
+}
+
+.meetingCard{
+
+    padding:18px 0;
+
+    border-top:1px solid #22314D;
+
+    cursor:pointer;
+
+    transition:.2s ease;
+
+}
+
+.meetingCard:first-of-type{
+
+    border-top:none;
+
+}
+
+.meetingCard:hover{
+
+    transform:translateX(5px);
+
+}
+
+.meetingTitle{
+
+    display:flex;
+
+    align-items:center;
+
+    gap:10px;
+
+}
+
+.meetingTitle svg{
+
+    color:#60A5FA;
+
+    flex-shrink:0;
+
+}
+
+.meetingTitle h3{
+
+    margin:0;
+
+    color:#E8EEF9;
+
+    font-size:1rem;
+
+    font-weight:600;
+
+}
+
+.meetingCard p{
+
+    margin:8px 0 12px 28px;
+
+    color:#94A3B8;
+
+    font-size:.9rem;
+
+}
+
+.meetingStats{
+
+    display:flex;
+
+    gap:18px;
+
+    margin-left:28px;
+
+}
+
+.meetingStats span{
+
+    display:flex;
+
+    align-items:center;
+
+    gap:6px;
+
+    color:#94A3B8;
+
+    font-size:.82rem;
+
+}
+
+.meetingStats svg{
+
+    color:#64748B;
+
+}
+
+.emptyMeetings{
+
+    text-align:center;
+
+    padding:40px 0;
+
+    color:#94A3B8;
+
+}

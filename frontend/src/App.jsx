@@ -8,24 +8,35 @@ import SessionsPage from "./pages/SessionsPage";
 import TaskList from "./pages/TaskList";
 
 function App() {
-  return (
-    <BrowserRouter>
-      <Navbar />
+    return (
+        <BrowserRouter>
+            <Navbar />
 
-      <Routes>
-        <Route path="/" element={<VoiceRecorder />} />
+            <Routes>
 
-        <Route path="/results" element={<ResultsPage />} />
-        <Route path="/results/:sessionId" element={<ResultsPage />} />
+                {/* Dashboard (Landing Page) */}
+                <Route path="/" element={<Dashboard />} />
+                <Route path="/dashboard" element={<Dashboard />} />
 
-        <Route path="/dashboard" element={<Dashboard />} />
+                {/* Record Page */}
+                <Route path="/record" element={<VoiceRecorder />} />
 
-        <Route path="/tasks" element={<TaskList />} />
+                {/* Results */}
+                <Route path="/results" element={<ResultsPage />} />
+                <Route
+                    path="/results/:sessionId"
+                    element={<ResultsPage />}
+                />
 
-        <Route path="/sessions" element={<SessionsPage />} />
-      </Routes>
-    </BrowserRouter>
-  );
+                {/* Tasks */}
+                <Route path="/tasks" element={<TaskList />} />
+
+                {/* Meetings */}
+                <Route path="/sessions" element={<SessionsPage />} />
+
+            </Routes>
+        </BrowserRouter>
+    );
 }
 
 export default App;

@@ -1,0 +1,28 @@
+.dashboardHeader{
+    display:flex;
+    justify-content:center;
+    align-items:center;
+
+    padding:32px 28px;
+
+    background:#101827;
+    border:1px solid #22314D;
+    border-radius:18px;
+}
+
+.dashboardGreeting{
+    text-align:center;
+}
+
+.dashboardGreeting h1{
+    margin:0;
+    font-size:2rem;
+    color:#E8EEF9;
+    font-weight:700;
+}
+
+.dashboardGreeting p{
+    margin-top:8px;
+    color:#94A3B8;
+    font-size:0.95rem;
+}

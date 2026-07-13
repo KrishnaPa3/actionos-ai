@@ -1,6 +1,9 @@
 import "./ResultsPage.css";
-import { useParams, useNavigate } from "react-router-dom";
-import { useEffect, useState } from "react";
+import {
+    useParams,
+    useNavigate,
+    useLocation,
+} from "react-router-dom";import { useEffect, useState } from "react";
 
 import Card from "../components/ui/Card";
 import Button from "../components/ui/Button";
@@ -43,7 +46,7 @@ const [decisionToDelete, setDecisionToDelete] = useState(null);
 const [deletingActionPlan, setDeletingActionPlan] = useState(false);
 const [editingActionPlan, setEditingActionPlan] = useState(null);
 const [editingActionPlanIndex, setEditingActionPlanIndex] = useState(null);
-
+const location = useLocation();
   // -------------------------
   // Load Meeting
   // -------------------------
@@ -701,7 +704,38 @@ useEffect(() => {
 
     initialize();
 
-}, [sessionId]);
+}, [sessionId, navigate]);
+useEffect(() => {
+
+    if (!meeting) return;
+
+    if (location.state?.scrollTo) {
+
+        const section = document.getElementById(
+            location.state.scrollTo
+        );
+
+        if (section) {
+
+            setTimeout(() => {
+
+                section.scrollIntoView({
+                    behavior: "smooth",
+                    block: "start",
+                });
+
+            }, 150);
+
+            navigate(location.pathname, {
+                replace: true,
+                state: {},
+            });
+
+        }
+
+    }
+
+}, [meeting, location, navigate]);
 
 async function handleSaveActionPlan(updatedPlan) {
 
@@ -902,15 +936,20 @@ async function handleSaveActionPlan(updatedPlan) {
 
       </Card>
 
-      <Card style={{ marginBottom: "24px" }}>
+    <div id="tasks">
+
+    <Card style={{ marginBottom: "24px" }}>
 
         <TaskSection
-    tasks={actions}
-    onCompleteTask={completeTask}
-    onDeleteTask={setTaskToDelete}
-    onUpdateTask={updateTask}
-/>
-      </Card>
+            tasks={actions}
+            onCompleteTask={completeTask}
+            onDeleteTask={setTaskToDelete}
+            onUpdateTask={updateTask}
+        />
+
+    </Card>
+
+</div>
 
      
 
@@ -931,24 +970,21 @@ async function handleSaveActionPlan(updatedPlan) {
 />
 
 </Card>
-      <Card style={{ marginBottom: "24px" }}>
+<div id="decisions">
 
-       <DecisionSection
+    <Card style={{ marginBottom: "24px" }}>
 
-    decisions={decisions}
+        <DecisionSection
+            decisions={decisions}
+            onAcceptDecision={acceptDecision}
+            onRejectDecision={rejectDecision}
+            onEditDecision={setDecisionToEdit}
+            onDeleteDecision={setDecisionToDelete}
+        />
 
-    onAcceptDecision={acceptDecision}
+    </Card>
 
-    onRejectDecision={rejectDecision}
-
-    onEditDecision={setDecisionToEdit}
-
-    onDeleteDecision={setDecisionToDelete}
-
-/>
-
-      </Card>
-
+</div>
       <Card>
 
         <RiskSection

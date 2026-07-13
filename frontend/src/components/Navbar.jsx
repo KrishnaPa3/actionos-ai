@@ -5,17 +5,13 @@ import Button from "./ui/Button";
 
 import {
   Target,
-  House,
   LayoutDashboard,
   History,
   FileText,
   ListChecks,
   BellRing,
-  Calendar,
-  Plus,
-  Trash2,
-  MoreVertical,
   ExternalLink,
+  Mic,
 } from "./ui/icons";
 
 import "./Navbar.css";
@@ -42,58 +38,49 @@ export default function Navbar() {
     }
   };
 
- useEffect(() => {
-
-  loadReminders();
-
-  const interval = setInterval(loadReminders, 30000);
-
-  const handleReminderUpdate = () => {
+  useEffect(() => {
     loadReminders();
-  };
 
-  window.addEventListener(
-    "remindersUpdated",
-    handleReminderUpdate
-  );
+    const interval = setInterval(loadReminders, 30000);
 
-  return () => {
+    const handleReminderUpdate = () => {
+      loadReminders();
+    };
 
-    clearInterval(interval);
-
-    window.removeEventListener(
+    window.addEventListener(
       "remindersUpdated",
       handleReminderUpdate
     );
 
+    return () => {
+      clearInterval(interval);
+
+      window.removeEventListener(
+        "remindersUpdated",
+        handleReminderUpdate
+      );
+    };
+  }, []);
+
+  const openTask = (reminder) => {
+    navigate(
+      `/results/${reminder.session_id}`,
+      {
+        state: {
+          highlightActionId: reminder.action_id,
+        },
+      }
+    );
+
+    setShowReminders(false);
+    setActiveMenu(null);
   };
-
-}, []);
-
- const openTask = (reminder) => {
-
-  navigate(
-
-    `/results/${reminder.session_id}`,
-
-    {
-      state: {
-        highlightActionId: reminder.action_id,
-      },
-    }
-
-  );
-
-  setShowReminders(false);
-
-  setActiveMenu(null);
-
-};
 
   return (
     <nav className="navbar">
 
       {/* Logo */}
+
       <div
         className="nav-logo"
         onClick={() => navigate("/")}
@@ -128,14 +115,69 @@ export default function Navbar() {
           gap: "12px",
         }}
       >
-              <Button
+
+        {/* Dashboard */}
+
+        <Button
           size="sm"
-          variant={location.pathname === "/" ? "primary" : "ghost"}
-          icon={<House size={18} />}
+          variant={
+            location.pathname === "/" ||
+            location.pathname === "/dashboard"
+              ? "primary"
+              : "ghost"
+          }
+          icon={<LayoutDashboard size={18} />}
           onClick={() => navigate("/")}
         >
-          Home
+          Dashboard
         </Button>
+
+        {/* Record */}
+
+        <Button
+          size="sm"
+          variant={
+            location.pathname === "/record"
+              ? "primary"
+              : "ghost"
+          }
+          icon={<Mic size={18} />}
+          onClick={() => navigate("/record")}
+        >
+          Record
+        </Button>
+
+        {/* Meetings */}
+
+        <Button
+          size="sm"
+          variant={
+            location.pathname === "/sessions"
+              ? "primary"
+              : "ghost"
+          }
+          icon={<History size={18} />}
+          onClick={() => navigate("/sessions")}
+        >
+          Meetings
+        </Button>
+
+        {/* Tasks */}
+
+        <Button
+          size="sm"
+          variant={
+            location.pathname === "/tasks"
+              ? "primary"
+              : "ghost"
+          }
+          icon={<ListChecks size={18} />}
+          onClick={() => navigate("/tasks")}
+        >
+          Tasks
+        </Button>
+
+        {/* Results */}
 
         <Button
           size="sm"
@@ -148,45 +190,6 @@ export default function Navbar() {
           onClick={openResults}
         >
           Results
-        </Button>
-
-        <Button
-          size="sm"
-          variant={
-            location.pathname === "/dashboard"
-              ? "primary"
-              : "ghost"
-          }
-          icon={<LayoutDashboard size={18} />}
-          onClick={() => navigate("/dashboard")}
-        >
-          Dashboard
-        </Button>
-
-        <Button
-          size="sm"
-          variant={
-            location.pathname === "/tasks"
-              ? "primary"
-              : "ghost"
-          }
-          icon={<ListChecks size={18} />}
-          onClick={() => navigate("/tasks")}
-        >
-          Task List
-        </Button>
-
-        <Button
-          size="sm"
-          variant={
-            location.pathname === "/sessions"
-              ? "primary"
-              : "ghost"
-          }
-          icon={<History size={18} />}
-          onClick={() => navigate("/sessions")}
-        >
-          Sessions
         </Button>
 
         {/* Reminder Bell */}
@@ -206,8 +209,7 @@ export default function Navbar() {
             </span>
           )}
         </div>
-
-        {/* Reminder Popup */}
+                {/* Reminder Popup */}
 
         {showReminders && (
 
@@ -256,21 +258,20 @@ export default function Navbar() {
                       </div>
 
                       <div
-    className={
-        reminder.is_default
-            ? "autoReminderBadge"
-            : "manualReminderBadge"
-    }
->
+                        className={
+                          reminder.is_default
+                            ? "autoReminderBadge"
+                            : "manualReminderBadge"
+                        }
+                      >
 
-    {reminder.is_default
-        ? "Auto Reminder"
-        : "Custom Reminder"}
+                        {reminder.is_default
+                          ? "Auto Reminder"
+                          : "Custom Reminder"}
 
-</div>
+                      </div>
 
                     </div>
-                                        
 
                   </div>
 
@@ -305,8 +306,7 @@ export default function Navbar() {
           </div>
 
         )}
-
-      </div>
+              </div>
 
     </nav>
 

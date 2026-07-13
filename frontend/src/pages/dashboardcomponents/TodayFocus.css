@@ -1,0 +1,296 @@
+.todayFocusCard{
+
+    flex:1;
+
+    display:flex;
+
+    flex-direction:column;
+
+    height:100%;
+    min-height:0;
+
+    background:#101827;
+
+    border:1px solid #22314D;
+
+    border-radius:16px;
+
+    padding:24px;
+
+    box-sizing:border-box;
+
+}
+
+.todayFocusHeader{
+
+    display:flex;
+
+    justify-content:space-between;
+
+    align-items:center;
+
+    margin-bottom:20px;
+
+    flex-shrink:0;
+
+}
+
+.todayFocusHeader h2{
+
+    margin:0;
+
+    color:#E8EEF9;
+
+    font-size:1.3rem;
+
+}
+
+.todayFocusHeader span{
+
+    color:#94A3B8;
+
+    font-size:0.9rem;
+
+}
+
+.todayFocusBody{
+
+    flex:1;
+
+    min-height:0;
+
+    overflow-y:auto;
+
+    padding-right:6px;
+
+}
+
+.todayFocusBody::-webkit-scrollbar{
+
+    width:6px;
+
+}
+
+.todayFocusBody::-webkit-scrollbar-track{
+
+    background:transparent;
+
+}
+
+.todayFocusBody::-webkit-scrollbar-thumb{
+
+    background:#2F4364;
+
+    border-radius:999px;
+
+}
+
+.todayFocusBody::-webkit-scrollbar-thumb:hover{
+
+    background:#4B6B9A;
+
+}
+
+.focusTask{
+
+    padding:18px 0;
+
+    border-top:1px solid #22314D;
+
+    cursor:pointer;
+
+    transition:.2s ease;
+
+    flex-shrink:0;
+
+}
+
+.focusTask:first-of-type{
+
+    border-top:none;
+
+}
+
+.focusTask:hover{
+
+    transform:translateY(-2px);
+
+}
+
+.focusTaskTop{
+
+    display:flex;
+
+    justify-content:space-between;
+
+    align-items:center;
+
+    gap:16px;
+
+}
+
+.taskTitleGroup{
+
+    display:flex;
+
+    align-items:center;
+
+    gap:12px;
+
+}
+
+.taskTitleGroup h3{
+
+    margin:0;
+
+    color:#E8EEF9;
+
+    font-size:1rem;
+
+    font-weight:600;
+
+}
+
+.taskRight{
+
+    display:flex;
+
+    align-items:center;
+
+    gap:10px;
+
+}
+
+.taskMeta{
+
+    display:flex;
+
+    gap:24px;
+
+    margin:12px 0 8px;
+
+    color:#94A3B8;
+
+    font-size:0.9rem;
+
+}
+
+.focusTask small{
+
+    color:#64748B;
+
+    font-size:0.8rem;
+
+}
+
+.priorityDot{
+
+    width:10px;
+
+    height:10px;
+
+    border-radius:50%;
+
+    flex-shrink:0;
+
+}
+
+.priorityDot.high{
+
+    background:#EF4444;
+
+}
+
+.priorityDot.medium{
+
+    background:#F59E0B;
+
+}
+
+.priorityDot.low{
+
+    background:#3B82F6;
+
+}
+
+.priorityBadge{
+
+    padding:4px 10px;
+
+    border-radius:999px;
+
+    font-size:0.72rem;
+
+    font-weight:600;
+
+    text-transform:uppercase;
+
+}
+
+.priorityBadge.high{
+
+    background:rgba(239,68,68,.15);
+
+    color:#FCA5A5;
+
+}
+
+.priorityBadge.medium{
+
+    background:rgba(245,158,11,.15);
+
+    color:#FCD34D;
+
+}
+
+.priorityBadge.low{
+
+    background:rgba(59,130,246,.15);
+
+    color:#93C5FD;
+
+}
+
+.taskArrow{
+
+    opacity:0;
+
+    transform:translateX(-6px);
+
+    transition:all .2s ease;
+
+    color:#64748B;
+
+}
+
+.focusTask:hover .taskArrow{
+
+    opacity:1;
+
+    transform:translateX(0);
+
+}
+
+.focusTask:focus{
+
+    outline:none;
+
+    border-radius:8px;
+
+}
+
+.emptyFocus{
+
+    flex:1;
+
+    display:flex;
+
+    align-items:center;
+
+    justify-content:center;
+
+    text-align:center;
+
+    color:#94A3B8;
+
+}

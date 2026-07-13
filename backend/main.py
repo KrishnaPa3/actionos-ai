@@ -942,6 +942,28 @@ async def complete_action(action_id: str):
         "message": f"Task marked as {new_status}",
         "action": update.data[0]
     }
+@app.get("/decisions")
+async def get_all_decisions():
+
+    response = (
+        supabase
+        .table("decisions")
+        .select("""
+            *,
+            sessions(
+                meeting_name
+            )
+        """)
+        .eq("deleted", False)
+        .order("created_at", desc=True)
+        .execute()
+    )
+
+    return {
+        "success": True,
+        "count": len(response.data),
+        "decisions": response.data
+    }
 @app.patch("/reminders/{reminder_id}")
 async def update_reminder(
     reminder_id: str,
