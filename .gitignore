@@ -18,4 +18,4 @@ dist/
 .DS_Store
 Thumbs.db
 
-backend/sample_output.json
+backend/.venv312/
