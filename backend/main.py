@@ -7,6 +7,7 @@ from pydantic import BaseModel
 from datetime import datetime, timedelta, timezone
 from services.date_service import resolve_due_date
 from services.action_service import build_action_payload, build_risk_payload
+from services.whisperx_service import transcribe_with_speakers
 
 import shutil
 import os
@@ -159,7 +160,12 @@ async def upload_audio(file: UploadFile = File(...)):
         segment.text
         for segment in segments
     ).strip()
+    _, speaker_transcript = transcribe_with_speakers(file_path)
 
+
+    print("========== SPEAKER TRANSCRIPT ==========")
+    print(speaker_transcript)
+    print("========================================")
     print("Whisper complete!")
 
     meeting_name = generate_meeting_name()
@@ -182,6 +188,8 @@ async def upload_audio(file: UploadFile = File(...)):
             "audio_url": audio_url,
 
             "transcript": transcript,
+
+            "speaker_transcript": speaker_transcript,
 
             "summary": [],
 

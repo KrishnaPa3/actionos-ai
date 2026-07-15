@@ -10,6 +10,7 @@ import Button from "../components/ui/Button";
 import PageHeader from "../components/ui/PageHeader";
 import EditItemModal from "../components/EditItemModal";
 import EditActionPlanModal from "../components/results/EditActionPlanModal";
+import TranscriptSection from "../components/results/TranscriptSection";
  
 import {
   FileText,
@@ -935,6 +936,13 @@ async function handleSaveActionPlan(updatedPlan) {
         />
 
       </Card>
+      <Card style={{ marginBottom: "24px" }}>
+
+    <TranscriptSection
+        transcript={meeting.speaker_transcript}
+    />
+
+</Card>
 
     <div id="tasks">
 
