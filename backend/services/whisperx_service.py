@@ -37,7 +37,7 @@ print(f"WhisperX using device: {DEVICE}")
 
 
 # --------------------------------------------------
-# Load models ONCE
+# Load WhisperX model ONCE
 # --------------------------------------------------
 
 print("Loading WhisperX model...")
@@ -89,8 +89,16 @@ def transcribe_with_speakers(audio_file):
     print("Running speaker diarization...")
 
     diarize_segments = diarization_model(
-        audio_file
-    )
+    audio_file,
+    min_speakers=2,
+    max_speakers=2,
+)
+
+    print("\n========== RAW DIARIZATION ==========")
+
+    print(diarize_segments.to_string())
+
+    print("====================================")
 
     result = whisperx.assign_word_speakers(
         diarize_segments,
@@ -131,6 +139,12 @@ def transcribe_with_speakers(audio_file):
     speaker_transcript = "\n".join(
         speaker_lines
     )
+
+    print("\n========== SPEAKER TRANSCRIPT ==========")
+
+    print(speaker_transcript)
+
+    print("========================================")
 
     return (
         transcript,

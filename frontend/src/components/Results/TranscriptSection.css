@@ -1,0 +1,100 @@
+.transcriptSection {
+
+    display: flex;
+
+    flex-direction: column;
+
+    gap: 16px;
+
+}
+
+.transcriptTitle {
+
+    margin: 0;
+
+    font-size: 22px;
+
+    font-weight: 700;
+
+}
+
+.transcriptBody {
+
+    margin: 0;
+
+    padding: 20px;
+
+    background: #0f172a;
+
+    border-radius: 12px;
+
+    color: #e5e7eb;
+
+    font-family: "Space Mono", monospace;
+
+    white-space: pre-wrap;
+
+    word-break: break-word;
+
+    text-align: left;
+
+    line-height: 1.9;
+
+    font-size: 15px;
+
+    max-height: 500px;
+
+    overflow-y: auto;
+
+    overflow-x: hidden;
+
+}
+
+/* Scrollbar */
+
+.transcriptBody::-webkit-scrollbar {
+
+    width: 8px;
+
+}
+
+.transcriptBody::-webkit-scrollbar-track {
+
+    background: transparent;
+
+}
+
+.transcriptBody::-webkit-scrollbar-thumb {
+
+    background: #334155;
+
+    border-radius: 999px;
+
+}
+
+.transcriptBody::-webkit-scrollbar-thumb:hover {
+
+    background: #475569;
+
+}
+.speakerLabel {
+
+    margin-top: 20px;
+
+    margin-bottom: 8px;
+
+    font-weight: 700;
+
+    color: #8ab4ff;
+
+    letter-spacing: 0.5px;
+
+}
+
+.speakerDialogue {
+
+    margin-bottom: 14px;
+
+    color: #e5e7eb;
+
+}
