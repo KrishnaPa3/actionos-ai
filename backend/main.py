@@ -8,6 +8,7 @@ from datetime import datetime, timedelta, timezone
 from services.date_service import resolve_due_date
 from services.action_service import build_action_payload, build_risk_payload
 from services.whisperx_service import transcribe_with_speakers
+from services.notion_service import NotionService
 
 import shutil
 import os
@@ -38,6 +39,7 @@ whisper_model = WhisperModel(
 )
 
 print("Whisper model loaded!")
+notion_service = NotionService()
 
 # ----------------------------------------------------
 # Helper Function
@@ -950,6 +952,98 @@ async def complete_action(action_id: str):
         "message": f"Task marked as {new_status}",
         "action": update.data[0]
     }
+@app.patch("/actions/{action_id}/confirm")
+async def confirm_action(action_id: str):
+
+    # ------------------------------------
+    # Fetch task
+    # ------------------------------------
+
+    response = (
+        supabase
+        .table("actions")
+        .select("*")
+        .eq("id", action_id)
+        .execute()
+    )
+
+    if len(response.data) == 0:
+        raise HTTPException(
+            status_code=404,
+            detail="Task not found"
+        )
+
+    action = response.data[0]
+
+    # ------------------------------------
+    # Already confirmed?
+    # ------------------------------------
+
+    if action["confirmed"]:
+
+        return {
+            "success": True,
+            "message": "Task already confirmed.",
+            "action": action
+        }
+
+    # ------------------------------------
+    # Create task in Notion
+    # ------------------------------------
+
+    try:
+
+        notion_page = notion_service.create_task(
+
+            title=action["title"],
+
+            owner=action["owner"],
+
+            due_date=action["due_date"],
+
+            priority=action["priority"],
+
+            summary=action.get("description") or "",
+
+            session_link=None
+        )
+
+    except Exception as e:
+
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to sync with Notion: {str(e)}"
+        )
+
+    # ------------------------------------
+    # Mark confirmed
+    # ------------------------------------
+
+    update = (
+        supabase
+        .table("actions")
+        .update({
+
+            "confirmed": True,
+
+            "notion_page_id": notion_page["page_id"],
+
+            "notion_page_url": notion_page["page_url"]
+
+        })
+        .eq("id", action_id)
+        .execute()
+    )
+
+    return {
+
+        "success": True,
+
+        "message": "Task confirmed and synced to Notion.",
+
+        "action": update.data[0]
+
+    }   
 @app.get("/decisions")
 async def get_all_decisions():
 
