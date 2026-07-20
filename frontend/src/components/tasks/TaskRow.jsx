@@ -28,6 +28,9 @@ export default function TaskRow({
   sourceSession,
   sessionId,
   status = "Open",
+
+  confirmed = false,
+  notionPageUrl = null,
 }) {
   const navigate = useNavigate();
 
@@ -78,6 +81,11 @@ export default function TaskRow({
         <h3 className="task-title">
           {title}
         </h3>
+        {confirmed && (
+    <p style={{ color: "#4ade80" }}>
+        Synced to Notion
+    </p>
+)}
 
         <div
           className="task-source clickable"

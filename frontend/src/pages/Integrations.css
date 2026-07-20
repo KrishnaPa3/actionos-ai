@@ -1,0 +1,298 @@
+.integrationsPage {
+    min-height: 100vh;
+    padding: 48px 40px;
+    background: #08111f;
+    color: #edf4ff;
+}
+
+.integrationsHeader {
+    max-width: 900px;
+    margin: 0 auto 36px;
+    text-align: center;
+}
+
+.integrationsHeader h1 {
+    margin: 0;
+    font-size: 2.4rem;
+    font-weight: 700;
+    letter-spacing: -0.04em;
+    color: #ffffff;
+}
+
+.integrationsHeader p {
+    margin: 14px auto 0;
+    max-width: 680px;
+    font-size: 1rem;
+    line-height: 1.8;
+    color: #91a4c3;
+}
+
+.integrationGrid {
+    display: flex;
+    justify-content: center;
+}
+
+.integrationCard {
+    width: 100%;
+    max-width: 920px;
+
+    background: linear-gradient(
+        180deg,
+        rgba(18, 27, 44, 0.98),
+        rgba(12, 19, 34, 0.98)
+    );
+
+    border: 1px solid #22314d;
+    border-radius: 22px;
+
+    padding: 34px;
+
+    transition: 0.25s ease;
+
+    box-shadow:
+        0 14px 45px rgba(0,0,0,.35),
+        inset 0 1px rgba(255,255,255,.03);
+}
+
+.integrationCard:hover {
+    transform: translateY(-3px);
+    border-color: #3b82f6;
+
+    box-shadow:
+        0 20px 50px rgba(59,130,246,.16);
+}
+
+/* ---------- HEADER ---------- */
+
+.integrationTop {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 24px;
+    margin-bottom: 32px;
+}
+
+.integrationInfo {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+}
+
+.integrationLogo {
+    width: 68px;
+    height: 68px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    flex-shrink: 0;
+
+    border-radius: 18px;
+
+    background: linear-gradient(
+        180deg,
+        #101827,
+        #0d1524
+    );
+
+    border: 1px solid #253b59;
+
+    box-shadow:
+        inset 0 1px rgba(255,255,255,.04),
+        0 8px 24px rgba(0,0,0,.3);
+}
+
+.integrationLogoImage {
+    width: 38px;
+    height: 38px;
+    object-fit: contain;
+}
+
+.integrationTop h2 {
+    margin: 0;
+    font-size: 1.8rem;
+    color: white;
+}
+
+.integrationDescription {
+    margin-top: 8px;
+    color: #8da3c3;
+    font-size: .95rem;
+    line-height: 1.6;
+    max-width: 500px;
+}
+
+/* ---------- STATUS ---------- */
+
+.status {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    padding: 8px 16px;
+
+    border-radius: 999px;
+
+    font-size: .8rem;
+    font-weight: 600;
+    letter-spacing: .04em;
+
+    white-space: nowrap;
+}
+
+.connected {
+    background: rgba(34,197,94,.15);
+    color: #4ade80;
+    border: 1px solid rgba(74,222,128,.35);
+}
+
+.disconnected {
+    background: rgba(239,68,68,.12);
+    color: #fb7185;
+    border: 1px solid rgba(251,113,133,.35);
+}
+
+/* ---------- INFO ROWS ---------- */
+
+.integrationRow {
+    display: grid;
+    grid-template-columns: 180px 1fr;
+
+    align-items: center;
+
+    padding: 18px 22px;
+
+    margin-bottom: 14px;
+
+    border-radius: 14px;
+
+    background: rgba(255,255,255,.025);
+
+    transition: .2s ease;
+}
+
+.integrationRow:hover {
+    background: rgba(59,130,246,.06);
+}
+
+.integrationRow label {
+    font-size: .75rem;
+    text-transform: uppercase;
+    letter-spacing: .12em;
+    color: #7088ad;
+    font-weight: 600;
+}
+
+.integrationRow p {
+    margin: 0;
+    color: #edf4ff;
+    font-size: 1rem;
+    line-height: 1.6;
+}
+
+/* ---------- FOOTER ---------- */
+
+.integrationFooter {
+    margin-top: 30px;
+
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 20px;
+
+    flex-wrap: wrap;
+}
+
+.integrationButton {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+
+    padding: 12px 18px;
+
+    border: none;
+    border-radius: 12px;
+
+    background: #2563eb;
+    color: white;
+
+    font-size: .9rem;
+    font-weight: 600;
+
+    cursor: not-allowed;
+    opacity: .65;
+}
+
+.integrationButton svg {
+    width: 16px;
+    height: 16px;
+}
+
+.comingSoon {
+    font-size: .82rem;
+    color: #7088ad;
+}
+
+.integrationLoading {
+    padding: 60px;
+    text-align: center;
+    color: #8da3c3;
+}
+
+/* ---------- RESPONSIVE ---------- */
+
+@media (max-width: 900px) {
+
+    .integrationsPage {
+        padding: 28px;
+    }
+
+    .integrationCard {
+        padding: 28px;
+    }
+
+    .integrationTop {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .integrationRow {
+        grid-template-columns: 1fr;
+        gap: 8px;
+    }
+
+}
+
+@media (max-width: 600px) {
+
+    .integrationsPage {
+        padding: 18px;
+    }
+
+    .integrationsHeader h1 {
+        font-size: 2rem;
+    }
+
+    .integrationLogo {
+        width: 58px;
+        height: 58px;
+    }
+
+    .integrationLogoImage {
+        width: 32px;
+        height: 32px;
+    }
+
+    .integrationTop h2 {
+        font-size: 1.5rem;
+    }
+
+}
+.integrationLogoImage {
+    width: 38px;
+    height: 38px;
+    object-fit: contain;
+
+    filter: brightness(0) invert(1);
+}

@@ -81,5 +81,8 @@ export {
   ShieldAlert,
   ShieldCheck,
   Plus,
-  
+  Blocks,
+  RefreshCw,
+  Lock,
+  X,
 } from "lucide-react";

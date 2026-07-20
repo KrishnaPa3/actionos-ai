@@ -8,6 +8,7 @@ import EmptySection from "./EmptySection";
 import ActionButtons from "./ActionButtons";
 import { useNavigate } from "react-router-dom"; 
 import ReminderPanel from "../ReminderPanel";
+import SyncDialog from "../integrations/SyncDialog";
 import {
     CheckSquare,
     User,
@@ -27,6 +28,9 @@ export default function TaskSection({
     const [editingTask, setEditingTask] = useState(null);
 const navigate = useNavigate();
     const [editedTask, setEditedTask] = useState({});
+    const [syncOpen, setSyncOpen] = useState(false);
+const [selectedTask, setSelectedTask] = useState(null);
+const [syncing, setSyncing] = useState(false);
 
     if (!tasks || tasks.length === 0) {
 
@@ -320,6 +324,11 @@ const navigate = useNavigate();
                                             }}
 
                                             onConfirm={() => onCompleteTask(task)}
+                                            onSync={() => {
+    setSelectedTask(task);
+    setSyncOpen(true);
+}}
+
 
                                             onDelete={() => onDeleteTask(task)}
 
@@ -684,6 +693,50 @@ const navigate = useNavigate();
                 })}
 
             </div>
+            <SyncDialog
+    open={syncOpen}
+    syncing={syncing}
+    onClose={() => {
+        setSyncOpen(false);
+        setSelectedTask(null);
+    }}
+    onSync={async () => {
+
+        if (!selectedTask) return;
+
+        setSyncing(true);
+
+        try {
+
+            const response = await fetch(
+                `http://localhost:8000/actions/${selectedTask.id}/confirm`,
+                {
+                    method: "PATCH"
+                }
+            );
+
+            const data = await response.json();
+
+            console.log(data);
+
+            alert("Task synced to Notion!");
+
+            setSyncOpen(false);
+
+        } catch (err) {
+
+            console.error(err);
+
+            alert("Sync failed.");
+
+        } finally {
+
+            setSyncing(false);
+
+        }
+
+    }}
+/>
 
         </section>
 

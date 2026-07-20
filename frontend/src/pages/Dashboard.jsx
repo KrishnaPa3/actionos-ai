@@ -5,7 +5,7 @@ import StatsCards from "./dashboardcomponents/StatsCards";
 import TodayFocus from "./dashboardcomponents/TodayFocus";
 import RecentMeetings from "./dashboardcomponents/RecentMeetings";
 import RecentDecisions from "./dashboardcomponents/RecentDecisions";
-
+import { apiFetch } from "../lib/api";
 import "./dashboardcomponents/Dashboard.css";
 
 export default function Dashboard() {
@@ -21,9 +21,7 @@ export default function Dashboard() {
 
     async function loadActions() {
         try {
-            const response = await fetch(
-                "http://127.0.0.1:8000/actions"
-            );
+            const response = await apiFetch("/actions")
 
             const data = await response.json();
 
@@ -35,9 +33,7 @@ export default function Dashboard() {
 
     async function loadSessions() {
         try {
-            const response = await fetch(
-                "http://127.0.0.1:8000/sessions"
-            );
+            const response = await apiFetch("/sessions")
 
             const data = await response.json();
 
@@ -49,9 +45,7 @@ export default function Dashboard() {
 
     async function loadDecisions() {
         try {
-            const response = await fetch(
-                "http://127.0.0.1:8000/decisions"
-            );
+    const response = await apiFetch("/decisions");
 
             const data = await response.json();
 

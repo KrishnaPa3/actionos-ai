@@ -1,5 +1,5 @@
 from services.extraction_service import extract_structured_data
-from fastapi import FastAPI, UploadFile, File, HTTPException
+from fastapi import FastAPI, UploadFile, File, HTTPException, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from supabase_client import supabase
 from faster_whisper import WhisperModel
@@ -9,6 +9,7 @@ from services.date_service import resolve_due_date
 from services.action_service import build_action_payload, build_risk_payload
 from services.whisperx_service import transcribe_with_speakers
 from services.notion_service import NotionService
+from dependencies.auth import get_current_user
 
 import shutil
 import os
@@ -901,6 +902,31 @@ async def complete_action(action_id: str):
     )
 
     # ------------------------------------
+    # Update Notion (if synced)
+    # ------------------------------------
+
+    if action.get("notion_page_id"):
+
+        try:
+
+            notion_service.update_task_status(
+                
+
+                page_id=action["notion_page_id"],
+
+                action_status=new_status
+                
+
+            )
+            
+
+            
+
+        except Exception as e:
+
+            print(f"Failed to update Notion status: {e}")
+
+    # ------------------------------------
     # Reminder handling
     # ------------------------------------
 
@@ -952,6 +978,7 @@ async def complete_action(action_id: str):
         "message": f"Task marked as {new_status}",
         "action": update.data[0]
     }
+
 @app.patch("/actions/{action_id}/confirm")
 async def confirm_action(action_id: str):
 
@@ -1005,7 +1032,9 @@ async def confirm_action(action_id: str):
 
             summary=action.get("description") or "",
 
-            session_link=None
+            session_link=None,
+
+            status=action["status"]
         )
 
     except Exception as e:
@@ -1131,10 +1160,44 @@ async def update_action(
             detail="Task not found"
         )
 
+    action = response.data[0]
+
+    # ------------------------------------
+    # Update Notion if already synced
+    # ------------------------------------
+
+    if action.get("notion_page_id"):
+
+        try:
+
+            notion_service.update_task(
+
+                page_id=action["notion_page_id"],
+
+                title=action["title"],
+
+                owner=action["owner"],
+
+                due_date=action["due_date"],
+
+                priority=action["priority"],
+
+                summary=action.get("description") or "",
+
+                session_link=None,
+
+                status=action["status"]
+
+            )
+
+        except Exception as e:
+
+            print(f"Failed to update Notion task: {e}")
+
     return {
         "success": True,
         "message": "Task updated",
-        "action": response.data[0]
+        "action": action
     }
 
 @app.delete("/actions/{action_id}")
@@ -1501,45 +1564,80 @@ async def rename_meeting(
 # Get All Sessions
 # ----------------------------------------------------
 
+from time import perf_counter
+from fastapi import Depends
+
 @app.get("/sessions")
-async def get_sessions():
+async def get_sessions(
+    user=Depends(get_current_user)
+):
+    endpoint_start = perf_counter()
+
+    # -------------------------------
+    # Query session dashboard
+    # -------------------------------
+    query_start = perf_counter()
 
     response = (
         supabase
         .table("session_dashboard")
         .select("*")
+        .eq("user_id", user["id"])
         .eq("deleted", False)
         .order("created_at", desc=True)
         .execute()
     )
 
+    query_time = perf_counter() - query_start
+
     sessions = response.data
 
-    # Populate live task list for each meeting
+    print(f"[TIMING] Session query: {query_time:.3f}s")
+
+    # -------------------------------
+    # Populate tasks
+    # -------------------------------
+    task_total = 0
+
     for session in sessions:
+
+        task_start = perf_counter()
 
         tasks = (
             supabase
             .table("actions")
             .select("*")
+            .eq("user_id", user["id"])
             .eq("session_id", session["id"])
             .eq("deleted", False)
             .execute()
         )
 
+        elapsed = perf_counter() - task_start
+        task_total += elapsed
+
+        print(
+            f"[TIMING] Tasks for '{session['meeting_name']}': "
+            f"{elapsed:.3f}s ({len(tasks.data)} tasks)"
+        )
+
         session["tasks"] = tasks.data
-        
-   
+
+    total_time = perf_counter() - endpoint_start
+
+    print()
+    print("========== /sessions ==========")
+    print(f"Session query : {query_time:.3f}s")
+    print(f"Task queries  : {task_total:.3f}s")
+    print(f"Endpoint total: {total_time:.3f}s")
+    print("================================")
+    print()
+
     return {
-
         "success": True,
-
         "count": len(sessions),
-
         "sessions": sessions
-
     }
-
 
 @app.delete("/session/{session_id}/action-plan/{index}")
 async def delete_action_plan(session_id: str, index: int):
@@ -1695,3 +1793,17 @@ async def delete_session(session_id: str):
         "session": response.data[0]
 
     }
+# ----------------------------------------------------
+# Notion Integration
+# ----------------------------------------------------
+
+@app.get("/notion/status")
+async def notion_status():
+
+    return notion_service.get_status()
+
+
+@app.get("/notion/database")
+async def notion_database():
+
+    return notion_service.get_database()

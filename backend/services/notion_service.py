@@ -8,6 +8,11 @@ from notion_client import Client
 
 load_dotenv(Path(__file__).parent.parent / ".env")
 
+STATUS_MAP = {
+    "pending": "Not started",
+    "completed": "Done",
+}
+
 
 class NotionService:
 
@@ -30,6 +35,41 @@ class NotionService:
         self.database_id = database_id
 
     # -----------------------------------------------------
+    # STATUS
+    # -----------------------------------------------------
+
+    def get_status(self):
+
+        return {
+            "connected": True,
+            "database_id": self.database_id
+        }
+
+    # -----------------------------------------------------
+    # DATABASE INFO
+    # -----------------------------------------------------
+
+    def get_database(self):
+
+        database = self.client.databases.retrieve(
+            database_id=self.database_id
+        )
+
+        title = ""
+
+        if database.get("title"):
+
+            title = "".join(
+                text["plain_text"]
+                for text in database["title"]
+            )
+
+        return {
+            "id": database["id"],
+            "title": title
+        }
+
+    # -----------------------------------------------------
     # CREATE
     # -----------------------------------------------------
 
@@ -41,6 +81,7 @@ class NotionService:
         priority,
         summary,
         session_link,
+        status="pending",
     ):
 
         payload = {
@@ -85,6 +126,15 @@ class NotionService:
                     }
                 },
 
+                "Status": {
+                    "status": {
+                        "name": STATUS_MAP.get(
+                            status,
+                            "Not started"
+                        )
+                    }
+                },
+
                 "Source Summary": {
                     "rich_text": [
                         {
@@ -124,7 +174,9 @@ class NotionService:
 
     def get_task(self, page_id: str):
 
-        page = self.client.pages.retrieve(page_id=page_id)
+        page = self.client.pages.retrieve(
+            page_id=page_id
+        )
 
         properties = page["properties"]
 
@@ -144,55 +196,149 @@ class NotionService:
 
         }
 
-        # ---------------------------
-        # Name
-        # ---------------------------
-
         title = properties["Name"]["title"]
 
         if title:
             task["title"] = title[0]["plain_text"]
-
-        # ---------------------------
-        # Owner
-        # ---------------------------
 
         owner = properties["Owner"]["rich_text"]
 
         if owner:
             task["owner"] = owner[0]["plain_text"]
 
-        # ---------------------------
-        # Priority
-        # ---------------------------
-
         priority = properties["Priority"]["select"]
 
         if priority:
             task["priority"] = priority["name"].lower()
-
-        # ---------------------------
-        # Due Date
-        # ---------------------------
 
         due = properties["Due Date"]["date"]
 
         if due:
             task["due_date"] = due["start"]
 
-        # ---------------------------
-        # Summary
-        # ---------------------------
-
         summary = properties["Source Summary"]["rich_text"]
 
         if summary:
             task["summary"] = summary[0]["plain_text"]
 
-        # ---------------------------
-        # Session Link
-        # ---------------------------
-
         task["session_link"] = properties["Session Link"]["url"]
 
         return task
+
+    # -----------------------------------------------------
+    # UPDATE STATUS
+    # -----------------------------------------------------
+
+    def update_task_status(
+        self,
+        page_id,
+        action_status,
+    ):
+
+        notion_status = STATUS_MAP.get(
+            action_status,
+            "Not started"
+        )
+
+        self.client.pages.update(
+
+            page_id=page_id,
+
+            properties={
+
+                "Status": {
+
+                    "status": {
+
+                        "name": notion_status
+
+                    }
+
+                }
+
+            }
+
+        )
+
+    # -----------------------------------------------------
+    # UPDATE TASK
+    # -----------------------------------------------------
+
+    def update_task(
+        self,
+        page_id,
+        title,
+        owner,
+        due_date,
+        priority,
+        summary,
+        session_link,
+        status,
+    ):
+
+        self.client.pages.update(
+
+            page_id=page_id,
+
+            properties={
+
+                "Name": {
+                    "title": [
+                        {
+                            "text": {
+                                "content": title
+                            }
+                        }
+                    ]
+                },
+
+                "Owner": {
+                    "rich_text": [
+                        {
+                            "text": {
+                                "content": owner or ""
+                            }
+                        }
+                    ]
+                },
+
+                "Due Date": {
+                    "date": {
+                        "start": due_date
+                    }
+                },
+
+                "Priority": {
+                    "select": {
+                        "name": priority.capitalize()
+                        if priority
+                        else "Medium"
+                    }
+                },
+
+                "Status": {
+                    "status": {
+                        "name": STATUS_MAP.get(
+                            status,
+                            "Not started"
+                        )
+                    }
+                },
+
+                "Source Summary": {
+                    "rich_text": [
+                        {
+                            "text": {
+                                "content": summary or ""
+                            }
+                        }
+                    ]
+                },
+
+                "Session Link": {
+                    "url": session_link
+                }
+
+            }
+
+        )

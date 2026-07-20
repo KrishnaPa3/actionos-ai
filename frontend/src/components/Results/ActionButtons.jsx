@@ -5,6 +5,7 @@ import {
     BadgeCheck,
     Trash2,
     RotateCcw,
+    RefreshCw,
     ExternalLink
 } from "../ui/icons";
 
@@ -12,10 +13,10 @@ export default function ActionButtons({
 
     onEdit,
     onConfirm,
+    onSync,
     onDelete,
     onRestore,
     onOpenMeeting,
-
     onAccept,
     onReject,
 
@@ -23,6 +24,7 @@ export default function ActionButtons({
 
     showEdit = true,
     showConfirm = true,
+    showSync = true,
     showDelete = true,
     showRestore = false,
     showOpenMeeting = false,
@@ -59,8 +61,6 @@ export default function ActionButtons({
 
             )}
 
-            {/* Only show Complete if a handler exists */}
-
             {showConfirm && onConfirm && (
 
                 <Button
@@ -79,6 +79,20 @@ export default function ActionButtons({
                             ? "Mark Pending"
                             : "Complete"
                     )}
+                </Button>
+
+            )}
+
+            {showSync && onSync && (
+
+                <Button
+                    size="sm"
+                    variant="outline"
+                    icon={<RefreshCw size={16} />}
+                    onClick={onSync}
+                    title="Sync"
+                >
+                    {!compact && "Sync"}
                 </Button>
 
             )}

@@ -7,6 +7,7 @@ import SearchBar from "../components/ui/SearchBar";
 import EmptyState from "../components/ui/EmptyState";
 import StatBadge from "../components/ui/StatBadge";
 import DeleteMeetingModal from "../components/DeleteMeetingModal";
+import { apiFetch } from "../lib/api";
 
 import {
     History,
@@ -33,9 +34,7 @@ export default function SessionsPage() {
 
         try {
 
-            const response = await fetch(
-                "http://127.0.0.1:8000/sessions"
-            );
+            const response = await apiFetch("/sessions");
 
             const data = await response.json();
 
@@ -60,15 +59,12 @@ export default function SessionsPage() {
 
         try {
 
-            const response = await fetch(
-
-                `http://127.0.0.1:8000/sessions/${meetingToDelete.id}`,
-
-                {
-                    method: "DELETE",
-                }
-
-            );
+            const response = await apiFetch(
+    `/sessions/${meetingToDelete.id}`,
+    {
+        method: "DELETE",
+    }
+);
 
             const data = await response.json();
 

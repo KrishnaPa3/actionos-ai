@@ -12,6 +12,7 @@ import {
   BellRing,
   ExternalLink,
   Mic,
+  Blocks,
 } from "./ui/icons";
 
 import "./Navbar.css";
@@ -159,7 +160,7 @@ export default function Navbar() {
           icon={<History size={18} />}
           onClick={() => navigate("/sessions")}
         >
-          Meetings
+          Session History
         </Button>
 
         {/* Tasks */}
@@ -189,8 +190,22 @@ export default function Navbar() {
           icon={<FileText size={18} />}
           onClick={openResults}
         >
-          Results
+          Meeting Info
         </Button>
+        {/* Integrations */}
+
+<Button
+  size="sm"
+  variant={
+    location.pathname === "/integrations"
+      ? "primary"
+      : "ghost"
+  }
+  icon={<Blocks size={18} />}
+  onClick={() => navigate("/integrations")}
+>
+  Integrations
+</Button>
 
         {/* Reminder Bell */}
 
