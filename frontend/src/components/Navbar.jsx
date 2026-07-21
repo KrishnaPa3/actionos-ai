@@ -1,5 +1,9 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
+import { useRef } from "react";
+import { useAuth } from "../auth/AuthContext";
+import { supabase } from "../lib/supabase"; 
+import { apiFetch } from "../lib/api"; 
 
 import Button from "./ui/Button";
 
@@ -24,14 +28,18 @@ export default function Navbar() {
   const [reminders, setReminders] = useState([]);
   const [showReminders, setShowReminders] = useState(false);
   const [activeMenu, setActiveMenu] = useState(null);
+const { user } = useAuth();
 
+const profileRef = useRef(null);
+
+const [showProfileMenu, setShowProfileMenu] = useState(false);
   const openResults = () => {
     navigate("/results");
   };
 
   const loadReminders = async () => {
     try {
-      const response = await fetch("http://127.0.0.1:8000/reminders");
+      const response = await apiFetch("/reminders");
       const data = await response.json();
       setReminders(data);
     } catch (error) {
@@ -76,6 +84,24 @@ export default function Navbar() {
     setShowReminders(false);
     setActiveMenu(null);
   };
+  useEffect(() => {
+    function handleClick(e) {
+        if (
+            profileRef.current &&
+            !profileRef.current.contains(e.target)
+        ) {
+            setShowProfileMenu(false);
+        }
+    }
+
+    document.addEventListener("mousedown", handleClick);
+
+    return () =>
+        document.removeEventListener(
+            "mousedown",
+            handleClick
+        );
+}, []);
 
   return (
     <nav className="navbar">
@@ -160,7 +186,7 @@ export default function Navbar() {
           icon={<History size={18} />}
           onClick={() => navigate("/sessions")}
         >
-          Session History
+          Sessions
         </Button>
 
         {/* Tasks */}
@@ -190,7 +216,7 @@ export default function Navbar() {
           icon={<FileText size={18} />}
           onClick={openResults}
         >
-          Meeting Info
+          Results
         </Button>
         {/* Integrations */}
 
@@ -206,13 +232,13 @@ export default function Navbar() {
 >
   Integrations
 </Button>
-
         {/* Reminder Bell */}
 
         <div
           className="notificationBell"
           onClick={() => {
             setShowReminders(!showReminders);
+            setShowProfileMenu(false);
             setActiveMenu(null);
           }}
         >
@@ -224,10 +250,10 @@ export default function Navbar() {
             </span>
           )}
         </div>
-                {/* Reminder Popup */}
+
+        {/* Reminder Popup */}
 
         {showReminders && (
-
           <div className="reminderPopup">
 
             <div className="reminderPopupHeader">
@@ -279,11 +305,9 @@ export default function Navbar() {
                             : "manualReminderBadge"
                         }
                       >
-
                         {reminder.is_default
                           ? "Auto Reminder"
                           : "Custom Reminder"}
-
                       </div>
 
                     </div>
@@ -291,13 +315,8 @@ export default function Navbar() {
                   </div>
 
                   <div className="reminderDue">
-
                     🕒{" "}
-
-                    {new Date(
-                      reminder.due_date
-                    ).toLocaleString()}
-
+                    {new Date(reminder.due_date).toLocaleString()}
                   </div>
 
                   <button
@@ -305,11 +324,7 @@ export default function Navbar() {
                     onClick={() => openTask(reminder)}
                   >
                     <ExternalLink size={16} />
-
-                    <span>
-                      Open Task
-                    </span>
-
+                    <span>Open Task</span>
                   </button>
 
                 </div>
@@ -319,12 +334,71 @@ export default function Navbar() {
             )}
 
           </div>
-
         )}
+
+        {/* Profile Menu */}
+
+        <div
+          ref={profileRef}
+          className="profileMenuContainer"
+        >
+          <button
+            className="profileButton"
+            onClick={() => {
+              setShowProfileMenu(!showProfileMenu);
+              setShowReminders(false);
+            }}
+          >
+            <div className="profileAvatar">
+              {(
+                user?.user_metadata?.username ||
+                user?.email ||
+                "U"
+              )[0].toUpperCase()}
+            </div>
+
+            <span>
+              {user?.user_metadata?.username || user?.email}
+            </span>
+
+            <span>▼</span>
+          </button>
+
+          {showProfileMenu && (
+            <div className="profileDropdown">
+
+              <div className="profileDropdownHeader">
+                <strong>
+                  {user?.user_metadata?.username || "User"}
+                </strong>
+
+                <small>{user?.email}</small>
               </div>
+
+              <button
+                onClick={() => {
+                  navigate("/profile");
+                  setShowProfileMenu(false);
+                }}
+              >
+                👤 Profile
+              </button>
+
+              <button onClick={handleLogout}>
+                🚪 Sign Out
+              </button>
+
+            </div>
+          )}
+        </div>
+
+      </div>
 
     </nav>
 
   );
-
+const handleLogout = async () => {
+    await supabase.auth.signOut();
+    navigate("/login");
+};
 }

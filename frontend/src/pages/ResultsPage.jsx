@@ -3,7 +3,10 @@ import {
     useParams,
     useNavigate,
     useLocation,
-} from "react-router-dom";import { useEffect, useState } from "react";
+} from "react-router-dom";
+import { useEffect, useState } from "react";
+
+import { apiFetch } from "../lib/api";
 
 import Card from "../components/ui/Card";
 import Button from "../components/ui/Button";
@@ -11,11 +14,11 @@ import PageHeader from "../components/ui/PageHeader";
 import EditItemModal from "../components/EditItemModal";
 import EditActionPlanModal from "../components/results/EditActionPlanModal";
 import TranscriptSection from "../components/results/TranscriptSection";
- 
+
 import {
-  FileText,
-  Pencil,
-  Save,
+    FileText,
+    Pencil,
+    Save,
 } from "../components/ui/icons";
 
 import SummarySection from "../components/results/SummarySection";
@@ -27,130 +30,141 @@ import DeleteItemModal from "../components/DeleteItemModal";
 
 export default function ResultsPage() {
 
-const { sessionId } = useParams();
-const navigate = useNavigate();
-  const [actions, setActions] = useState([]);
-  const [meeting, setMeeting] = useState(null);
-  const [loading, setLoading] = useState(true);
-const [toast, setToast] = useState({
-    message: "",
-    type: "success"
-});  const [editing, setEditing] = useState(false);
-  const [meetingName, setMeetingName] = useState("");
-  const [taskToDelete, setTaskToDelete] = useState(null);
-  const [risks, setRisks] = useState([]);
-  const [riskToEdit, setRiskToEdit] = useState(null);
-const [riskToDelete, setRiskToDelete] = useState(null);
-const [decisions, setDecisions] = useState([]);
-const [decisionToEdit, setDecisionToEdit] = useState(null);
-const [decisionToDelete, setDecisionToDelete] = useState(null);
-const [deletingActionPlan, setDeletingActionPlan] = useState(false);
-const [editingActionPlan, setEditingActionPlan] = useState(null);
-const [editingActionPlanIndex, setEditingActionPlanIndex] = useState(null);
-const location = useLocation();
-  // -------------------------
-  // Load Meeting
-  // -------------------------
+    const { sessionId } = useParams();
+    const navigate = useNavigate();
 
-  async function loadMeeting() {
+    const [actions, setActions] = useState([]);
+    const [meeting, setMeeting] = useState(null);
+    const [loading, setLoading] = useState(true);
 
-    try {
+    const [toast, setToast] = useState({
+        message: "",
+        type: "success"
+    });
 
-      const response = await fetch(
-        `http://127.0.0.1:8000/session/${sessionId}`
-      );
+    const [editing, setEditing] = useState(false);
+    const [meetingName, setMeetingName] = useState("");
 
-      const actionsResponse = await fetch(
-        `http://127.0.0.1:8000/session/${sessionId}/actions`
-      );
-      const risksResponse = await fetch(
-    `http://127.0.0.1:8000/session/${sessionId}/risks`
-);
+    const [taskToDelete, setTaskToDelete] = useState(null);
 
-      const actionsData = await actionsResponse.json();
-      const risksData = await risksResponse.json();
-      const decisionsResponse = await fetch(
-    `http://127.0.0.1:8000/session/${sessionId}/decisions`
-);
+    const [risks, setRisks] = useState([]);
+    const [riskToEdit, setRiskToEdit] = useState(null);
+    const [riskToDelete, setRiskToDelete] = useState(null);
 
-const decisionsData = await decisionsResponse.json();
+    const [decisions, setDecisions] = useState([]);
+    const [decisionToEdit, setDecisionToEdit] = useState(null);
+    const [decisionToDelete, setDecisionToDelete] = useState(null);
 
-setDecisions(decisionsData.decisions);
+    const [deletingActionPlan, setDeletingActionPlan] = useState(false);
+    const [editingActionPlan, setEditingActionPlan] = useState(null);
+    const [editingActionPlanIndex, setEditingActionPlanIndex] = useState(null);
 
-      setActions(actionsData.actions);
-      setRisks(risksData.risks);
+    const location = useLocation();
 
-      const data = await response.json();
+    // -------------------------
+    // Load Meeting
+    // -------------------------
 
-      setMeeting(data);
-      setMeetingName(data.meeting_name);
+    async function loadMeeting() {
 
-    } catch (err) {
+        try {
 
-      console.error(err);
+            const response = await apiFetch(
+                `/session/${sessionId}`
+            );
 
-    } finally {
+            const actionsResponse = await apiFetch(
+                `/session/${sessionId}/actions`
+            );
 
-      setLoading(false);
+            const risksResponse = await apiFetch(
+                `/session/${sessionId}/risks`
+            );
+
+            const decisionsResponse = await apiFetch(
+                `/session/${sessionId}/decisions`
+            );
+
+            const actionsData = await actionsResponse.json();
+            const risksData = await risksResponse.json();
+            const decisionsData = await decisionsResponse.json();
+
+            setDecisions(decisionsData.decisions);
+
+            setActions(actionsData.actions);
+            setRisks(risksData.risks);
+
+            const data = await response.json();
+
+            setMeeting(data);
+            setMeetingName(data.meeting_name);
+
+        } catch (err) {
+
+            console.error(err);
+
+        } finally {
+
+            setLoading(false);
+
+        }
 
     }
 
-  }
+    // -------------------------
+    // Load on page open
+    // -------------------------
 
-  // -------------------------
-  // Load on page open
-  // -------------------------
-async function completeTask(task) {
+    async function completeTask(task) {
 
-    try {
+        try {
 
-        const response = await fetch(
-            `http://127.0.0.1:8000/actions/${task.id}/complete`,
-            {
-                method: "PATCH",
+            const response = await apiFetch(
+                `/actions/${task.id}/complete`,
+                {
+                    method: "PATCH",
+                }
+            );
+
+            if (!response.ok) {
+                throw new Error("Failed to update task");
             }
-        );
 
-        if (!response.ok) {
-            throw new Error("Failed to update task");
-        }
+            await loadMeeting();
 
-        await loadMeeting();
-
-// Tell the Navbar that reminders changed
-window.dispatchEvent(
-    new Event("remindersUpdated")
-);
-
-setToast({
-    message: "Task completed",
-    type: "success"
-});
-
-        setTimeout(() => {
+            // Tell the Navbar that reminders changed
+            window.dispatchEvent(
+                new Event("remindersUpdated")
+            );
 
             setToast({
-                message: "",
+                message: "Task completed",
                 type: "success"
             });
 
-        }, 3000);
+            setTimeout(() => {
 
-    } catch (err) {
+                setToast({
+                    message: "",
+                    type: "success"
+                });
 
-        console.error(err);
+            }, 3000);
+
+        } catch (err) {
+
+            console.error(err);
+
+        }
 
     }
-
-}
-
 async function resolveRisk(risk) {
 
     try {
 
-        const response = await fetch(
+        const response = await apiFetch(
 
-            `http://127.0.0.1:8000/risks/${risk.id}/resolve`,
+            `/risks/${risk.id}/resolve`,
 
             {
 
@@ -196,9 +210,9 @@ async function acceptDecision(decision) {
 
     try {
 
-        const response = await fetch(
+        const response = await apiFetch(
 
-            `http://127.0.0.1:8000/decisions/${decision.id}/accept`,
+            `/decisions/${decision.id}/accept`,
 
             {
 
@@ -244,9 +258,9 @@ async function rejectDecision(decision) {
 
     try {
 
-        const response = await fetch(
+        const response = await apiFetch(
 
-            `http://127.0.0.1:8000/decisions/${decision.id}/reject`,
+            `/decisions/${decision.id}/reject`,
 
             {
 
@@ -294,9 +308,9 @@ async function deleteTask() {
 
     try {
 
-        const response = await fetch(
+        const response = await apiFetch(
 
-            `http://127.0.0.1:8000/actions/${taskToDelete.id}`,
+            `/actions/${taskToDelete.id}`,
 
             {
                 method: "DELETE"
@@ -333,15 +347,16 @@ async function deleteTask() {
     }
 
 }
+
 async function deleteRisk() {
 
     if (!riskToDelete) return;
 
     try {
 
-        const response = await fetch(
+        const response = await apiFetch(
 
-            `http://127.0.0.1:8000/risks/${riskToDelete.id}`,
+            `/risks/${riskToDelete.id}`,
 
             {
 
@@ -391,9 +406,9 @@ async function deleteDecision() {
 
     try {
 
-        const response = await fetch(
+        const response = await apiFetch(
 
-            `http://127.0.0.1:8000/decisions/${decisionToDelete.id}`,
+            `/decisions/${decisionToDelete.id}`,
 
             {
 
@@ -436,7 +451,6 @@ async function deleteDecision() {
     }
 
 }
-
 async function handleDeleteActionPlan(index) {
 
     if (deletingActionPlan) return;
@@ -451,8 +465,8 @@ async function handleDeleteActionPlan(index) {
 
         setDeletingActionPlan(true);
 
-        const response = await fetch(
-            `http://127.0.0.1:8000/session/${meeting.id}/action-plan/${index}`,
+        const response = await apiFetch(
+            `/session/${meeting.id}/action-plan/${index}`,
             {
                 method: "DELETE"
             }
@@ -495,23 +509,18 @@ async function handleDeleteActionPlan(index) {
     }
 
 }
+
 async function updateTask(taskId, updatedTask) {
 
     try {
 
-        const response = await fetch(
+        const response = await apiFetch(
 
-            `http://127.0.0.1:8000/actions/${taskId}`,
+            `/actions/${taskId}`,
 
             {
 
                 method: "PATCH",
-
-                headers: {
-
-                    "Content-Type": "application/json"
-
-                },
 
                 body: JSON.stringify(updatedTask)
 
@@ -555,19 +564,13 @@ async function updateRisk(riskId, updatedRisk) {
 
     try {
 
-        const response = await fetch(
+        const response = await apiFetch(
 
-            `http://127.0.0.1:8000/risks/${riskId}`,
+            `/risks/${riskId}`,
 
             {
 
                 method: "PATCH",
-
-                headers: {
-
-                    "Content-Type": "application/json"
-
-                },
 
                 body: JSON.stringify(updatedRisk)
 
@@ -611,19 +614,13 @@ async function updateDecision(decisionId, updatedDecision) {
 
     try {
 
-        const response = await fetch(
+        const response = await apiFetch(
 
-            `http://127.0.0.1:8000/decisions/${decisionId}`,
+            `/decisions/${decisionId}`,
 
             {
 
                 method: "PATCH",
-
-                headers: {
-
-                    "Content-Type": "application/json"
-
-                },
 
                 body: JSON.stringify(updatedDecision)
 
@@ -675,8 +672,8 @@ useEffect(() => {
         // Otherwise get the newest meeting
         try {
 
-            const response = await fetch(
-                "http://127.0.0.1:8000/sessions"
+            const response = await apiFetch(
+                "/sessions"
             );
 
             const data = await response.json();
@@ -706,6 +703,7 @@ useEffect(() => {
     initialize();
 
 }, [sessionId, navigate]);
+
 useEffect(() => {
 
     if (!meeting) return;
@@ -742,13 +740,10 @@ async function handleSaveActionPlan(updatedPlan) {
 
     try {
 
-        const response = await fetch(
-            `http://127.0.0.1:8000/session/${meeting.id}/action-plan/${editingActionPlanIndex}`,
+        const response = await apiFetch(
+            `/session/${meeting.id}/action-plan/${editingActionPlanIndex}`,
             {
                 method: "PUT",
-                headers: {
-                    "Content-Type": "application/json"
-                },
                 body: JSON.stringify(updatedPlan)
             }
         );
@@ -787,48 +782,44 @@ async function handleSaveActionPlan(updatedPlan) {
     }
 
 }
-  // -------------------------
-  // Rename Meeting
-  // -------------------------
 
-  async function saveMeetingName() {
+// -------------------------
+// Rename Meeting
+// -------------------------
+
+async function saveMeetingName() {
 
     try {
 
-      const response = await fetch(
+        const response = await apiFetch(
 
-        `http://127.0.0.1:8000/session/${sessionId}/rename`,
+            `/session/${sessionId}/rename`,
 
-        {
+            {
 
-          method: "PATCH",
+                method: "PATCH",
 
-          headers: {
-            "Content-Type": "application/json",
-          },
+                body: JSON.stringify({
+                    meeting_name: meetingName,
+                }),
 
-          body: JSON.stringify({
-            meeting_name: meetingName,
-          }),
+            }
 
-        }
+        );
 
-      );
+        const data = await response.json();
 
-      const data = await response.json();
+        setMeeting(data.session);
 
-      setMeeting(data.session);
-
-      setEditing(false);
+        setEditing(false);
 
     } catch (err) {
 
-      console.error(err);
+        console.error(err);
 
     }
 
-  }
-
+}
   if (loading) {
 
     return <h2>Loading meeting...</h2>;
@@ -936,208 +927,217 @@ async function handleSaveActionPlan(updatedPlan) {
         />
 
       </Card>
+
       <Card style={{ marginBottom: "24px" }}>
 
-    <TranscriptSection
-        transcript={meeting.speaker_transcript}
-    />
+        <TranscriptSection
+          transcript={meeting.speaker_transcript}
+        />
 
-</Card>
+      </Card>
 
-    <div id="tasks">
+      <div id="tasks">
 
-    <Card style={{ marginBottom: "24px" }}>
+        <Card style={{ marginBottom: "24px" }}>
 
-        <TaskSection
+          <TaskSection
             tasks={actions}
             onCompleteTask={completeTask}
             onDeleteTask={setTaskToDelete}
             onUpdateTask={updateTask}
+          />
+
+        </Card>
+
+      </div>
+
+      <Card style={{ marginBottom: "24px" }}>
+
+        <ActionPlanSection
+          actionPlans={meeting.action_plan}
+          onEdit={(index) => {
+
+            setEditingActionPlanIndex(index);
+
+            setEditingActionPlan(
+              structuredClone(meeting.action_plan[index])
+            );
+
+          }}
+          onDelete={handleDeleteActionPlan}
         />
 
-    </Card>
+      </Card>
 
-</div>
+      <div id="decisions">
 
-     
+        <Card style={{ marginBottom: "24px" }}>
 
-   <Card style={{ marginBottom: "24px" }}>
-
-   <ActionPlanSection
-    actionPlans={meeting.action_plan}
-    onEdit={(index) => {
-
-    setEditingActionPlanIndex(index);
-
-    setEditingActionPlan(
-        structuredClone(meeting.action_plan[index])
-    );
-
-}}
-    onDelete={handleDeleteActionPlan}
-/>
-
-</Card>
-<div id="decisions">
-
-    <Card style={{ marginBottom: "24px" }}>
-
-        <DecisionSection
+          <DecisionSection
             decisions={decisions}
             onAcceptDecision={acceptDecision}
             onRejectDecision={rejectDecision}
             onEditDecision={setDecisionToEdit}
             onDeleteDecision={setDecisionToDelete}
-        />
+          />
 
-    </Card>
+        </Card>
 
-</div>
+      </div>
+
       <Card>
 
         <RiskSection
-    risks={risks}
-    onResolveRisk={resolveRisk}
-    onUpdateRisk={updateRisk}
-    onDeleteRisk={setRiskToDelete}
-    onEditRisk={setRiskToEdit}
-/>
+          risks={risks}
+          onResolveRisk={resolveRisk}
+          onUpdateRisk={updateRisk}
+          onDeleteRisk={setRiskToDelete}
+          onEditRisk={setRiskToEdit}
+        />
 
       </Card>
-<DeleteItemModal
-    open={taskToDelete !== null}
-    item={taskToDelete}
-    itemType="Task"
-    onCancel={() => setTaskToDelete(null)}
-    onConfirm={deleteTask}
-/>
-<DeleteItemModal
-    open={riskToDelete !== null}
-    item={riskToDelete}
-    itemType="Risk"
-    onCancel={() => setRiskToDelete(null)}
-    onConfirm={deleteRisk}
-/>
-<DeleteItemModal
-    open={decisionToDelete !== null}
-    item={decisionToDelete}
-    itemType="Decision"
-    onCancel={() => setDecisionToDelete(null)}
-    onConfirm={deleteDecision}
-/>
-<EditItemModal
-    open={riskToEdit !== null}
-    title="Edit Risk"
-    item={riskToEdit}
-    fields={[
-        {
+
+      <DeleteItemModal
+        open={taskToDelete !== null}
+        item={taskToDelete}
+        itemType="Task"
+        onCancel={() => setTaskToDelete(null)}
+        onConfirm={deleteTask}
+      />
+
+      <DeleteItemModal
+        open={riskToDelete !== null}
+        item={riskToDelete}
+        itemType="Risk"
+        onCancel={() => setRiskToDelete(null)}
+        onConfirm={deleteRisk}
+      />
+
+      <DeleteItemModal
+        open={decisionToDelete !== null}
+        item={decisionToDelete}
+        itemType="Decision"
+        onCancel={() => setDecisionToDelete(null)}
+        onConfirm={deleteDecision}
+      />
+
+      <EditItemModal
+        open={riskToEdit !== null}
+        title="Edit Risk"
+        item={riskToEdit}
+        fields={[
+          {
             name: "title",
             label: "Title"
-        },
-        {
+          },
+          {
             name: "impact",
             label: "Impact",
             type: "textarea"
-        },
-        {
+          },
+          {
             name: "mitigation",
             label: "Mitigation",
             type: "textarea"
-        },
-        {
+          },
+          {
             name: "risk_score",
             label: "Risk Score",
             type: "number"
-        }
-    ]}
-    onCancel={() => setRiskToEdit(null)}
-    onSave={async (updatedRisk) => {
+          }
+        ]}
+        onCancel={() => setRiskToEdit(null)}
+        onSave={async (updatedRisk) => {
 
-        await updateRisk(
+          await updateRisk(
             riskToEdit.id,
             updatedRisk
-        );
+          );
 
-        setRiskToEdit(null);
+          setRiskToEdit(null);
 
-    }}
-/>
-<EditItemModal
-    open={decisionToEdit !== null}
-    title="Edit Decision"
-    item={decisionToEdit}
-    fields={[
-        {
+        }}
+      />
+
+      <EditItemModal
+        open={decisionToEdit !== null}
+        title="Edit Decision"
+        item={decisionToEdit}
+        fields={[
+          {
             name: "title",
             label: "Title"
-        },
-        {
+          },
+          {
             name: "reason",
             label: "Reason",
             type: "textarea"
-        }
-    ]}
-    onCancel={() => setDecisionToEdit(null)}
-    onSave={async (updatedDecision) => {
+          }
+        ]}
+        onCancel={() => setDecisionToEdit(null)}
+        onSave={async (updatedDecision) => {
 
-        await updateDecision(
+          await updateDecision(
             decisionToEdit.id,
             {
-                ...decisionToEdit,
-                ...updatedDecision,
-                confidence: decisionToEdit.confidence
+              ...decisionToEdit,
+              ...updatedDecision,
+              confidence: decisionToEdit.confidence
             }
-        );
+          );
 
-        setDecisionToEdit(null);
+          setDecisionToEdit(null);
 
-    }}
-/>
-<EditActionPlanModal
-    open={editingActionPlan !== null}
-    actionPlan={editingActionPlan}
-    onCancel={() => {
-        setEditingActionPlan(null);
-        setEditingActionPlanIndex(null);
-    }}
-    onSave={handleSaveActionPlan}
-/>
-{toast.message && (    
-    <div
-        style={{
-    position: "fixed",
-    bottom: "24px",
-    right: "24px",
+        }}
+      />
 
-    background:
-        toast.type === "success"
-            ? "#16a34a"
-            : toast.type === "warning"
-            ? "#ea580c"
-            : "#2563eb",
+      <EditActionPlanModal
+        open={editingActionPlan !== null}
+        actionPlan={editingActionPlan}
+        onCancel={() => {
+          setEditingActionPlan(null);
+          setEditingActionPlanIndex(null);
+        }}
+        onSave={handleSaveActionPlan}
+      />
 
-    color: "#fff",
+      {toast.message && (
+        <div
+          style={{
+            position: "fixed",
+            bottom: "24px",
+            right: "24px",
 
-    padding: "12px 18px",
+            background:
+              toast.type === "success"
+                ? "#16a34a"
+                : toast.type === "warning"
+                ? "#ea580c"
+                : "#2563eb",
 
-    borderRadius: "10px",
+            color: "#fff",
 
-    boxShadow: "0 10px 20px rgba(0,0,0,0.2)",
+            padding: "12px 18px",
 
-    fontFamily: "'Space Mono', monospace",
+            borderRadius: "10px",
 
-    fontSize: "14px",
+            boxShadow: "0 10px 20px rgba(0,0,0,0.2)",
 
-    fontWeight: 600,
+            fontFamily: "'Space Mono', monospace",
 
-    zIndex: 9999,
+            fontSize: "14px",
 
-    animation: "fadeIn 0.3s ease",
-}}
-    >
-        {toast.message}
-    </div>
-)}
+            fontWeight: 600,
+
+            zIndex: 9999,
+
+            animation: "fadeIn 0.3s ease",
+          }}
+        >
+          {toast.message}
+        </div>
+      )}
+
     </div>
 
   );

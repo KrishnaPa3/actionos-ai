@@ -1,7 +1,7 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { useEffect } from "react";
 
-import { useAuth } from "./auth/AuthProvider";
+import { useAuth } from "./auth/AuthContext";
 
 import AppLayout from "./layouts/AppLayout";
 
@@ -14,6 +14,8 @@ import ResultsPage from "./pages/ResultsPage";
 import SessionsPage from "./pages/SessionsPage";
 import TaskList from "./pages/TaskList";
 import Integrations from "./pages/Integrations";
+
+import ProtectedRoute from "./auth/ProtectedRoute";
 
 function App() {
     const { user, loading } = useAuth();
@@ -37,7 +39,13 @@ function App() {
 
                 {/* Protected Application */}
 
-                <Route element={<AppLayout />}>
+                <Route
+                    element={
+                        <ProtectedRoute>
+                            <AppLayout />
+                        </ProtectedRoute>
+                    }
+                >
 
                     {/* Dashboard */}
 
@@ -50,7 +58,10 @@ function App() {
 
                     {/* Results */}
 
-                    <Route path="/results" element={<ResultsPage />} />
+                    <Route
+                        path="/results"
+                        element={<ResultsPage />}
+                    />
                     <Route
                         path="/results/:sessionId"
                         element={<ResultsPage />}

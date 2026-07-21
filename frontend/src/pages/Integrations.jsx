@@ -3,6 +3,7 @@ import { ExternalLink } from "lucide-react";
 
 import "./Integrations.css";
 import notionLogo from "../assets/integrations/notion-darkmode.svg";
+import { apiFetch } from "../lib/api";
 
 const API = "http://localhost:8000";
 
@@ -15,8 +16,8 @@ export default function Integrations() {
         async function load() {
             try {
                 const [statusRes, databaseRes] = await Promise.all([
-                    fetch(`${API}/notion/status`),
-                    fetch(`${API}/notion/database`)
+                    apiFetch(`/notion/status`),
+                    apiFetch(`/notion/database`)
                 ]);
 
                 setStatus(await statusRes.json());

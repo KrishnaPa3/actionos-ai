@@ -10,6 +10,7 @@ from services.action_service import build_action_payload, build_risk_payload
 from services.whisperx_service import transcribe_with_speakers
 from services.notion_service import NotionService
 from dependencies.auth import get_current_user
+from auth_supabase import get_authenticated_supabase
 
 import shutil
 import os
@@ -46,12 +47,13 @@ notion_service = NotionService()
 # Helper Function
 # ----------------------------------------------------
 
-def generate_meeting_name():
+def generate_meeting_name(user_id: str):
 
     response = (
         supabase
         .table("sessions")
         .select("meeting_name")
+        .eq("user_id", user_id)
         .execute()
     )
 
@@ -102,7 +104,17 @@ def root():
 
 
 @app.post("/upload-audio")
-async def upload_audio(file: UploadFile = File(...)):
+async def upload_audio(
+    file: UploadFile = File(...),
+    user=Depends(get_current_user),
+):
+
+    print("\n\nUPLOAD ENDPOINT HIT\n\n")
+
+    from auth_supabase import get_authenticated_supabase
+
+    # Authenticated database client (RLS-aware)
+    db = get_authenticated_supabase(user["access_token"])
 
     print("\n==============================")
     print("NEW AUDIO UPLOAD")
@@ -163,15 +175,15 @@ async def upload_audio(file: UploadFile = File(...)):
         segment.text
         for segment in segments
     ).strip()
-    _, speaker_transcript = transcribe_with_speakers(file_path)
 
+    _, speaker_transcript = transcribe_with_speakers(file_path)
 
     print("========== SPEAKER TRANSCRIPT ==========")
     print(speaker_transcript)
     print("========================================")
     print("Whisper complete!")
 
-    meeting_name = generate_meeting_name()
+    meeting_name = generate_meeting_name(user["id"])
 
     print("\n========== CREATING SESSION ==========")
 
@@ -200,12 +212,21 @@ async def upload_audio(file: UploadFile = File(...)):
 
             "archived": False,
 
-            "deleted": False
+            "deleted": False,
+
+            "user_id": user["id"],
 
         }
 
+        print("\n========== SESSION PAYLOAD ==========")
+        print(empty_payload)
+        print("Authenticated user:", user)
+        print("User ID:", user["id"])
+        print("=====================================\n")
+
+        # Use authenticated DB client
         response = (
-            supabase
+            db
             .table("sessions")
             .insert(empty_payload)
             .execute()
@@ -249,12 +270,12 @@ async def upload_audio(file: UploadFile = File(...)):
                 session_created_at
             )
 
-        # --------------------------------------------------
+                # --------------------------------------------------
         # STEP 3 - Update session with extraction
         # --------------------------------------------------
-       
+
         (
-            supabase
+            db
             .table("sessions")
             .update({
 
@@ -274,9 +295,11 @@ async def upload_audio(file: UploadFile = File(...)):
                 )
 
             })
+            .eq("user_id", user["id"])
             .eq("id", session_id)
             .execute()
         )
+
         # --------------------------------------------------
         # STEP 4 - Save actions
         # --------------------------------------------------
@@ -297,12 +320,14 @@ async def upload_audio(file: UploadFile = File(...)):
 
                 session_id,
 
-                session_created_at
+                session_created_at,
 
             )
 
+            action_payload["user_id"] = user["id"]
+
             action_response = (
-                supabase
+                db
                 .table("actions")
                 .insert(action_payload)
                 .execute()
@@ -342,14 +367,15 @@ async def upload_audio(file: UploadFile = File(...)):
                         )
 
                     (
-                        supabase
+                        db
                         .table("reminders")
                         .insert({
-    "action_id": new_action["id"],
-    "reminder_time": reminder_time.isoformat(),
-    "label": "Due Soon",
-    "is_default": True
-})
+                            "action_id": new_action["id"],
+                            "reminder_time": reminder_time.isoformat(),
+                            "label": "Due Soon",
+                            "is_default": True,
+                            "user_id": user["id"],
+                        })
                         .execute()
                     )
 
@@ -375,11 +401,13 @@ async def upload_audio(file: UploadFile = File(...)):
 
             risk_payload = build_risk_payload(
                 risk,
-                session_id
+                session_id,
             )
 
+            risk_payload["user_id"] = user["id"]
+
             (
-                supabase
+                db
                 .table("risks")
                 .insert(risk_payload)
                 .execute()
@@ -407,8 +435,27 @@ async def upload_audio(file: UploadFile = File(...)):
                 "confidence": decision.get("confidence", 0.0),
 
                 "decision_status": "pending",
-                "message" : "Failed to save meeting."
 
+                "user_id": user["id"],
+
+            }
+
+            (
+                db
+                .table("decisions")
+                .insert(decision_payload)
+                .execute()
+            )
+
+    except Exception as e:
+
+        import traceback
+        traceback.print_exc()
+
+        return {
+            "success": False,
+            "message": "Failed to save meeting.",
+            "error": str(e),
         }
 
     finally:
@@ -434,8 +481,7 @@ async def upload_audio(file: UploadFile = File(...)):
 
         "extraction": structured_data
 
-    }
-        
+    }        
 # ----------------------------------------------------
 # Request Models
 # ----------------------------------------------------
@@ -477,7 +523,7 @@ class SnoozeRequest(BaseModel):
 # ----------------------------------------------------
 
 @app.post("/extract")
-async def extract_text(request: ExtractRequest):
+async def extract_text(request: ExtractRequest, user=Depends(get_current_user),):
 
     if not request.transcript.strip():
 
@@ -508,12 +554,15 @@ async def extract_text(request: ExtractRequest):
 # ----------------------------------------------------
 
 @app.get("/session/{session_id}")
-async def get_session(session_id: str):
+async def get_session(session_id: str,  user=Depends(get_current_user),):
+
+    db = get_authenticated_supabase(user["access_token"])
 
     response = (
-        supabase
+        db
         .table("sessions")
         .select("*")
+        .eq("user_id", user["id"])
         .eq("id", session_id)
         .execute()
     )
@@ -532,12 +581,15 @@ async def get_session(session_id: str):
 
 
 @app.get("/session/{session_id}/actions")
-async def get_session_actions(session_id: str):
+async def get_session_actions(session_id: str,  user=Depends(get_current_user),):
+
+    db = get_authenticated_supabase(user["access_token"])
 
     response = (
-        supabase
+        db
         .table("actions")
         .select("*")
+        .eq("user_id", user["id"])
         .eq("session_id", session_id)
         .eq("deleted", False)
         .order("created_at")
@@ -561,11 +613,15 @@ async def get_all_actions(
     date_mode: str | None = None,
     date: str | None = None,
     end: str | None = None,
+    user=Depends(get_current_user),
+
 ):
+
+    db = get_authenticated_supabase(user["access_token"])
 
     # Build base query
     query = (
-        supabase
+        db
         .table("actions")
         .select("""
             *,
@@ -574,6 +630,7 @@ async def get_all_actions(
                 meeting_name
             )
         """)
+        .eq("user_id", user["id"])
         .eq("deleted", False)
     )
 
@@ -678,11 +735,14 @@ async def get_all_actions(
         "count": len(response.data),
         "actions": response.data
     }
-@app.post("/reminders/{reminder_id}/snooze")
+@app.post("/reminders/{reminder_id}/snooze" )
 async def snooze_reminder(
     reminder_id: str,
-    request: SnoozeRequest
+    request: SnoozeRequest,
+    user=Depends(get_current_user),
 ):
+
+    db = get_authenticated_supabase(user["access_token"])
 
     now = datetime.now(timezone.utc)
 
@@ -727,13 +787,14 @@ async def snooze_reminder(
         )
 
     response = (
-        supabase
+        db
         .table("reminders")
         .update({
             "reminder_time": new_time.isoformat(),
             "dismissed": False,
             "updated_at": now.isoformat(),
         })
+        .eq("user_id", user["id"])
         .eq("id", reminder_id)
         .execute()
     )
@@ -742,11 +803,14 @@ async def snooze_reminder(
 @app.post("/actions/{action_id}/reminders")
 async def create_reminder(
     action_id: str,
-    reminder: ReminderCreate
+    reminder: ReminderCreate,
+    user=Depends(get_current_user),
 ):
 
+    db = get_authenticated_supabase(user["access_token"])
+
     response = (
-        supabase
+        db
         .table("reminders")
         .insert({
     "action_id": action_id,
@@ -754,19 +818,23 @@ async def create_reminder(
     "reminder_time": reminder.reminder_time,
     "dismissed": False,
     "is_default": False,
+    "user_id": user["id"],
 })
         .execute()
     )
 
     return response.data[0]
 @app.get("/actions/filters")
-async def get_action_filters():
+async def get_action_filters( user=Depends(get_current_user),):
+
+    db = get_authenticated_supabase(user["access_token"])
 
     # Owners
     owner_response = (
-        supabase
+        db
         .table("actions")
         .select("owner")
+        .eq("user_id", user["id"])
         .eq("deleted", False)
         .execute()
     )
@@ -779,9 +847,10 @@ async def get_action_filters():
 
     # Sessions
     session_response = (
-        supabase
+        db
         .table("sessions")
         .select("id, meeting_name")
+        .eq("user_id", user["id"])
         .order("meeting_name")
         .execute()
     )
@@ -791,13 +860,15 @@ async def get_action_filters():
         "sessions": session_response.data
     }
 @app.get("/reminders")
-async def get_reminders():
+async def get_reminders( user=Depends(get_current_user),):
+
+    db = get_authenticated_supabase(user["access_token"])
 
     now = datetime.now(timezone.utc)
     next_24h = now + timedelta(hours=24)
 
     response = (
-        supabase
+        db
         .table("reminders")
         .select("""
             *,
@@ -814,6 +885,7 @@ async def get_reminders():
                 )
             )
         """)
+        .eq("user_id", user["id"])
         .eq("dismissed", False)
         .or_(
             f"and(is_default.eq.true,reminder_time.lte.{next_24h.isoformat()}),is_default.eq.false"
@@ -858,13 +930,16 @@ async def get_reminders():
 
     return reminders
 @app.patch("/actions/{action_id}/complete")
-async def complete_action(action_id: str):
+async def complete_action(action_id: str, user=Depends(get_current_user)):
+
+    db = get_authenticated_supabase(user["access_token"])
 
     # Get current task
     response = (
-        supabase
+        db
         .table("actions")
         .select("*")
+        .eq("user_id", user["id"])
         .eq("id", action_id)
         .execute()
     )
@@ -894,9 +969,10 @@ async def complete_action(action_id: str):
     }
 
     update = (
-        supabase
+        db
         .table("actions")
         .update(update_data)
+        .eq("user_id", user["id"])
         .eq("id", action_id)
         .execute()
     )
@@ -910,17 +986,9 @@ async def complete_action(action_id: str):
         try:
 
             notion_service.update_task_status(
-                
-
                 page_id=action["notion_page_id"],
-
                 action_status=new_status
-                
-
             )
-            
-
-            
 
         except Exception as e:
 
@@ -933,9 +1001,10 @@ async def complete_action(action_id: str):
     if new_status == "completed":
 
         (
-            supabase
+            db
             .table("reminders")
             .delete()
+            .eq("user_id", user["id"])
             .eq("action_id", action_id)
             .execute()
         )
@@ -959,7 +1028,7 @@ async def complete_action(action_id: str):
                 )
 
             (
-                supabase
+                db
                 .table("reminders")
                 .insert({
                     "action_id": action_id,
@@ -967,6 +1036,7 @@ async def complete_action(action_id: str):
                     "reminder_time": reminder_time.isoformat(),
                     "dismissed": False,
                     "is_default": True,
+                    "user_id": user["id"],
                 })
                 .execute()
             )
@@ -979,17 +1049,21 @@ async def complete_action(action_id: str):
         "action": update.data[0]
     }
 
+
 @app.patch("/actions/{action_id}/confirm")
-async def confirm_action(action_id: str):
+async def confirm_action(action_id: str, user=Depends(get_current_user)):
+
+    db = get_authenticated_supabase(user["access_token"])
 
     # ------------------------------------
     # Fetch task
     # ------------------------------------
 
     response = (
-        supabase
+        db
         .table("actions")
         .select("*")
+        .eq("user_id", user["id"])
         .eq("id", action_id)
         .execute()
     )
@@ -1023,18 +1097,13 @@ async def confirm_action(action_id: str):
         notion_page = notion_service.create_task(
 
             title=action["title"],
-
             owner=action["owner"],
-
             due_date=action["due_date"],
-
             priority=action["priority"],
-
             summary=action.get("description") or "",
-
             session_link=None,
-
             status=action["status"]
+
         )
 
     except Exception as e:
@@ -1049,17 +1118,16 @@ async def confirm_action(action_id: str):
     # ------------------------------------
 
     update = (
-        supabase
+        db
         .table("actions")
         .update({
 
             "confirmed": True,
-
             "notion_page_id": notion_page["page_id"],
-
             "notion_page_url": notion_page["page_url"]
 
         })
+        .eq("user_id", user["id"])
         .eq("id", action_id)
         .execute()
     )
@@ -1067,17 +1135,17 @@ async def confirm_action(action_id: str):
     return {
 
         "success": True,
-
         "message": "Task confirmed and synced to Notion.",
-
         "action": update.data[0]
 
-    }   
+    }
 @app.get("/decisions")
-async def get_all_decisions():
+async def get_all_decisions( user=Depends(get_current_user),):
+
+    db = get_authenticated_supabase(user["access_token"])
 
     response = (
-        supabase
+        db
         .table("decisions")
         .select("""
             *,
@@ -1085,6 +1153,7 @@ async def get_all_decisions():
                 meeting_name
             )
         """)
+        .eq("user_id", user["id"])
         .eq("deleted", False)
         .order("created_at", desc=True)
         .execute()
@@ -1098,16 +1167,20 @@ async def get_all_decisions():
 @app.patch("/reminders/{reminder_id}")
 async def update_reminder(
     reminder_id: str,
-    reminder: ReminderUpdate
+    reminder: ReminderUpdate,
+    user=Depends(get_current_user),
 ):
 
+    db = get_authenticated_supabase(user["access_token"])
+
     response = (
-        supabase
+        db
         .table("reminders")
         .update({
             "reminder_time": reminder.reminder_time,
             "updated_at": datetime.now(timezone.utc).isoformat(),
         })
+        .eq("user_id", user["id"])
         .eq("id", reminder_id)
         .execute()
     )
@@ -1120,12 +1193,15 @@ async def update_reminder(
 
     return response.data[0]
 @app.get("/actions/{action_id}/reminders")
-async def get_action_reminders(action_id: str):
+async def get_action_reminders(action_id: str,  user=Depends(get_current_user),):
+
+    db = get_authenticated_supabase(user["access_token"])
 
     response = (
-        supabase
+        db
         .table("reminders")
         .select("*")
+        .eq("user_id", user["id"])
         .eq("action_id", action_id)
         .order("reminder_time")
         .execute()
@@ -1137,11 +1213,14 @@ async def get_action_reminders(action_id: str):
 @app.patch("/actions/{action_id}")
 async def update_action(
     action_id: str,
-    request: UpdateActionRequest
+    request: UpdateActionRequest,
+    user=Depends(get_current_user),
 ):
 
+    db = get_authenticated_supabase(user["access_token"])
+
     response = (
-        supabase
+        db
         .table("actions")
         .update({
             "title": request.title,
@@ -1150,6 +1229,7 @@ async def update_action(
             "priority": request.priority,
             "description": request.description
         })
+        .eq("user_id", user["id"])
         .eq("id", action_id)
         .execute()
     )
@@ -1201,13 +1281,16 @@ async def update_action(
     }
 
 @app.delete("/actions/{action_id}")
-async def delete_action(action_id: str):
+async def delete_action(action_id: str,  user=Depends(get_current_user),):
+
+    db = get_authenticated_supabase(user["access_token"])
 
     # Check if task exists
     response = (
-        supabase
+        db
         .table("actions")
         .select("*")
+        .eq("user_id", user["id"])
         .eq("id", action_id)
         .execute()
     )
@@ -1220,11 +1303,12 @@ async def delete_action(action_id: str):
 
     # Soft delete
     update = (
-        supabase
+        db
         .table("actions")
         .update({
             "deleted": True
         })
+        .eq("user_id", user["id"])
         .eq("id", action_id)
         .execute()
     )
@@ -1235,12 +1319,15 @@ async def delete_action(action_id: str):
         "action": update.data[0]
     }
 @app.delete("/reminders/{reminder_id}")
-async def delete_reminder(reminder_id: str):
+async def delete_reminder(reminder_id: str,  user=Depends(get_current_user),):
+
+    db = get_authenticated_supabase(user["access_token"])
 
     (
-        supabase
+        db
         .table("reminders")
         .delete()
+        .eq("user_id", user["id"])
         .eq("id", reminder_id)
         .execute()
     )
@@ -1249,12 +1336,15 @@ async def delete_reminder(reminder_id: str):
         "success": True
     }
 @app.get("/session/{session_id}/risks")
-async def get_session_risks(session_id: str):
+async def get_session_risks(session_id: str,  user=Depends(get_current_user),):
+
+    db = get_authenticated_supabase(user["access_token"])
 
     response = (
-        supabase
+        db
         .table("risks")
         .select("*")
+        .eq("user_id", user["id"])
         .eq("session_id", session_id)
         .eq("deleted", False)
         .order("created_at")
@@ -1268,11 +1358,14 @@ async def get_session_risks(session_id: str):
 @app.patch("/risks/{risk_id}")
 async def update_risk(
     risk_id: str,
-    request: UpdateRiskRequest
+    request: UpdateRiskRequest,
+    user=Depends(get_current_user),
 ):
 
+    db = get_authenticated_supabase(user["access_token"])
+
     response = (
-        supabase
+        db
         .table("risks")
         .update({
 
@@ -1287,6 +1380,7 @@ async def update_risk(
             "updated_at": datetime.now(timezone.utc).isoformat()
 
         })
+        .eq("user_id", user["id"])
         .eq("id", risk_id)
         .execute()
     )
@@ -1311,12 +1405,15 @@ async def update_risk(
 
     }
 @app.patch("/risks/{risk_id}/resolve")
-async def resolve_risk(risk_id: str):
+async def resolve_risk(risk_id: str,  user=Depends(get_current_user),):
+
+    db = get_authenticated_supabase(user["access_token"])
 
     response = (
-        supabase
+        db
         .table("risks")
         .select("*")
+        .eq("user_id", user["id"])
         .eq("id", risk_id)
         .execute()
     )
@@ -1336,12 +1433,13 @@ async def resolve_risk(risk_id: str):
     )
 
     update = (
-        supabase
+        db
         .table("risks")
         .update({
             "status": new_status,
             "updated_at": datetime.now(timezone.utc).isoformat()
         })
+        .eq("user_id", user["id"])
         .eq("id", risk_id)
         .execute()
     )
@@ -1353,13 +1451,16 @@ async def resolve_risk(risk_id: str):
     }
 
 @app.delete("/risks/{risk_id}")
-async def delete_risk(risk_id: str):
+async def delete_risk(risk_id: str,  user=Depends(get_current_user),):
+
+    db = get_authenticated_supabase(user["access_token"])
 
     # Check if risk exists
     response = (
-        supabase
+        db
         .table("risks")
         .select("*")
+        .eq("user_id", user["id"])
         .eq("id", risk_id)
         .execute()
     )
@@ -1372,12 +1473,13 @@ async def delete_risk(risk_id: str):
 
     # Soft delete
     update = (
-        supabase
+        db
         .table("risks")
         .update({
             "deleted": True,
             "updated_at": datetime.now(timezone.utc).isoformat()
         })
+        .eq("user_id", user["id"])
         .eq("id", risk_id)
         .execute()
     )
@@ -1388,12 +1490,15 @@ async def delete_risk(risk_id: str):
         "risk": update.data[0]
     }
 @app.get("/session/{session_id}/decisions")
-async def get_session_decisions(session_id: str):
+async def get_session_decisions(session_id: str,  user=Depends(get_current_user),):
+
+    db = get_authenticated_supabase(user["access_token"])
 
     response = (
-        supabase
+        db
         .table("decisions")
         .select("*")
+        .eq("user_id", user["id"])
         .eq("session_id", session_id)
         .eq("deleted", False)
         .order("created_at")
@@ -1407,11 +1512,14 @@ async def get_session_decisions(session_id: str):
 @app.patch("/decisions/{decision_id}")
 async def update_decision(
     decision_id: str,
-    request: UpdateDecisionRequest
+    request: UpdateDecisionRequest,
+    user=Depends(get_current_user),
 ):
 
+    db = get_authenticated_supabase(user["access_token"])
+
     response = (
-        supabase
+        db
         .table("decisions")
         .update({
             "title": request.title,
@@ -1419,6 +1527,7 @@ async def update_decision(
             "confidence": request.confidence,
             "updated_at": datetime.now(timezone.utc).isoformat()
         })
+        .eq("user_id", user["id"])
         .eq("id", decision_id)
         .execute()
     )
@@ -1435,15 +1544,18 @@ async def update_decision(
         "decision": response.data[0]
     }
 @app.patch("/decisions/{decision_id}/accept")
-async def accept_decision(decision_id: str):
+async def accept_decision(decision_id: str,  user=Depends(get_current_user),):
+
+    db = get_authenticated_supabase(user["access_token"])
 
     response = (
-        supabase
+        db
         .table("decisions")
         .update({
             "decision_status": "accepted",
             "updated_at": datetime.now(timezone.utc).isoformat()
         })
+        .eq("user_id", user["id"])
         .eq("id", decision_id)
         .execute()
     )
@@ -1459,15 +1571,18 @@ async def accept_decision(decision_id: str):
         "decision": response.data[0]
     }
 @app.patch("/decisions/{decision_id}/reject")
-async def reject_decision(decision_id: str):
+async def reject_decision(decision_id: str,  user=Depends(get_current_user),):
+
+    db = get_authenticated_supabase(user["access_token"])
 
     response = (
-        supabase
+        db
         .table("decisions")
         .update({
             "decision_status": "rejected",
             "updated_at": datetime.now(timezone.utc).isoformat()
         })
+        .eq("user_id", user["id"])
         .eq("id", decision_id)
         .execute()
     )
@@ -1483,12 +1598,15 @@ async def reject_decision(decision_id: str):
         "decision": response.data[0]
     }
 @app.delete("/decisions/{decision_id}")
-async def delete_decision(decision_id: str):
+async def delete_decision(decision_id: str,  user=Depends(get_current_user),):
+
+    db = get_authenticated_supabase(user["access_token"])
 
     response = (
-        supabase
+        db
         .table("decisions")
         .select("*")
+        .eq("user_id", user["id"])
         .eq("id", decision_id)
         .execute()
     )
@@ -1500,12 +1618,13 @@ async def delete_decision(decision_id: str):
         )
 
     update = (
-        supabase
+        db
         .table("decisions")
         .update({
             "deleted": True,
             "updated_at": datetime.now(timezone.utc).isoformat()
         })
+        .eq("user_id", user["id"])
         .eq("id", decision_id)
         .execute()
     )
@@ -1522,11 +1641,14 @@ async def delete_decision(decision_id: str):
 @app.patch("/session/{session_id}/rename")
 async def rename_meeting(
     session_id: str,
-    request: RenameMeetingRequest
+    request: RenameMeetingRequest,
+    user=Depends(get_current_user),
 ):
 
+    db = get_authenticated_supabase(user["access_token"])
+
     response = (
-        supabase
+        db
         .table("sessions")
         .update({
 
@@ -1535,6 +1657,7 @@ async def rename_meeting(
             "updated_at": datetime.utcnow().isoformat()
 
         })
+        .eq("user_id", user["id"])
         .eq("id", session_id)
         .execute()
     )
@@ -1568,9 +1691,12 @@ from time import perf_counter
 from fastapi import Depends
 
 @app.get("/sessions")
-async def get_sessions(
-    user=Depends(get_current_user)
+async def get_sessions( user=Depends(get_current_user),
+    
 ):
+
+    db = get_authenticated_supabase(user["access_token"])
+
     endpoint_start = perf_counter()
 
     # -------------------------------
@@ -1579,7 +1705,7 @@ async def get_sessions(
     query_start = perf_counter()
 
     response = (
-        supabase
+        db
         .table("session_dashboard")
         .select("*")
         .eq("user_id", user["id"])
@@ -1604,7 +1730,7 @@ async def get_sessions(
         task_start = perf_counter()
 
         tasks = (
-            supabase
+            db
             .table("actions")
             .select("*")
             .eq("user_id", user["id"])
@@ -1640,11 +1766,14 @@ async def get_sessions(
     }
 
 @app.delete("/session/{session_id}/action-plan/{index}")
-async def delete_action_plan(session_id: str, index: int):
+async def delete_action_plan(session_id: str, index: int, user=Depends(get_current_user),):
+
+    db = get_authenticated_supabase(user["access_token"])
 
     response = (
-        supabase.table("sessions")
+        db.table("sessions")
         .select("action_plan")
+        .eq("user_id", user["id"])
         .eq("id", session_id)
         .single()
         .execute()
@@ -1666,11 +1795,11 @@ async def delete_action_plan(session_id: str, index: int):
 
     action_plans.pop(index)
 
-    supabase.table("sessions").update(
+    db.table("sessions").update(
         {
             "action_plan": action_plans
         }
-    ).eq(
+    ).eq("user_id", user["id"]).eq(
         "id",
         session_id
     ).execute()
@@ -1684,12 +1813,16 @@ from schemas.extraction import ActionPlan
 async def update_action_plan(
     session_id: str,
     index: int,
-    updated_plan: ActionPlan
+    updated_plan: ActionPlan,
+    user=Depends(get_current_user),
 ):
 
+    db = get_authenticated_supabase(user["access_token"])
+
     response = (
-        supabase.table("sessions")
+        db.table("sessions")
         .select("action_plan")
+        .eq("user_id", user["id"])
         .eq("id", session_id)
         .single()
         .execute()
@@ -1711,11 +1844,11 @@ async def update_action_plan(
 
     action_plans[index] = updated_plan.model_dump()
 
-    supabase.table("sessions").update(
+    db.table("sessions").update(
         {
             "action_plan": action_plans
         }
-    ).eq(
+    ).eq("user_id", user["id"]).eq(
         "id",
         session_id
     ).execute()
@@ -1728,22 +1861,26 @@ async def update_action_plan(
 # ----------------------------------------------------
 
 @app.delete("/sessions/{session_id}")
-async def delete_session(session_id: str):
+async def delete_session(session_id: str,  user=Depends(get_current_user),):
+
+    db = get_authenticated_supabase(user["access_token"])
 
     # Delete actions first
     (
-        supabase
+        db
         .table("actions")
         .delete()
+        .eq("user_id", user["id"])
         .eq("session_id", session_id)
         .execute()
     )
 
     # Delete the session
     response = (
-        supabase
+        db
         .table("sessions")
         .delete()
+        .eq("user_id", user["id"])
         .eq("id", session_id)
         .execute()
     )
@@ -1758,10 +1895,12 @@ async def delete_session(session_id: str):
 # ----------------------------------------------------
 
 @app.patch("/session/{session_id}/delete")
-async def delete_session(session_id: str):
+async def delete_session(session_id: str,  user=Depends(get_current_user),):
+
+    db = get_authenticated_supabase(user["access_token"])
 
     response = (
-        supabase
+        db
         .table("sessions")
         .update({
 
@@ -1770,6 +1909,7 @@ async def delete_session(session_id: str):
             "updated_at": datetime.utcnow().isoformat()
 
         })
+        .eq("user_id", user["id"])
         .eq("id", session_id)
         .execute()
     )

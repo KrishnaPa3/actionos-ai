@@ -5,6 +5,7 @@ import WaveSurfer from "wavesurfer.js";
 import Card from "./components/ui/Card";
 import Button from "./components/ui/Button";
 import PageHeader from "./components/ui/PageHeader";
+import { apiFetch } from "./lib/api";
 
 import {
   CircleDot,
@@ -58,8 +59,8 @@ function VoiceRecorder() {
 
       setUploadStatus("Uploading audio...");
 
-      const response = await fetch(
-        "http://127.0.0.1:8000/upload-audio",
+      const response = await apiFetch(
+        "/upload-audio",
         {
           method: "POST",
           body: formData,

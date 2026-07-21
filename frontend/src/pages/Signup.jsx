@@ -7,12 +7,10 @@ import "./Auth.css";
 
 function Signup() {
     const navigate = useNavigate();
-
-    const [username, setUsername] = useState("");
-    const [fullName, setFullName] = useState("");
-    const [email, setEmail] = useState("");
-    const [password, setPassword] = useState("");
-    const [confirmPassword, setConfirmPassword] = useState("");
+const [username, setUsername] = useState("");
+const [email, setEmail] = useState("");
+const [password, setPassword] = useState("");
+const [confirmPassword, setConfirmPassword] = useState("");
 
     const [showPassword, setShowPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -58,7 +56,11 @@ function Signup() {
             "Account created successfully!\n\nPlease verify your email before logging in."
         );
 
-        navigate("/login");
+       navigate("/login", {
+    state: {
+        message: "Account created successfully! Please sign in.",
+    },
+});
     };
 
     const handleGoogleSignup = async () => {

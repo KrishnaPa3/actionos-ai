@@ -6,6 +6,7 @@ import TaskFilters from "../components/tasks/TaskFilters";
 import TaskTable from "../components/tasks/TaskTable";
 
 import "./TaskList.css";
+import { apiFetch } from "../lib/api";
 
 export default function TaskList() {
   // Search state
@@ -56,10 +57,10 @@ if (dateMode && selectedDate) {
 
 if (dateMode === "between" && endDate) {
     params.append("end", endDate);
-}
+} 
 
-      const response = await fetch(
-        `http://localhost:8000/actions?${params.toString()}`
+      const response = await apiFetch(
+        `/actions?${params.toString()}`
       );
 
       if (!response.ok) {
@@ -78,8 +79,8 @@ if (dateMode === "between" && endDate) {
   }
 async function loadFilters() {
   try {
-    const response = await fetch(
-      "http://localhost:8000/actions/filters"
+    const response = await apiFetch(
+      "/actions/filters"
     );
 
     if (!response.ok) {

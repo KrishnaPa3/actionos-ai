@@ -1,81 +1,67 @@
-.navbar{
+.navbar {
+    background: #0B1120;
 
-    background:#0B1120;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
 
-    display:flex;
+    width: 100%;
+    min-height: 76px;
 
-    justify-content:space-between;
+    padding: 0 32px;
 
-    align-items:center;
+    border-bottom: 1px solid #22314D;
 
-    padding:18px 40px;
-
-    border-bottom:1px solid #22314D;
-
-    position:sticky;
-
-    top:0;
-
-    z-index:1000;
-
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+    box-sizing: border-box;
 }
 
-.nav-logo{
+.nav-logo {
+    display: flex;
+    align-items: center;
+    flex-shrink: 0;
 
-    font-family:var(--display);
-
-    color:white;
-
-    font-size:1.7rem;
-
-    letter-spacing:3px;
-
-    cursor:pointer;
-
+    font-family: var(--display);
+    color: white;
+    font-size: 1.7rem;
+    letter-spacing: 3px;
+    cursor: pointer;
 }
 
-.nav-links{
+.nav-links {
+    display: flex;
+    align-items: center;
+    gap: 10px;
 
-    display:flex;
+    flex: 1;
+    justify-content: flex-end;
 
-    align-items:center;
-
-    gap:18px;
-
-    position:relative;
-
+    position: relative;
 }
 
-.nav-links button{
+.nav-links button {
+    background: none;
+    border: none;
 
-    background:none;
+    color: #C6D1E4;
 
-    border:none;
+    font-family: var(--display);
+    font-size: .88rem;
 
-    color:#C6D1E4;
+    cursor: pointer;
 
-    font-family:var(--display);
-
-    cursor:pointer;
-
-    font-size:.9rem;
-
-    transition:.25s;
-
+    transition: .25s;
 }
 
-.nav-links button:hover{
-
-    color:#4F8CFF;
-
+.nav-links button:hover {
+    color: #4F8CFF;
 }
 
-.active{
-
-    color:#4F8CFF !important;
-
+.active {
+    color: #4F8CFF !important;
 }
-
 
 /* ===========================================
    Notification Bell
@@ -449,4 +435,122 @@
 
     color:#6EDB91;
 
+}
+/* ==========================================
+   Profile Menu
+========================================== */
+
+.profileMenuContainer {
+    position: relative;
+    margin-left: 8px;
+}
+
+.profileButton {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+
+    background: transparent;
+    border: none;
+
+    color: white;
+    cursor: pointer;
+
+    padding: 6px 10px;
+
+    border-radius: 10px;
+
+    transition: .2s;
+}
+
+.profileButton:hover {
+    background: #172238;
+}
+
+.profileAvatar {
+    width: 34px;
+    height: 34px;
+
+    border-radius: 50%;
+
+    background: #2563EB;
+
+    color: white;
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    font-weight: 700;
+    font-size: 15px;
+
+    flex-shrink: 0;
+}
+
+.profileDropdown {
+    position: absolute;
+
+    top: 58px;
+    right: 0;
+
+    width: 230px;
+
+    background: #111827;
+
+    border: 1px solid #25314B;
+
+    border-radius: 14px;
+
+    overflow: hidden;
+
+    box-shadow: 0 24px 60px rgba(0,0,0,.45);
+
+    z-index: 9999;
+
+    animation: popupFade .18s ease;
+}
+
+.profileDropdownHeader {
+    padding: 18px;
+
+    display: flex;
+    flex-direction: column;
+
+    border-bottom: 1px solid #25314B;
+}
+
+.profileDropdownHeader strong {
+    color: white;
+    font-size: 15px;
+}
+
+.profileDropdownHeader small {
+    margin-top: 4px;
+    color: #8EA2C8;
+    font-size: 12px;
+}
+
+.profileDropdown button {
+    width: 100%;
+
+    padding: 14px 18px;
+
+    display: flex;
+    align-items: center;
+    gap: 10px;
+
+    background: transparent;
+    border: none;
+
+    color: white;
+
+    cursor: pointer;
+
+    text-align: left;
+
+    transition: .2s;
+}
+
+.profileDropdown button:hover {
+    background: #162035;
 }

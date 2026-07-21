@@ -13,6 +13,7 @@
     } from "./ui/icons";
 
     import "./ReminderPanel.css";
+import { apiFetch } from "../lib/api";
 
     export default function ReminderPanel({
       actionId,
@@ -53,22 +54,18 @@
         Load reminders
       ========================================== */
 
-      useEffect(() => {
-
-        if (!actionId) return;
-
-        loadReminders();
-
-      }, [actionId]);
-
+     useEffect(() => {
+    if (!actionId) return;
+    loadReminders();
+}, [actionId]);
       const loadReminders = async () => {
 
         try {
 
           setLoading(true);
 
-          const response = await fetch(
-            `http://127.0.0.1:8000/actions/${actionId}/reminders`
+          const response = await apiFetch(
+            `/actions/${actionId}/reminders`
           );
 
           const data = await response.json();
@@ -103,9 +100,9 @@
 
         try {
 
-          await fetch(
+          await apiFetch(
 
-            `http://127.0.0.1:8000/actions/${actionId}/reminders`,
+            `/${actionId}/reminders`,
 
             {
 
@@ -158,9 +155,9 @@
 
         try {
 
-          await fetch(
+          await apiFetch(
 
-            `http://127.0.0.1:8000/reminders/${reminderId}`,
+            `/reminders/${reminderId}`,
 
             {
 
@@ -211,9 +208,9 @@ const snoozeReminder = async (
 
   try {
 
-    await fetch(
+    await apiFetch(
 
-      `http://127.0.0.1:8000/reminders/${reminderId}/snooze`,
+      `/reminders/${reminderId}/snooze`,
 
       {
 
@@ -262,9 +259,9 @@ const snoozeReminder = async (
 
         try {
 
-          await fetch(
+          await apiFetch(
 
-            `http://127.0.0.1:8000/reminders/${reminderId}`,
+            `/reminders/${reminderId}`,
 
             {
 

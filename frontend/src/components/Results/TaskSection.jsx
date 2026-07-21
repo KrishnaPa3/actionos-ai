@@ -708,8 +708,8 @@ const [syncing, setSyncing] = useState(false);
 
         try {
 
-            const response = await fetch(
-                `http://localhost:8000/actions/${selectedTask.id}/confirm`,
+            const response = await apiFetch(
+                `/actions/${selectedTask.id}/confirm`,
                 {
                     method: "PATCH"
                 }
