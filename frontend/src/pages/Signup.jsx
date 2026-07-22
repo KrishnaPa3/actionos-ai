@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { motion } from "motion/react";
 import { Link, useNavigate } from "react-router-dom";
 import { Eye, EyeOff } from "lucide-react";
 import { supabase } from "../lib/supabase";
@@ -7,10 +8,12 @@ import "./Auth.css";
 
 function Signup() {
     const navigate = useNavigate();
-const [username, setUsername] = useState("");
-const [email, setEmail] = useState("");
-const [password, setPassword] = useState("");
-const [confirmPassword, setConfirmPassword] = useState("");
+
+    const [username, setUsername] = useState("");
+    const [fullName, setFullName] = useState("");
+    const [email, setEmail] = useState("");
+    const [password, setPassword] = useState("");
+    const [confirmPassword, setConfirmPassword] = useState("");
 
     const [showPassword, setShowPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -22,7 +25,7 @@ const [confirmPassword, setConfirmPassword] = useState("");
         e.preventDefault();
         setError("");
 
-        if (!username || !email || !password || !confirmPassword) {
+        if (!username || !fullName || !email || !password || !confirmPassword) {
             setError("Please fill in all required fields.");
             return;
         }
@@ -34,7 +37,7 @@ const [confirmPassword, setConfirmPassword] = useState("");
 
         setLoading(true);
 
-        const { error } = await supabase.auth.signUp({
+        const { data, error } = await supabase.auth.signUp({
             email,
             password,
             options: {
@@ -52,24 +55,16 @@ const [confirmPassword, setConfirmPassword] = useState("");
             return;
         }
 
-        alert(
-            "Account created successfully!\n\nPlease verify your email before logging in."
-        );
-
-       navigate("/login", {
-    state: {
-        message: "Account created successfully! Please sign in.",
-    },
-});
-    };
-
-    const handleGoogleSignup = async () => {
-        const { error } = await supabase.auth.signInWithOAuth({
-            provider: "google",
-        });
-
-        if (error) {
-            setError(error.message);
+        // If email confirmation is disabled, the session will be set immediately.
+        // Navigate to dashboard. Otherwise, redirect to login with a success message.
+        if (data.session) {
+            navigate("/");
+        } else {
+            navigate("/login", {
+                state: {
+                    message: "Account created successfully! Please sign in.",
+                },
+            });
         }
     };
 
@@ -79,8 +74,12 @@ const [confirmPassword, setConfirmPassword] = useState("");
 
                 {/* Left */}
 
-                <div className="auth-left">
-
+                <motion.div
+                  className="auth-left"
+                  initial={{ opacity: 0, x: -30 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 0.5, ease: "easeOut" }}
+                >
                     <div
                         style={{
                             width: "100%",
@@ -112,18 +111,20 @@ const [confirmPassword, setConfirmPassword] = useState("");
                             conversations into actions.
                         </p>
                     </div>
-
-                </div>
+                </motion.div>
 
                 {/* Right */}
 
-                <div className="auth-right">
-
+                <motion.div
+                  className="auth-right"
+                  initial={{ opacity: 0, x: 30 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 0.5, ease: "easeOut", delay: 0.1 }}
+                >
                     <form
                         className="auth-card"
                         onSubmit={handleSignup}
                     >
-
                         <h2>Create Account</h2>
 
                         <p className="auth-subtitle">
@@ -131,9 +132,14 @@ const [confirmPassword, setConfirmPassword] = useState("");
                         </p>
 
                         {error && (
-                            <div className="auth-error">
+                            <motion.div
+                              className="auth-error"
+                              initial={{ opacity: 0, x: -10 }}
+                              animate={{ opacity: 1, x: 0 }}
+                              transition={{ duration: 0.2 }}
+                            >
                                 {error}
-                            </div>
+                            </motion.div>
                         )}
 
                         <label>Username *</label>
@@ -148,7 +154,7 @@ const [confirmPassword, setConfirmPassword] = useState("");
                             }
                         />
 
-                        <label>Full Name</label>
+                        <label>Full Name *</label>
 
                         <input
                             className="auth-input"
@@ -199,13 +205,16 @@ const [confirmPassword, setConfirmPassword] = useState("");
                             <button
                                 type="button"
                                 onClick={() =>
-                                    setShowPassword(!showPassword)
+                                    setShowPassword(
+                                        !showPassword
+                                    )
                                 }
                                 style={{
                                     position: "absolute",
                                     right: "16px",
                                     top: "50%",
-                                    transform: "translateY(-50%)",
+                                    transform:
+                                        "translateY(-50%)",
                                     background: "none",
                                     border: "none",
                                     cursor: "pointer",
@@ -240,7 +249,9 @@ const [confirmPassword, setConfirmPassword] = useState("");
                                 placeholder="Confirm Password"
                                 value={confirmPassword}
                                 onChange={(e) =>
-                                    setConfirmPassword(e.target.value)
+                                    setConfirmPassword(
+                                        e.target.value
+                                    )
                                 }
                             />
 
@@ -255,7 +266,8 @@ const [confirmPassword, setConfirmPassword] = useState("");
                                     position: "absolute",
                                     right: "16px",
                                     top: "50%",
-                                    transform: "translateY(-50%)",
+                                    transform:
+                                        "translateY(-50%)",
                                     background: "none",
                                     border: "none",
                                     cursor: "pointer",
@@ -280,18 +292,6 @@ const [confirmPassword, setConfirmPassword] = useState("");
                                 : "Create Account"}
                         </button>
 
-                        <div className="auth-divider">
-                            OR
-                        </div>
-
-                        <button
-                            type="button"
-                            className="google-button"
-                            onClick={handleGoogleSignup}
-                        >
-                            Continue with Google
-                        </button>
-
                         <p className="auth-footer">
                             Already have an account?{" "}
                             <Link to="/login">
@@ -300,8 +300,7 @@ const [confirmPassword, setConfirmPassword] = useState("");
                         </p>
 
                     </form>
-
-                </div>
+                </motion.div>
 
             </div>
         </div>
@@ -309,3 +308,4 @@ const [confirmPassword, setConfirmPassword] = useState("");
 }
 
 export default Signup;
+

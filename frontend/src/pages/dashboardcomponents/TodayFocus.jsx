@@ -1,7 +1,17 @@
 import { ChevronRight } from "lucide-react";
+import { motion } from "motion/react";
 import { useNavigate } from "react-router-dom";
 
 import "./TodayFocus.css";
+
+const taskVariants = {
+  hidden: { opacity: 0, x: -12 },
+  visible: (i) => ({
+    opacity: 1,
+    x: 0,
+    transition: { duration: 0.25, ease: "easeOut", delay: i * 0.04 },
+  }),
+};
 
 export default function TodayFocus({ actions }) {
 
@@ -109,41 +119,50 @@ export default function TodayFocus({ actions }) {
 
                 ) : (
 
-                    focusedTasks.map(task => (
+                    focusedTasks.map((task, i) => (
 
-                        <div
+                        <motion.div
                             key={task.id}
                             className="focusTask"
                             role="button"
                             tabIndex={0}
-onClick={() =>
-    navigate(
-        `/results/${task.session_id}`,
-        {
-            state: {
-                scrollTo: "tasks",
-            },
-        }
-    )
-}                           onKeyDown={(e) => {
+                            custom={i}
+                            variants={taskVariants}
+                            initial="hidden"
+                            animate="visible"
+                            whileHover={{
+                              x: 4,
+                              transition: { duration: 0.15 },
+                            }}
+                            onClick={() =>
+                                navigate(
+                                    `/results/${task.session_id}`,
+                                    {
+                                        state: {
+                                            scrollTo: "tasks",
+                                        },
+                                    }
+                                )
+                            }
+                            onKeyDown={(e) => {
 
-    if (
-        e.key === "Enter" ||
-        e.key === " "
-    ) {
+                                if (
+                                    e.key === "Enter" ||
+                                    e.key === " "
+                                ) {
 
-        navigate(
-            `/results/${task.session_id}`,
-            {
-                state: {
-                    scrollTo: "tasks",
-                },
-            }
-        );
+                                    navigate(
+                                        `/results/${task.session_id}`,
+                                        {
+                                            state: {
+                                                scrollTo: "tasks",
+                                            },
+                                        }
+                                    );
 
-    }
+                                }
 
-}}
+                            }}
                         >
 
                             <div className="focusTaskTop">
@@ -200,7 +219,7 @@ onClick={() =>
 
                             </small>
 
-                        </div>
+                        </motion.div>
 
                     ))
 

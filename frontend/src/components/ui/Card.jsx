@@ -1,5 +1,15 @@
+import { motion } from "motion/react";
 import { COLORS } from "./colors";
 import { RADIUS } from "./radius";
+
+const cardVariants = {
+  hidden: { opacity: 0, y: 20 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.3, ease: "easeOut" },
+  },
+};
 
 export default function Card({
   children,
@@ -8,29 +18,32 @@ export default function Card({
   hover = true,
 }) {
   return (
-    <div
+    <motion.div
+      variants={cardVariants}
+      initial="hidden"
+      animate="visible"
       onClick={onClick}
       style={{
         background: COLORS.surface,
         border: `1px solid ${COLORS.border}`,
         borderRadius: RADIUS.lg,
         padding: "22px",
-        transition: "all 0.2s ease",
         cursor: onClick ? "pointer" : "default",
         ...style,
       }}
-      onMouseEnter={(e) => {
-        if (!hover) return;
-        e.currentTarget.style.transform = "translateY(-3px)";
-        e.currentTarget.style.borderColor = COLORS.primary;
-      }}
-      onMouseLeave={(e) => {
-        if (!hover) return;
-        e.currentTarget.style.transform = "translateY(0)";
-        e.currentTarget.style.borderColor = COLORS.border;
-      }}
+      whileHover={
+        hover
+          ? {
+              y: -4,
+              borderColor: COLORS.primary,
+              boxShadow: `0 8px 30px rgba(59, 130, 246, 0.15)`,
+              transition: { duration: 0.2 },
+            }
+          : undefined
+      }
+      whileTap={onClick ? { scale: 0.99 } : undefined}
     >
       {children}
-    </div>
+    </motion.div>
   );
 }

@@ -5,9 +5,19 @@ import {
     AlertTriangle,
     ChevronRight,
 } from "lucide-react";
+import { motion } from "motion/react";
 
 import { useNavigate } from "react-router-dom";
 import "./RecentMeetings.css";
+
+const meetingVariants = {
+  hidden: { opacity: 0, y: 12 },
+  visible: (i) => ({
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.25, ease: "easeOut", delay: i * 0.06 },
+  }),
+};
 
 export default function RecentMeetings({ sessions }) {
 
@@ -41,13 +51,21 @@ export default function RecentMeetings({ sessions }) {
 
             ) : (
 
-                recentSessions.map((session) => (
+                recentSessions.map((session, i) => (
 
-                    <div
+                    <motion.div
                         key={session.id}
                         className="meetingCard"
                         role="button"
                         tabIndex={0}
+                        custom={i}
+                        variants={meetingVariants}
+                        initial="hidden"
+                        animate="visible"
+                        whileHover={{
+                          x: 4,
+                          transition: { duration: 0.15 },
+                        }}
                         onClick={() => navigate(`/results/${session.id}`)}
                         onKeyDown={(e) => {
                             if (e.key === "Enter" || e.key === " ") {
@@ -98,7 +116,7 @@ export default function RecentMeetings({ sessions }) {
 
                         </div>
 
-                    </div>
+                    </motion.div>
 
                 ))
 

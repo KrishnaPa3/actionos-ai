@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { motion } from "motion/react";
 
 import DashboardHeader from "./dashboardcomponents/DashboardHeader";
 import StatsCards from "./dashboardcomponents/StatsCards";
@@ -7,6 +8,24 @@ import RecentMeetings from "./dashboardcomponents/RecentMeetings";
 import RecentDecisions from "./dashboardcomponents/RecentDecisions";
 import { apiFetch } from "../lib/api";
 import "./dashboardcomponents/Dashboard.css";
+
+const containerVariants = {
+  hidden: {},
+  visible: {
+    transition: {
+      staggerChildren: 0.08,
+    },
+  },
+};
+
+const sectionVariants = {
+  hidden: { opacity: 0, y: 24 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.35, ease: "easeOut" },
+  },
+};
 
 export default function Dashboard() {
     const [actions, setActions] = useState([]);
@@ -56,22 +75,30 @@ export default function Dashboard() {
     }
 
     return (
-        <div className="dashboardPage">
-            <DashboardHeader />
+        <motion.div
+          className="dashboardPage"
+          variants={containerVariants}
+          initial="hidden"
+          animate="visible"
+        >
+            <motion.div variants={sectionVariants}>
+              <DashboardHeader />
+            </motion.div>
 
-            <StatsCards actions={actions} />
+            <motion.div variants={sectionVariants}>
+              <StatsCards actions={actions} />
+            </motion.div>
 
-            <div className="dashboardMain">
-                <div className="dashboardLeft">
+            <motion.div variants={sectionVariants} className="dashboardMain">
+                <motion.div variants={sectionVariants} className="dashboardLeft">
                     <TodayFocus actions={actions} />
-                </div>
+                </motion.div>
 
-                <div className="dashboardRight">
+                <motion.div variants={sectionVariants} className="dashboardRight">
                     <RecentMeetings sessions={sessions} />
-
                     <RecentDecisions decisions={decisions} />
-                </div>
-            </div>
-        </div>
+                </motion.div>
+            </motion.div>
+        </motion.div>
     );
 }

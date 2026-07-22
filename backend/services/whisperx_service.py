@@ -1,61 +1,12 @@
-import os
+from services.model_manager import (
+    get_align_model,
+    get_diarizer,
+    get_whisperx,
+    get_whisperx_device,
+)
 
-import torch
-import whisperx
-
-from dotenv import load_dotenv
-from whisperx.diarize import DiarizationPipeline
-
-
-# --------------------------------------------------
-# Load environment
-# --------------------------------------------------
-
-load_dotenv()
-
-HF_TOKEN = os.getenv("HF_TOKEN")
-
-if not HF_TOKEN:
-    raise RuntimeError("HF_TOKEN not found in .env")
-
-
-# --------------------------------------------------
-# Configuration
-# --------------------------------------------------
-
-DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 
 BATCH_SIZE = 16
-
-COMPUTE_TYPE = (
-    "float16"
-    if DEVICE == "cuda"
-    else "int8"
-)
-
-print(f"WhisperX using device: {DEVICE}")
-
-
-# --------------------------------------------------
-# Load WhisperX model ONCE
-# --------------------------------------------------
-
-print("Loading WhisperX model...")
-
-whisper_model = whisperx.load_model(
-    "base",
-    DEVICE,
-    compute_type=COMPUTE_TYPE,
-)
-
-print("Loading Diarization model...")
-
-diarization_model = DiarizationPipeline(
-    token=HF_TOKEN,
-    device=DEVICE,
-)
-
-print("WhisperX ready!")
 
 
 # --------------------------------------------------
@@ -63,6 +14,9 @@ print("WhisperX ready!")
 # --------------------------------------------------
 
 def transcribe_with_speakers(audio_file):
+    import whisperx
+
+    whisper_model = get_whisperx()
 
     print("Transcribing audio...")
 
@@ -73,22 +27,19 @@ def transcribe_with_speakers(audio_file):
 
     print("Aligning transcript...")
 
-    model_a, metadata = whisperx.load_align_model(
-        language_code=result["language"],
-        device=DEVICE,
-    )
+    model_a, metadata = get_align_model(result["language"])
 
     result = whisperx.align(
         result["segments"],
         model_a,
         metadata,
         audio_file,
-        DEVICE,
+        get_whisperx_device(),
     )
 
     print("Running speaker diarization...")
 
-    diarize_segments = diarization_model(
+    diarize_segments = get_diarizer()(
     audio_file,
     min_speakers=2,
     max_speakers=2,

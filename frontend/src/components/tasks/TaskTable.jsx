@@ -1,7 +1,5 @@
   import TaskRow from "./TaskRow";
-  import { useNavigate } from "react-router-dom";
-  export default function TaskTable({ tasks, loading }) {
-  const navigate = useNavigate();
+  export default function TaskTable({ tasks, loading, error, hasActiveFilters }) {
     if (loading) {
       return (
         <div className="task-loading">
@@ -10,13 +8,23 @@
       );
     }
 
+    if (error) {
+      return (
+        <div className="task-empty-state">
+          <h3>Could not load tasks</h3>
+          <p>{error}</p>
+        </div>
+      );
+    }
+
     if (tasks.length === 0) {
       return (
         <div className="task-empty-state">
-          <h3>No tasks yet</h3>
+          <h3>{hasActiveFilters ? "No matching tasks" : "No tasks yet"}</h3>
 
-          <p>
-            Tasks and reminders extracted from meetings will appear here.
+          <p>{hasActiveFilters
+            ? "Try a different search term or clear one of the filters."
+            : "Tasks extracted from meetings will appear here."}
           </p>
         </div>
       );

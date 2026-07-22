@@ -1,12 +1,28 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
+import { motion } from "motion/react";
 
 import TaskListHeader from "../components/tasks/TaskListHeader";
 import TaskSearchBar from "../components/tasks/TaskSearchBar";
 import TaskFilters from "../components/tasks/TaskFilters";
 import TaskTable from "../components/tasks/TaskTable";
+import { ListChecks } from "../components/ui/icons";
+import { COLORS } from "../components/ui/colors";
 
 import "./TaskList.css";
 import { apiFetch } from "../lib/api";
+
+function LoadingSpinner() {
+  return (
+    <div style={{ display: "flex", justifyContent: "center", marginTop: "80px" }}>
+      <motion.div
+        animate={{ rotate: 360 }}
+        transition={{ duration: 1.2, repeat: Infinity, ease: "linear" }}
+      >
+        <ListChecks size={36} color={COLORS.primary} />
+      </motion.div>
+    </div>
+  );
+}
 
 export default function TaskList() {
   // Search state
@@ -18,6 +34,7 @@ const [owner, setOwner] = useState("");
 
 const [tasks, setTasks] = useState([]);
 const [loading, setLoading] = useState(true);
+const [loadError, setLoadError] = useState("");
 const [owners, setOwners] = useState([]);
 
 const [session, setSession] = useState("");
@@ -29,14 +46,15 @@ const [dateMode, setDateMode] = useState("");
 const [selectedDate, setSelectedDate] = useState("");
 const [endDate, setEndDate] = useState("");
   // Load tasks from backend
-  async function loadTasks() {
+  const loadTasks = useCallback(async (signal) => {
     setLoading(true);
+    setLoadError("");
 
     try {
       const params = new URLSearchParams();
 
       if (search.trim()) {
-        params.append("search", search);
+        params.append("search", search.trim());
       }
       if (priority) {
     params.append("priority", priority);
@@ -60,7 +78,8 @@ if (dateMode === "between" && endDate) {
 } 
 
       const response = await apiFetch(
-        `/actions?${params.toString()}`
+        `/actions?${params.toString()}`,
+        { signal }
       );
 
       if (!response.ok) {
@@ -69,14 +88,24 @@ if (dateMode === "between" && endDate) {
 
       const data = await response.json();
 
-      setTasks(data.actions || []);
+      if (!signal.aborted) {
+        setTasks(data.actions || []);
+      }
     } catch (err) {
+      if (err.name === "AbortError") {
+        return;
+      }
       console.error("Error loading actions:", err);
-      setTasks([]);
+      if (!signal.aborted) {
+        setTasks([]);
+        setLoadError("Please check your connection and try again.");
+      }
     } finally {
-      setLoading(false);
+      if (!signal.aborted) {
+        setLoading(false);
+      }
     }
-  }
+  }, [search, priority, status, owner, session, dateMode, selectedDate, endDate]);
 async function loadFilters() {
   try {
     const response = await apiFetch(
@@ -95,15 +124,36 @@ setSessions(data.sessions || []);
     console.error(err);
   }
 }
-  // Reload whenever the search changes
+  // Debounce search and cancel obsolete requests so earlier responses cannot
+  // overwrite the result for the user's latest term.
   useEffect(() => {
-    loadTasks();
-  }, [search, priority, status, owner, session]);
+    const controller = new AbortController();
+    const timeout = window.setTimeout(
+      () => { void loadTasks(controller.signal); },
+      search.trim() ? 300 : 0,
+    );
+
+    return () => {
+      window.clearTimeout(timeout);
+      controller.abort();
+    };
+  }, [loadTasks, search]);
 useEffect(() => {
-  loadFilters();
+  const timeout = window.setTimeout(() => { void loadFilters(); }, 0);
+  return () => window.clearTimeout(timeout);
 }, []);
+
+  if (loading && tasks.length === 0) {
+    return <LoadingSpinner />;
+  }
+
   return (
-    <div className="task-list-container">
+    <motion.div
+      className="task-list-container"
+      initial={{ opacity: 0, y: 12 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.3, ease: "easeOut" }}
+    >
       <TaskListHeader />
 
       <TaskSearchBar
@@ -138,7 +188,12 @@ useEffect(() => {
       <TaskTable
         tasks={tasks}
         loading={loading}
+        error={loadError}
+        hasActiveFilters={Boolean(
+          search.trim() || priority || status || owner || session ||
+          dateMode || selectedDate || endDate
+        )}
       />
-    </div>
+    </motion.div>
   );
 }

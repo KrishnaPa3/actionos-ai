@@ -1,4 +1,21 @@
+import { motion } from "motion/react";
 import "./DashboardHeader.css";
+
+const greetingVariants = {
+  hidden: {},
+  visible: {
+    transition: { staggerChildren: 0.1 },
+  },
+};
+
+const itemVariants = {
+  hidden: { opacity: 0, y: -16 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.35, ease: "easeOut" },
+  },
+};
 
 export default function DashboardHeader() {
     const hour = new Date().getHours();
@@ -17,10 +34,15 @@ export default function DashboardHeader() {
 
     return (
         <div className="dashboardHeader">
-            <div className="dashboardGreeting">
-                <h1>{greeting}</h1>
-                <p>{date}</p>
-            </div>
+            <motion.div
+              className="dashboardGreeting"
+              variants={greetingVariants}
+              initial="hidden"
+              animate="visible"
+            >
+                <motion.h1 variants={itemVariants}>{greeting}</motion.h1>
+                <motion.p variants={itemVariants}>{date}</motion.p>
+            </motion.div>
         </div>
     );
 }

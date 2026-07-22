@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { motion } from "motion/react";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { Eye, EyeOff } from "lucide-react";
 import { supabase } from "../lib/supabase";
 
@@ -7,6 +8,7 @@ import "./Auth.css";
 
 function Login() {
     const navigate = useNavigate();
+    const location = useLocation();
 
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
@@ -15,6 +17,7 @@ function Login() {
 
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
+    const [success, setSuccess] = useState(location.state?.message || "");
 
     const handleLogin = async (e) => {
         e.preventDefault();
@@ -27,7 +30,7 @@ function Login() {
 
         setLoading(true);
 
-        const { error } =
+        const { data, error } =
             await supabase.auth.signInWithPassword({
                 email,
                 password,
@@ -36,22 +39,14 @@ function Login() {
         setLoading(false);
 
         if (error) {
+            console.error("[LOGIN ERROR]", error);
             setError(error.message);
             return;
         }
 
+        console.log("[LOGIN SUCCESS]", data);
+
         navigate("/");
-    };
-
-    const handleGoogleLogin = async () => {
-        const { error } =
-            await supabase.auth.signInWithOAuth({
-                provider: "google",
-            });
-
-        if (error) {
-            setError(error.message);
-        }
     };
 
     return (
@@ -60,8 +55,12 @@ function Login() {
 
                 {/* Left */}
 
-                <div className="auth-left">
-
+                <motion.div
+                  className="auth-left"
+                  initial={{ opacity: 0, x: -30 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 0.5, ease: "easeOut" }}
+                >
                     <div
                         style={{
                             width: "100%",
@@ -94,12 +93,16 @@ function Login() {
                         </p>
                     </div>
 
-                </div>
+                </motion.div>
 
                 {/* Right */}
 
-                <div className="auth-right">
-
+                <motion.div
+                  className="auth-right"
+                  initial={{ opacity: 0, x: 30 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 0.5, ease: "easeOut", delay: 0.1 }}
+                >
                     <form
                         className="auth-card"
                         onSubmit={handleLogin}
@@ -112,9 +115,25 @@ function Login() {
                         </p>
 
                         {error && (
-                            <div className="auth-error">
+                            <motion.div
+                              className="auth-error"
+                              initial={{ opacity: 0, x: -10 }}
+                              animate={{ opacity: 1, x: 0 }}
+                              transition={{ duration: 0.2 }}
+                            >
                                 {error}
-                            </div>
+                            </motion.div>
+                        )}
+
+                        {success && (
+                            <motion.div
+                              className="auth-success"
+                              initial={{ opacity: 0, x: -10 }}
+                              animate={{ opacity: 1, x: 0 }}
+                              transition={{ duration: 0.2 }}
+                            >
+                                {success}
+                            </motion.div>
                         )}
 
                         <label>Email</label>
@@ -199,18 +218,6 @@ function Login() {
                                 : "Sign In"}
                         </button>
 
-                        <div className="auth-divider">
-                            OR
-                        </div>
-
-                        <button
-                            type="button"
-                            className="google-button"
-                            onClick={handleGoogleLogin}
-                        >
-                            Continue with Google
-                        </button>
-
                         <p className="auth-footer">
                             Don't have an account?{" "}
                             <Link to="/signup">
@@ -220,7 +227,7 @@ function Login() {
 
                     </form>
 
-                </div>
+                </motion.div>
 
             </div>
         </div>

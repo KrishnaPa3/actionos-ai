@@ -1,3 +1,4 @@
+import { motion } from "motion/react";
 import { COLORS } from "./colors";
 import { TYPOGRAPHY } from "./typography";
 
@@ -15,7 +16,10 @@ export default function PageHeader({
 
     return (
 
-        <div
+        <motion.div
+            initial={{ opacity: 0, y: -12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3, ease: "easeOut" }}
             style={{
                 display: "flex",
                 justifyContent: "space-between",
@@ -61,7 +65,7 @@ export default function PageHeader({
 
             {right}
 
-        </div>
+        </motion.div>
 
     );
 

@@ -1,12 +1,10 @@
-import whisper
-
-# Load the model once when the module is imported
-model = whisper.load_model("base")
+from services.model_manager import get_whisper
 
 
 def transcribe_audio(audio_path: str) -> str:
     """
     Transcribes an audio file and returns the transcript.
     """
-    result = model.transcribe(audio_path)
-    return result["text"].strip()
+    model = get_whisper()
+    segments, _info = model.transcribe(audio_path)
+    return " ".join(segment.text for segment in segments).strip()

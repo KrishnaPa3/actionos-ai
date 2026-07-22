@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { motion, AnimatePresence } from "motion/react";
 import WaveSurfer from "wavesurfer.js";
 
 import Card from "./components/ui/Card";
@@ -46,6 +47,21 @@ function VoiceRecorder() {
   // =====================================
   // Upload Audio
   // =====================================
+
+  const warmAudioModels = () => {
+
+    // Do not wait here: model loading happens while the user records or the
+    // upload begins. The upload endpoint reuses the same backend singletons.
+    apiFetch("/warm-audio-models", {
+      method: "POST",
+    }).catch((error) => {
+
+      // The upload still performs lazy initialization if warm-up fails.
+      console.warn("Audio model warm-up failed:", error);
+
+    });
+
+  };
 
   const uploadAudio = async (audioFile, filename) => {
 
@@ -111,6 +127,11 @@ function VoiceRecorder() {
         "Upload & extraction completed successfully."
       );
 
+      // The upload pipeline creates default reminders for newly extracted
+      // tasks. Refresh the navigation bell immediately instead of waiting
+      // for its polling interval.
+      window.dispatchEvent(new Event("remindersUpdated"));
+
       sessionStorage.setItem(
         "current_session",
         data.id
@@ -138,6 +159,8 @@ function VoiceRecorder() {
     sessionStorage.removeItem(
       "actionos_results"
     );
+
+    warmAudioModels();
 
     try {
 
@@ -276,7 +299,10 @@ function VoiceRecorder() {
   }, [audioURL]);
     return (
 
-    <div
+    <motion.div
+      initial={{ opacity: 0, y: 12 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.3, ease: "easeOut" }}
       style={{
         maxWidth: "950px",
         margin: "40px auto",
@@ -300,7 +326,17 @@ function VoiceRecorder() {
           }}
         >
 
-          <div
+          <motion.div
+            animate={
+              recording
+                ? { scale: [1, 1.05, 1], opacity: [1, 0.7, 1] }
+                : {}
+            }
+            transition={
+              recording
+                ? { duration: 1.5, repeat: Infinity, ease: "easeInOut" }
+                : {}
+            }
             style={{
               fontSize: "56px",
               fontFamily: '"Space Mono", monospace',
@@ -312,7 +348,7 @@ function VoiceRecorder() {
             :
             {String(seconds % 60).padStart(2, "0")}
 
-          </div>
+          </motion.div>
 
           {!recording ? (
 
@@ -402,6 +438,8 @@ function VoiceRecorder() {
 
                 if (!file) return;
 
+                warmAudioModels();
+
                 setAudioURL(
                   URL.createObjectURL(file)
                 );
@@ -424,56 +462,44 @@ function VoiceRecorder() {
 
       </Card>
 
-      {audioURL && (
-
-        <Card
-          style={{
-            marginTop: "24px",
-          }}
-        >
-
-          <PageHeader
-            icon={<Play size={22} />}
-            title="Playback"
-            subtitle="Review your recording."
-          />
-
-          <div
-            ref={waveformRef}
-            style={{
-              width: "100%",
-              marginBottom: "20px",
-            }}
-          />
-
-          <Button
-            variant="primary"
-            icon={<Play size={18} />}
-            onClick={() =>
-              wavesurferRef.current?.playPause()
-            }
+      <AnimatePresence>
+        {audioURL && (
+          <motion.div
+            key="playback"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            transition={{ duration: 0.3 }}
           >
-            Play / Pause
-          </Button>
-
-        </Card>
-
-      )}
+            <Card style={{ marginTop: "24px" }}>
+              <PageHeader
+                icon={<Play size={22} />}
+                title="Playback"
+                subtitle="Review your recording."
+              />
+              <div
+                ref={waveformRef}
+                style={{ width: "100%", marginBottom: "20px" }}
+              />
+              <Button
+                variant="primary"
+                icon={<Play size={18} />}
+                onClick={() => wavesurferRef.current?.playPause()}
+              >
+                Play / Pause
+              </Button>
+            </Card>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {transcript && (
-
-        <Card
-          style={{
-            marginTop: "24px",
-          }}
-        >
-
+        <Card style={{ marginTop: "24px" }}>
           <PageHeader
             icon={<FileText size={22} />}
             title="Transcript"
             subtitle="Generated from your recording."
           />
-
           <p
             style={{
               fontFamily: '"Space Mono", monospace',
@@ -483,25 +509,16 @@ function VoiceRecorder() {
           >
             {transcript}
           </p>
-
         </Card>
-
       )}
 
       {extraction && (
-
-        <Card
-          style={{
-            marginTop: "24px",
-          }}
-        >
-
+        <Card style={{ marginTop: "24px" }}>
           <PageHeader
             icon={<FileText size={22} />}
             title="Meeting Ready"
             subtitle="Your meeting has been processed."
           />
-
           <div
             style={{
               display: "flex",
@@ -509,7 +526,6 @@ function VoiceRecorder() {
               flexWrap: "wrap",
             }}
           >
-
             <Button
               variant="primary"
               icon={<FileText size={18} />}
@@ -521,7 +537,6 @@ function VoiceRecorder() {
             >
               View Results
             </Button>
-
             <Button
               variant="secondary"
               icon={<CircleDot size={18} />}
@@ -529,17 +544,12 @@ function VoiceRecorder() {
             >
               Record Again
             </Button>
-
           </div>
-
         </Card>
-
       )}
 
-    </div>
-
+    </motion.div>
   );
-
 }
 
 export default VoiceRecorder;

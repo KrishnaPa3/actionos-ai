@@ -1,4 +1,15 @@
+import { motion } from "motion/react";
 import "./StatsCards.css";
+
+const cardVariants = {
+  hidden: { opacity: 0, y: 20, scale: 0.95 },
+  visible: (i) => ({
+    opacity: 1,
+    y: 0,
+    scale: 1,
+    transition: { duration: 0.3, ease: "easeOut", delay: i * 0.08 },
+  }),
+};
 
 export default function StatsCards({ actions }) {
 
@@ -53,29 +64,33 @@ export default function StatsCards({ actions }) {
 
     }).length;
 
+    const stats = [
+      { title: "Open Tasks", value: openTasks },
+      { title: "Due Today", value: dueToday },
+      { title: "Overdue", value: overdue },
+      { title: "Completed This Week", value: completedWeek },
+    ];
+
     return (
         <div className="statsGrid">
-
-            <div className="statCard">
-                <p className="statTitle">Open Tasks</p>
-                <h2>{openTasks}</h2>
-            </div>
-
-            <div className="statCard">
-                <p className="statTitle">Due Today</p>
-                <h2>{dueToday}</h2>
-            </div>
-
-            <div className="statCard">
-                <p className="statTitle">Overdue</p>
-                <h2>{overdue}</h2>
-            </div>
-
-            <div className="statCard">
-                <p className="statTitle">Completed This Week</p>
-                <h2>{completedWeek}</h2>
-            </div>
-
+            {stats.map((stat, i) => (
+              <motion.div
+                key={stat.title}
+                className="statCard"
+                custom={i}
+                variants={cardVariants}
+                initial="hidden"
+                animate="visible"
+                whileHover={{
+                  y: -4,
+                  boxShadow: "0 8px 30px rgba(59, 130, 246, 0.12)",
+                  transition: { duration: 0.2 },
+                }}
+              >
+                <p className="statTitle">{stat.title}</p>
+                <h2>{stat.value}</h2>
+              </motion.div>
+            ))}
         </div>
     );
 }

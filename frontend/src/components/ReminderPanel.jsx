@@ -1,4 +1,4 @@
-    import { useEffect, useState } from "react";
+    import { useCallback, useEffect, useState } from "react";
 
     import {
       BellRing,
@@ -54,11 +54,7 @@ import { apiFetch } from "../lib/api";
         Load reminders
       ========================================== */
 
-     useEffect(() => {
-    if (!actionId) return;
-    loadReminders();
-}, [actionId]);
-      const loadReminders = async () => {
+      const loadReminders = useCallback(async () => {
 
         try {
 
@@ -67,6 +63,10 @@ import { apiFetch } from "../lib/api";
           const response = await apiFetch(
             `/actions/${actionId}/reminders`
           );
+
+          if (!response.ok) {
+            throw new Error("Failed to load reminders.");
+          }
 
           const data = await response.json();
 
@@ -86,7 +86,19 @@ import { apiFetch } from "../lib/api";
 
         }
 
+      }, [actionId]);
+
+      const notifyRemindersUpdated = () => {
+        window.dispatchEvent(new Event("remindersUpdated"));
       };
+
+     useEffect(() => {
+    // Avoid one authenticated request per task when the task list renders.
+    // Reminders are fetched only when this task's panel is opened.
+    if (!actionId || !expanded) return;
+    const timeout = window.setTimeout(() => { void loadReminders(); }, 0);
+    return () => window.clearTimeout(timeout);
+}, [actionId, expanded, loadReminders]);
 
       /* ==========================================
         Create reminder
@@ -102,7 +114,7 @@ import { apiFetch } from "../lib/api";
 
           await apiFetch(
 
-            `/${actionId}/reminders`,
+            `/actions/${actionId}/reminders`,
 
             {
 
@@ -134,6 +146,7 @@ import { apiFetch } from "../lib/api";
           setNewReminderTime("");
 
           await loadReminders();
+          notifyRemindersUpdated();
 
         }
 
@@ -189,6 +202,7 @@ import { apiFetch } from "../lib/api";
           setEditedReminderTime("");
 
           await loadReminders();
+          notifyRemindersUpdated();
 
         }
 
@@ -239,6 +253,7 @@ const snoozeReminder = async (
     setActiveReminderMenu(null);
 
     await loadReminders();
+    notifyRemindersUpdated();
 
   }
 
@@ -277,6 +292,7 @@ const snoozeReminder = async (
 
       
           await loadReminders();
+          notifyRemindersUpdated();
 
         }
 

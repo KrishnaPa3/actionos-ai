@@ -1,3 +1,4 @@
+import { motion } from "motion/react";
 import { COLORS } from "./colors";
 import { RADIUS } from "./radius";
 
@@ -86,9 +87,39 @@ export default function Button({
 
     };
 
+    const buttonBaseStyle = {
+
+        display: "flex",
+
+        alignItems: "center",
+
+        justifyContent: "center",
+
+        gap: "8px",
+
+        borderRadius: RADIUS.md,
+
+        cursor: disabled
+            ? "not-allowed"
+            : "pointer",
+
+        opacity: disabled ? 0.5 : 1,
+
+        fontFamily: "inherit",
+
+        fontWeight: 600,
+
+        ...variants[variant],
+
+        ...sizes[size],
+
+        ...style
+
+    };
+
     return (
 
-        <button
+        <motion.button
 
             type={type}
 
@@ -96,53 +127,11 @@ export default function Button({
 
             disabled={disabled}
 
-            style={{
+            style={buttonBaseStyle}
 
-                display: "flex",
+            whileHover={!disabled ? { y: -2, transition: { duration: 0.15 } } : undefined}
 
-                alignItems: "center",
-
-                justifyContent: "center",
-
-                gap: "8px",
-
-                borderRadius: RADIUS.md,
-
-                cursor: disabled
-                    ? "not-allowed"
-                    : "pointer",
-
-                opacity: disabled ? 0.5 : 1,
-
-                transition: "0.2s ease",
-
-                fontFamily: "inherit",
-
-                fontWeight: 600,
-
-                ...variants[variant],
-
-                ...sizes[size],
-
-                ...style
-
-            }}
-
-            onMouseEnter={(e) => {
-
-                if (!disabled) {
-
-                    e.currentTarget.style.transform = "translateY(-2px)";
-
-                }
-
-            }}
-
-            onMouseLeave={(e) => {
-
-                e.currentTarget.style.transform = "translateY(0px)";
-
-            }}
+            whileTap={!disabled ? { scale: 0.96, transition: { duration: 0.1 } } : undefined}
 
         >
 
@@ -150,7 +139,7 @@ export default function Button({
 
             {children}
 
-        </button>
+        </motion.button>
 
     );
 

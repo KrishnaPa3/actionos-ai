@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { motion, AnimatePresence } from "motion/react";
 
 import Card from "../components/ui/Card";
 import PageHeader from "../components/ui/PageHeader";
@@ -18,6 +19,35 @@ import {
 } from "../components/ui/icons";
 
 import { COLORS } from "../components/ui/colors";
+
+const containerVariants = {
+  hidden: {},
+  visible: {
+    transition: { staggerChildren: 0.06 },
+  },
+};
+
+const meetingVariants = {
+  hidden: { opacity: 0, y: 20 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.3, ease: "easeOut" },
+  },
+};
+
+function LoadingSpinner() {
+  return (
+    <div style={{ display: "flex", justifyContent: "center", marginTop: "80px" }}>
+      <motion.div
+        animate={{ rotate: 360 }}
+        transition={{ duration: 1.2, repeat: Infinity, ease: "linear" }}
+      >
+        <History size={36} color={COLORS.primary} />
+      </motion.div>
+    </div>
+  );
+}
 
 export default function SessionsPage() {
 
@@ -120,19 +150,7 @@ export default function SessionsPage() {
 
     if (loading) {
 
-        return (
-
-            <h2
-                style={{
-                    color: COLORS.text,
-                    textAlign: "center",
-                    marginTop: "80px"
-                }}
-            >
-                Loading meetings...
-            </h2>
-
-        );
+        return <LoadingSpinner />;
 
     }
 
@@ -164,17 +182,22 @@ export default function SessionsPage() {
         />
     )}
 
-    {filteredMeetings.map((meeting) => (
+    <motion.div
+      variants={containerVariants}
+      initial="hidden"
+      animate="visible"
+    >
+      {filteredMeetings.map((meeting) => (
 
-        <Card
-            key={meeting.id}
+        <motion.div key={meeting.id} variants={meetingVariants}>
+          <Card
             onClick={() =>
                 navigate(`/results/${meeting.id}`)
             }
             style={{
                 marginBottom: "18px"
             }}
-        >
+          >
 
             <h2
                 style={{
@@ -262,8 +285,10 @@ export default function SessionsPage() {
             </div>
 
         </Card>
+        </motion.div>
 
-    ))}
+      ))}
+    </motion.div>
                 <DeleteMeetingModal
                 open={meetingToDelete !== null}
                 meeting={meetingToDelete}
@@ -271,8 +296,13 @@ export default function SessionsPage() {
                 onConfirm={deleteMeeting}
             />
 
-            {toast && (
-                <div
+            <AnimatePresence>
+              {toast && (
+                <motion.div
+                  initial={{ opacity: 0, y: 20, scale: 0.95 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: 20, scale: 0.95 }}
+                  transition={{ duration: 0.2 }}
                     style={{
                         position: "fixed",
                         bottom: "24px",
@@ -286,12 +316,12 @@ export default function SessionsPage() {
                         fontSize: "14px",
                         fontWeight: 600,
                         zIndex: 9999,
-                        animation: "fadeIn 0.3s ease",
                     }}
                 >
                     {toast}
-                </div>
-            )}
+                </motion.div>
+              )}
+            </AnimatePresence>
 
         </div>
     );

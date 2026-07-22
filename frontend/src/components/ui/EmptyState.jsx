@@ -1,3 +1,4 @@
+import { motion } from "motion/react";
 import { COLORS } from "./colors";
 
 export default function EmptyState({
@@ -10,7 +11,10 @@ export default function EmptyState({
 
     return (
 
-        <div
+        <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.3, ease: "easeOut" }}
             style={{
                 textAlign: "center",
                 padding: "60px 20px"
@@ -37,7 +41,7 @@ export default function EmptyState({
 
             </p>
 
-        </div>
+        </motion.div>
 
     );
 

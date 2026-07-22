@@ -4,10 +4,20 @@ import {
     XCircle,
     ChevronRight,
 } from "lucide-react";
+import { motion } from "motion/react";
 
 import { useNavigate } from "react-router-dom";
 
 import "./RecentDecisions.css";
+
+const decisionVariants = {
+  hidden: { opacity: 0, y: 12 },
+  visible: (i) => ({
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.25, ease: "easeOut", delay: i * 0.06 },
+  }),
+};
 
 export default function RecentDecisions({ decisions }) {
 
@@ -70,7 +80,7 @@ export default function RecentDecisions({ decisions }) {
 
                 <div className="recentDecisionsBody">
 
-                    {recentDecisions.map(decision => {
+                    {recentDecisions.map((decision, i) => {
 
                         const status = getStatus(
                             decision.decision_status
@@ -80,11 +90,19 @@ export default function RecentDecisions({ decisions }) {
 
                         return (
 
-                            <div
+                            <motion.div
                                 key={decision.id}
                                 className={`decisionCard ${status.className}`}
                                 role="button"
                                 tabIndex={0}
+                                custom={i}
+                                variants={decisionVariants}
+                                initial="hidden"
+                                animate="visible"
+                                whileHover={{
+                                  x: 4,
+                                  transition: { duration: 0.15 },
+                                }}
                                 onClick={() =>
                                     navigate(
                                         `/results/${decision.session_id}`,
@@ -146,7 +164,7 @@ export default function RecentDecisions({ decisions }) {
 
                                 </p>
 
-                            </div>
+                            </motion.div>
 
                         );
 
