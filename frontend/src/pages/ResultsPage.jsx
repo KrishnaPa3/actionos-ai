@@ -69,21 +69,17 @@ export default function ResultsPage() {
 
         try {
 
-            const response = await apiFetch(
-                `/session/${sessionId}`
-            );
-
-            const actionsResponse = await apiFetch(
-                `/session/${sessionId}/actions`
-            );
-
-            const risksResponse = await apiFetch(
-                `/session/${sessionId}/risks`
-            );
-
-            const decisionsResponse = await apiFetch(
-                `/session/${sessionId}/decisions`
-            );
+            const [
+                response,
+                actionsResponse,
+                risksResponse,
+                decisionsResponse
+            ] = await Promise.all([
+                apiFetch(`/session/${sessionId}`),
+                apiFetch(`/session/${sessionId}/actions`),
+                apiFetch(`/session/${sessionId}/risks`),
+                apiFetch(`/session/${sessionId}/decisions`)
+            ]);
 
             const actionsData = await actionsResponse.json();
             const risksData = await risksResponse.json();
@@ -120,17 +116,25 @@ export default function ResultsPage() {
         try {
 
             const response = await apiFetch(
-                `/actions/${task.id}/complete`,
-                {
-                    method: "PATCH",
-                }
-            );
+    `/actions/${task.id}/complete`,
+    {
+        method: "PATCH",
+    }
+);
 
-            if (!response.ok) {
-                throw new Error("Failed to update task");
-            }
+if (!response.ok) {
+    throw new Error("Failed to update task");
+}
 
-            await loadMeeting();
+const data = await response.json();
+
+setActions(prev =>
+    prev.map(action =>
+        action.id === data.action.id
+            ? data.action
+            : action
+    )
+);
 
             // Tell the Navbar that reminders changed
             window.dispatchEvent(
@@ -180,7 +184,15 @@ async function resolveRisk(risk) {
 
         }
 
-        await loadMeeting();
+        const data = await response.json();
+
+        setRisks(prev =>
+            prev.map(risk =>
+                risk.id === data.risk.id
+                    ? data.risk
+                    : risk
+            )
+        );
 
         setToast({
             message: "Risk status updated",
@@ -228,7 +240,15 @@ async function acceptDecision(decision) {
 
         }
 
-        await loadMeeting();
+        const data = await response.json();
+
+        setDecisions(prev =>
+            prev.map(decision =>
+                decision.id === data.decision.id
+                    ? data.decision
+                    : decision
+            )
+        );
 
         setToast({
             message: "Decision marked as Agreed",
@@ -276,7 +296,15 @@ async function rejectDecision(decision) {
 
         }
 
-        await loadMeeting();
+        const data = await response.json();
+
+        setDecisions(prev =>
+            prev.map(decision =>
+                decision.id === data.decision.id
+                    ? data.decision
+                    : decision
+            )
+        );
 
         setToast({
             message: "Decision marked as Disagreed",
@@ -322,9 +350,11 @@ async function deleteTask() {
             throw new Error("Failed to delete task");
         }
 
-        setTaskToDelete(null);
+        setActions(prev =>
+            prev.filter(action => action.id !== taskToDelete.id)
+        );
 
-        await loadMeeting();
+        setTaskToDelete(null);
 
         setToast({
             message: "Task deleted",
@@ -372,9 +402,11 @@ async function deleteRisk() {
 
         }
 
-        setRiskToDelete(null);
+        setRisks(prev =>
+            prev.filter(risk => risk.id !== riskToDelete.id)
+        );
 
-        await loadMeeting();
+        setRiskToDelete(null);
 
         setToast({
             message: "Risk deleted",
@@ -424,9 +456,13 @@ async function deleteDecision() {
 
         }
 
-        setDecisionToDelete(null);
+        setDecisions(prev =>
+            prev.filter(
+                decision => decision.id !== decisionToDelete.id
+            )
+        );
 
-        await loadMeeting();
+        setDecisionToDelete(null);
 
         setToast({
             message: "Decision deleted",
@@ -480,7 +516,12 @@ async function handleDeleteActionPlan(index) {
             );
         }
 
-        await loadMeeting();
+        setMeeting(prev => ({
+            ...prev,
+            action_plan: prev.action_plan.filter(
+                (_, i) => i !== index
+            )
+        }));
 
         setToast({
             message: "Action Plan deleted",
@@ -534,7 +575,15 @@ async function updateTask(taskId, updatedTask) {
 
         }
 
-        await loadMeeting();
+        const data = await response.json();
+
+        setActions(prev =>
+            prev.map(action =>
+                action.id === data.action.id
+                    ? data.action
+                    : action
+            )
+        );
 
         setToast({
             message: "Task updated",
@@ -584,7 +633,15 @@ async function updateRisk(riskId, updatedRisk) {
 
         }
 
-        await loadMeeting();
+        const data = await response.json();
+
+        setRisks(prev =>
+            prev.map(risk =>
+                risk.id === data.risk.id
+                    ? data.risk
+                    : risk
+            )
+        );
 
         setToast({
             message: "Risk updated",
@@ -634,7 +691,15 @@ async function updateDecision(decisionId, updatedDecision) {
 
         }
 
-        await loadMeeting();
+        const data = await response.json();
+
+        setDecisions(prev =>
+            prev.map(decision =>
+                decision.id === data.decision.id
+                    ? data.decision
+                    : decision
+            )
+        );
 
         setToast({
             message: "Decision updated",
@@ -754,10 +819,17 @@ async function handleSaveActionPlan(updatedPlan) {
             throw new Error(data.detail || "Update failed");
         }
 
+        setMeeting(prev => ({
+            ...prev,
+            action_plan: prev.action_plan.map((plan, i) =>
+                i === editingActionPlanIndex
+                    ? (data.action_plan ?? data)
+                    : plan
+            )
+        }));
+
         setEditingActionPlan(null);
         setEditingActionPlanIndex(null);
-
-        await loadMeeting();
 
         setToast({
             message: "Action Plan updated",

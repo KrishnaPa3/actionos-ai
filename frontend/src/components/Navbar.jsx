@@ -47,14 +47,21 @@ const [showProfileMenu, setShowProfileMenu] = useState(false);
     }
   };
 
+const handleLogout = async () => {
+    await supabase.auth.signOut();
+    navigate("/login");
+  };
+
   useEffect(() => {
-    loadReminders();
-
-    const interval = setInterval(loadReminders, 30000);
-
     const handleReminderUpdate = () => {
       loadReminders();
     };
+
+    if (document.hidden) return;
+
+    loadReminders();
+
+    const interval = setInterval(loadReminders, 30000);
 
     window.addEventListener(
       "remindersUpdated",
@@ -63,7 +70,6 @@ const [showProfileMenu, setShowProfileMenu] = useState(false);
 
     return () => {
       clearInterval(interval);
-
       window.removeEventListener(
         "remindersUpdated",
         handleReminderUpdate
@@ -71,19 +77,19 @@ const [showProfileMenu, setShowProfileMenu] = useState(false);
     };
   }, []);
 
-  const openTask = (reminder) => {
-    navigate(
-      `/results/${reminder.session_id}`,
-      {
-        state: {
-          highlightActionId: reminder.action_id,
-        },
-      }
-    );
+  function openTask(reminder) {
+  navigate(
+    `/results/${reminder.session_id}`,
+    {
+      state: {
+        highlightActionId: reminder.action_id,
+      },
+    }
+  );
 
-    setShowReminders(false);
-    setActiveMenu(null);
-  };
+  setShowReminders(false);
+  setActiveMenu(null);
+}
   useEffect(() => {
     function handleClick(e) {
         if (
@@ -397,8 +403,5 @@ const [showProfileMenu, setShowProfileMenu] = useState(false);
     </nav>
 
   );
-const handleLogout = async () => {
-    await supabase.auth.signOut();
-    navigate("/login");
-};
+
 }
