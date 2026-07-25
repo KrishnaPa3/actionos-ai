@@ -12,14 +12,6 @@ class ProfileUpdate(BaseModel):
     full_name: Optional[str] = Field(None, max_length=100)
 
 
-class ProfileEmailUpdate(BaseModel):
-    email: str = Field(..., min_length=3)
-
-
-class ProfilePasswordUpdate(BaseModel):
-    password: str = Field(..., min_length=6)
-
-
 class ProfileResponse(BaseModel):
     id: str
     username: Optional[str] = None
@@ -35,4 +27,3 @@ class ProfileSetupResponse(BaseModel):
     success: bool
     message: str
     profile: Optional[ProfileResponse] = None
-

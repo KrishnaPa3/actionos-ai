@@ -2,9 +2,9 @@ import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { useAuth } from "../auth/AuthContext";
 import { apiFetch } from "../lib/api";
+import { supabase } from "../lib/supabase";
 import { COLORS } from "../components/ui/colors";
 
-import ChangeEmailDialog from "./Profile/ChangeEmailDialog";
 import ChangePasswordDialog from "./Profile/ChangePasswordDialog";
 
 import {
@@ -215,7 +215,6 @@ function Profile() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  const [showEmailDialog, setShowEmailDialog] = useState(false);
   const [showPasswordDialog, setShowPasswordDialog] = useState(false);
 
   const [toasts, setToasts] = useState([]);
@@ -279,29 +278,9 @@ function Profile() {
     addToast("Full name updated successfully");
   };
 
-  const handleEmailChange = async (email) => {
-    const res = await apiFetch("/profile/email", {
-      method: "PATCH",
-      body: JSON.stringify({ email }),
-    });
-    if (!res.ok) {
-      const err = await res.json().catch(() => ({}));
-      throw new Error(err.detail || "Failed to update email");
-    }
-    const data = await res.json();
-    addToast(data.message || "Email updated successfully");
-    setShowEmailDialog(false);
-  };
-
   const handlePasswordChange = async (password) => {
-    const res = await apiFetch("/profile/password", {
-      method: "PATCH",
-      body: JSON.stringify({ password }),
-    });
-    if (!res.ok) {
-      const err = await res.json().catch(() => ({}));
-      throw new Error(err.detail || "Failed to update password");
-    }
+    // The ChangePasswordDialog already calls supabase.auth.updateUser({ password })
+    // and performs reauthentication. We just need to show confirmation and close.
     addToast("Password updated successfully");
     setShowPasswordDialog(false);
   };
@@ -427,13 +406,6 @@ function Profile() {
           <div className="profile-card-actions">
             <button
               className="profile-btn profile-btn-secondary"
-              onClick={() => setShowEmailDialog(true)}
-            >
-              <Mail size={16} />
-              Change Email
-            </button>
-            <button
-              className="profile-btn profile-btn-secondary"
               onClick={() => setShowPasswordDialog(true)}
             >
               <Lock size={16} />
@@ -474,16 +446,9 @@ function Profile() {
       </div>
 
       {/* Dialogs */}
-      {showEmailDialog && (
-        <ChangeEmailDialog
-          currentEmail={profile?.email || ""}
-          onSave={handleEmailChange}
-          onClose={() => setShowEmailDialog(false)}
-        />
-      )}
-
       {showPasswordDialog && (
         <ChangePasswordDialog
+          currentEmail={profile?.email || ""}
           onSave={handlePasswordChange}
           onClose={() => setShowPasswordDialog(false)}
         />

@@ -89,4 +89,6 @@ export {
   Copy,
   Clock,
   LogOut,
+  Eye,
+  EyeOff,
 } from "lucide-react";

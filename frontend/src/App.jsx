@@ -1,13 +1,15 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { useEffect } from "react";
 import { motion } from "motion/react";
-
+import AuthCallback from "./pages/AuthCallback";
 import { useAuth } from "./auth/AuthContext";
 
 import AppLayout from "./layouts/AppLayout";
 
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
+import ForgotPassword from "./pages/ForgotPassword";
+import ResetPassword from "./pages/ResetPassword";
 
 import Dashboard from "./pages/Dashboard";
 import VoiceRecorder from "./VoiceRecorder";
@@ -84,6 +86,18 @@ function App() {
 
                 <Route path="/login" element={<Login />} />
                 <Route path="/signup" element={<Signup />} />
+                <Route
+                    path="/auth/callback"
+                    element={<AuthCallback />}
+                />
+                <Route
+                    path="/forgot-password"
+                    element={<ForgotPassword />}
+                />
+                <Route
+                    path="/reset-password"
+                    element={<ResetPassword />}
+                />
 
                 {/* Protected Application */}
 

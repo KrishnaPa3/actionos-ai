@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "motion/react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { Eye, EyeOff } from "lucide-react";
@@ -16,8 +16,73 @@ function Login() {
     const [showPassword, setShowPassword] = useState(false);
 
     const [loading, setLoading] = useState(false);
+    const [resending, setResending] = useState(false);
     const [error, setError] = useState("");
     const [success, setSuccess] = useState(location.state?.message || "");
+
+    // Check URL params for verification success
+    useEffect(() => {
+        const params = new URLSearchParams(location.search);
+        if (params.get("verified") === "true") {
+            setSuccess("Email verified successfully. You can now sign in.");
+            // Clean up the URL
+            window.history.replaceState({}, document.title, "/login");
+        }
+    }, [location.search]);
+
+    const getFriendlyError = (error) => {
+        if (!error) return "";
+
+        const code = error?.code || "";
+        const message = error?.message || "";
+
+        // Email not confirmed
+        if (
+            message.toLowerCase().includes("email not confirmed") ||
+            message.toLowerCase().includes("email_not_confirmed")
+        ) {
+            return "Please verify your email before signing in. Check your inbox or spam folder.";
+        }
+
+        // Invalid credentials
+        if (
+            message.toLowerCase().includes("invalid login credentials") ||
+            message.toLowerCase().includes("invalid credentials") ||
+            message.toLowerCase().includes("invalid email or password") ||
+            code === "invalid_credentials"
+        ) {
+            return "Invalid email or password. Please try again.";
+        }
+
+        // User already exists (for context, though this is from signup)
+        if (
+            message.toLowerCase().includes("user already registered") ||
+            code === "user_already_exists"
+        ) {
+            return "An account with this email already exists. Please sign in.";
+        }
+
+        // Rate limiting
+        if (
+            message.toLowerCase().includes("rate limit") ||
+            message.toLowerCase().includes("too many requests") ||
+            code === "over_request_rate_limit"
+        ) {
+            return "Too many attempts. Please wait a moment before trying again.";
+        }
+
+        // Network error
+        if (
+            message.toLowerCase().includes("network") ||
+            message.toLowerCase().includes("fetch") ||
+            message.toLowerCase().includes("failed to fetch")
+        ) {
+            return "Unable to connect. Please check your internet connection and try again.";
+        }
+
+        // Default fallback
+        return message || "An unexpected error occurred. Please try again.";
+    };
 
     const handleLogin = async (e) => {
         e.preventDefault();
@@ -40,13 +105,41 @@ function Login() {
 
         if (error) {
             console.error("[LOGIN ERROR]", error);
-            setError(error.message);
+            setError(getFriendlyError(error));
             return;
         }
 
         console.log("[LOGIN SUCCESS]", data);
 
         navigate("/");
+    };
+
+    const handleResendVerification = async () => {
+        if (!email) {
+            setError("Please enter your email address first.");
+            return;
+        }
+
+        setResending(true);
+        setError("");
+
+        const { error } = await supabase.auth.resend({
+            type: "signup",
+            email,
+            options: {
+                emailRedirectTo: "http://localhost:5173/auth/callback",
+            },
+        });
+
+        setResending(false);
+
+        if (error) {
+            console.error("[RESEND ERROR]", error);
+            setError(getFriendlyError(error));
+            return;
+        }
+
+        setSuccess("Verification email sent. Please check your inbox.");
     };
 
     return (
@@ -217,6 +310,22 @@ function Login() {
                                 ? "Signing In..."
                                 : "Sign In"}
                         </button>
+
+                        <div className="auth-resend">
+                            <span className="auth-resend-text">
+                                Didn't receive the verification email?
+                            </span>
+                            <button
+                                type="button"
+                                className="auth-resend-button"
+                                onClick={handleResendVerification}
+                                disabled={resending}
+                            >
+                                {resending
+                                    ? "Sending..."
+                                    : "Resend Verification Email"}
+                            </button>
+                        </div>
 
                         <p className="auth-footer">
                             Don't have an account?{" "}

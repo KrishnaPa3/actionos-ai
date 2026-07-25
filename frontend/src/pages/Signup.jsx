@@ -41,6 +41,7 @@ function Signup() {
             email,
             password,
             options: {
+               emailRedirectTo: "http://localhost:5173/auth/callback",
                 data: {
                     username,
                     full_name: fullName,
@@ -62,7 +63,7 @@ function Signup() {
         } else {
             navigate("/login", {
                 state: {
-                    message: "Account created successfully! Please sign in.",
+                    message: "We've sent a verification email to your inbox. Please verify your email before signing in.",
                 },
             });
         }

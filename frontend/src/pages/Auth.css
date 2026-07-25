@@ -264,6 +264,28 @@
 }
 
 /* =====================================================
+   OPTIONS (Forgot Password link etc.)
+===================================================== */
+
+.auth-options {
+    margin-top: 18px;
+    display: flex;
+    justify-content: flex-end;
+}
+
+.forgot-link {
+    color: #6FA4FF;
+    font-family: "Audex";
+    font-size: 0.85rem;
+    text-decoration: none;
+    transition: color 0.2s ease;
+}
+
+.forgot-link:hover {
+    color: white;
+}
+
+/* =====================================================
    FOOTER
 ===================================================== */
 
@@ -290,6 +312,67 @@
 .auth-footer a:hover {
 
     color: white;
+}
+
+/* =====================================================
+   RESEND VERIFICATION
+===================================================== */
+
+.auth-resend {
+
+    margin-top: 24px;
+
+    text-align: center;
+
+    display: flex;
+
+    flex-direction: column;
+
+    gap: 8px;
+}
+
+.auth-resend-text {
+
+    color: #8C9BB0;
+
+    font-family: "Space Mono";
+
+    font-size: 0.85rem;
+}
+
+.auth-resend-button {
+
+    background: none;
+
+    border: none;
+
+    color: #6FA4FF;
+
+    font-family: "Audex";
+
+    font-size: 0.9rem;
+
+    cursor: pointer;
+
+    transition: color 0.2s ease;
+
+    text-decoration: underline;
+
+    text-underline-offset: 3px;
+}
+
+.auth-resend-button:hover {
+
+    color: white;
+}
+
+.auth-resend-button:disabled {
+
+    color: #6D7A90;
+
+    cursor: not-allowed;
+
+    text-decoration: none;
 }
 
 /* =====================================================

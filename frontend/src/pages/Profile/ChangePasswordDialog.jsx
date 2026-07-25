@@ -1,12 +1,21 @@
 import { useState } from "react";
 import { motion } from "motion/react";
-import { X, Lock, LoaderCircle, ShieldCheck, ShieldAlert } from "../../components/ui/icons";
+import { supabase } from "../../lib/supabase";
+import {
+  X,
+  Lock,
+  LoaderCircle,
+  ShieldCheck,
+  ShieldAlert,
+  Eye,
+  EyeOff,
+} from "../../components/ui/icons";
 import "./ChangePasswordDialog.css";
 
 function getPasswordStrength(password) {
   let score = 0;
-  if (password.length >= 6) score += 1;
-  if (password.length >= 10) score += 1;
+  if (password.length >= 8) score += 1;
+  if (password.length >= 12) score += 1;
   if (/[A-Z]/.test(password)) score += 1;
   if (/[a-z]/.test(password)) score += 1;
   if (/[0-9]/.test(password)) score += 1;
@@ -22,39 +31,74 @@ function getStrengthLabel(score) {
   return { label: "Very Strong", color: "#22C55E" };
 }
 
-export default function ChangePasswordDialog({ onSave, onClose }) {
-  const [password, setPassword] = useState("");
+export default function ChangePasswordDialog({ currentEmail, onSave, onClose }) {
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
+  const [newPassword, setNewPassword] = useState("");
+  const [showNewPassword, setShowNewPassword] = useState(false);
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
 
-  const strength = getPasswordStrength(password);
+  const strength = getPasswordStrength(newPassword);
   const strengthInfo = getStrengthLabel(strength);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
 
-    if (!password) {
-      setError("Password is required");
+    // Validate current password
+    if (!currentPassword) {
+      setError("Current password is required");
       return;
     }
 
-    if (password.length < 6) {
-      setError("Password must be at least 6 characters");
+    // Validate new password
+    if (!newPassword) {
+      setError("New password is required");
       return;
     }
 
-    if (password !== confirmPassword) {
+    if (newPassword.length < 8) {
+      setError("New password must be at least 8 characters");
+      return;
+    }
+
+    // Validate confirm password
+    if (newPassword !== confirmPassword) {
       setError("Passwords do not match");
       return;
     }
 
     setSaving(true);
     try {
-      await onSave(password);
-      setPassword("");
+      // Step 1: Reauthenticate with current password
+      const { error: reauthError } = await supabase.auth.signInWithPassword({
+        email: currentEmail,
+        password: currentPassword,
+      });
+
+      if (reauthError) {
+        setError("Current password is incorrect.");
+        return;
+      }
+
+      // Step 2: Update password directly via Supabase Auth (no backend call needed)
+      const { error: updateError } = await supabase.auth.updateUser({
+        password: newPassword,
+      });
+
+      if (updateError) {
+        setError(updateError.message || "Failed to update password");
+        return;
+      }
+
+      setCurrentPassword("");
+      setNewPassword("");
       setConfirmPassword("");
+      onClose();
+      onSave(newPassword);
     } catch (err) {
       setError(err.message || "Failed to update password");
     } finally {
@@ -85,22 +129,54 @@ export default function ChangePasswordDialog({ onSave, onClose }) {
         </div>
 
         <p className="dialog-description">
-          Choose a strong password to keep your account secure.
+          Verify your identity first, then choose a strong new password.
         </p>
 
         <form className="dialog-form" onSubmit={handleSubmit}>
-          <label className="dialog-label">New Password</label>
-          <input
-            className="dialog-input"
-            type="password"
-            placeholder="Enter new password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            autoFocus
-            disabled={saving}
-          />
+          {/* Current Password */}
+          <label className="dialog-label">Current Password</label>
+          <div className="dialog-input-wrapper">
+            <input
+              className="dialog-input"
+              type={showCurrentPassword ? "text" : "password"}
+              placeholder="Enter current password"
+              value={currentPassword}
+              onChange={(e) => setCurrentPassword(e.target.value)}
+              autoFocus
+              disabled={saving}
+            />
+            <button
+              type="button"
+              className="dialog-input-toggle"
+              onClick={() => setShowCurrentPassword((prev) => !prev)}
+              tabIndex={-1}
+            >
+              {showCurrentPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+            </button>
+          </div>
 
-          {password && (
+          {/* New Password */}
+          <label className="dialog-label">New Password</label>
+          <div className="dialog-input-wrapper">
+            <input
+              className="dialog-input"
+              type={showNewPassword ? "text" : "password"}
+              placeholder="Enter new password"
+              value={newPassword}
+              onChange={(e) => setNewPassword(e.target.value)}
+              disabled={saving}
+            />
+            <button
+              type="button"
+              className="dialog-input-toggle"
+              onClick={() => setShowNewPassword((prev) => !prev)}
+              tabIndex={-1}
+            >
+              {showNewPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+            </button>
+          </div>
+
+          {newPassword && (
             <div className="password-strength">
               <div
                 className="password-strength-bar"
@@ -118,15 +194,26 @@ export default function ChangePasswordDialog({ onSave, onClose }) {
             </div>
           )}
 
+          {/* Confirm New Password */}
           <label className="dialog-label">Confirm New Password</label>
-          <input
-            className="dialog-input"
-            type="password"
-            placeholder="Confirm new password"
-            value={confirmPassword}
-            onChange={(e) => setConfirmPassword(e.target.value)}
-            disabled={saving}
-          />
+          <div className="dialog-input-wrapper">
+            <input
+              className="dialog-input"
+              type={showConfirmPassword ? "text" : "password"}
+              placeholder="Confirm new password"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              disabled={saving}
+            />
+            <button
+              type="button"
+              className="dialog-input-toggle"
+              onClick={() => setShowConfirmPassword((prev) => !prev)}
+              tabIndex={-1}
+            >
+              {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+            </button>
+          </div>
 
           {error && <p className="dialog-error">{error}</p>}
 

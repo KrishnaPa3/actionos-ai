@@ -1,5 +1,9 @@
 """
 Profile endpoints.
+
+Note: Email and password changes are handled entirely on the frontend
+via supabase.auth.updateUser() after reauthentication. The backend
+only handles application data (profile info, account deletion).
 """
 
 from datetime import datetime, timezone
@@ -7,14 +11,13 @@ from datetime import datetime, timezone
 from fastapi import APIRouter, Depends, HTTPException, status
 
 from dependencies.database import AuthContext, get_auth_context
+from dependencies.auth import get_current_user
 from schemas.profile import (
-    ProfileEmailUpdate,
-    ProfilePasswordUpdate,
     ProfileResponse,
     ProfileUpdate,
 )
-from auth_supabase import get_authenticated_supabase
 from supabase_client import supabase
+from supabase_admin import supabase_admin
 
 router = APIRouter()
 
@@ -192,86 +195,41 @@ async def update_profile(
     }
 
 
-@router.patch("/profile/email", response_model=dict)
-async def update_email(
-    data: ProfileEmailUpdate,
-    ctx: AuthContext = Depends(get_auth_context),
-):
+@router.delete("/profile/delete-account", response_model=dict)
+async def delete_account(user: dict = Depends(get_current_user)):
     """
-    Update email through Supabase Auth (auth.users).
-    Does NOT write to public.profiles — auth data belongs to auth.users.
-    Returns a confirmation message if email confirmation is enabled.
+    Permanently delete the authenticated user's account and all associated
+    data. Uses the Supabase Admin API to delete the auth.users record,
+    and PostgreSQL ON DELETE CASCADE automatically removes all related
+    rows (profile, sessions, actions, reminders, decisions, risks).
+
+    This operation cannot be undone.
     """
+    user_id = user["id"]
+
     try:
-        email = data.email.strip().lower()
-        if not email:
+        supabase_admin.auth.admin.delete_user(user_id)
+    except Exception as e:
+        error_msg = str(e).lower()
+        print(f"[DELETE ACCOUNT] Admin API error: {e}")
+
+        if "not found" in error_msg or "does not exist" in error_msg:
             raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Email cannot be empty.",
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Account not found. It may have already been deleted.",
+            )
+        if "unauthorized" in error_msg or "invalid" in error_msg or "forbidden" in error_msg:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Account deletion failed due to a server configuration error. Please contact support.",
             )
 
-        # Use the authenticated client (user's own session) for auth operations
-        auth_db = get_authenticated_supabase(ctx.access_token)
-        auth_db.auth.update_user({"email": email})
-
-        return {
-            "success": True,
-            "message": "A confirmation email has been sent to your new email address. Please check your inbox and follow the instructions to confirm the change.",
-        }
-    except HTTPException:
-        raise
-    except Exception as e:
-        error_msg = str(e).lower()
-        print(f"[PROFILE] Email update failed: {e}")
-
-        if "already in use" in error_msg or "email already exists" in error_msg:
-            detail = "This email address is already associated with another account."
-        elif "invalid" in error_msg and "email" in error_msg:
-            detail = "Please enter a valid email address."
-        elif "expired" in error_msg or "session" in error_msg:
-            detail = "Your session has expired. Please log in again."
-        else:
-            detail = str(e) or "Failed to update email. Please try again."
-
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=detail,
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to delete account. Please try again later or contact support.",
         )
 
-
-@router.patch("/profile/password", response_model=dict)
-async def update_password(
-    data: ProfilePasswordUpdate,
-    ctx: AuthContext = Depends(get_auth_context),
-):
-    """
-    Update password through Supabase Auth.
-    Passwords are NEVER stored in our database.
-    """
-    try:
-        # Use the authenticated client (user's own session) for auth operations
-        auth_db = get_authenticated_supabase(ctx.access_token)
-        auth_db.auth.update_user({"password": data.password})
-        return {
-            "success": True,
-            "message": "Password updated successfully.",
-        }
-    except HTTPException:
-        raise
-    except Exception as e:
-        error_msg = str(e).lower()
-        print(f"[PROFILE] Password update failed: {e}")
-
-        if "weak" in error_msg or "too weak" in error_msg or "password" in error_msg and "strength" in error_msg:
-            detail = "Password is too weak. Use at least 6 characters with a mix of letters, numbers, and symbols."
-        elif "expired" in error_msg or "session" in error_msg:
-            detail = "Your session has expired. Please log in again."
-        elif "invalid" in error_msg or "credentials" in error_msg:
-            detail = "Authentication failed. Please log in again and try again."
-        else:
-            detail = str(e) or "Failed to update password. Please try again."
-
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=detail,
-        )
+    return {
+        "success": True,
+        "message": "Account deleted successfully.",
+    }
