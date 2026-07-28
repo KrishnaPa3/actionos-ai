@@ -1,5 +1,5 @@
-  import TaskRow from "./TaskRow";
-  export default function TaskTable({ tasks, loading, error, hasActiveFilters }) {
+import TaskRow from "./TaskRow";
+  export default function TaskTable({ tasks, loading, error, hasActiveFilters, onSyncComplete }) {
     if (loading) {
       return (
         <div className="task-loading">
@@ -44,11 +44,16 @@
     sourceSession={task.sessions?.meeting_name || "Unknown Session"}
     sessionId={task.session_id}
     status={task.status}
-
-    confirmed={task.confirmed}
-    notionPageUrl={task.notion_page_url}
+    notionSynced={task.notion_synced || false}
+    notionPageId={task.notion_page_id || null}
+    notionPageUrl={task.notion_page_url || null}
+    googleSynced={task.google_synced || false}
+    googleEventId={task.google_event_id || null}
+    googleEventUrl={task.google_event_url || null}
+    onSyncComplete={onSyncComplete}
 />
         ))}
       </section>
     );
   }
+

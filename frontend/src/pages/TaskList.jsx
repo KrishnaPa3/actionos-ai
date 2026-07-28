@@ -36,10 +36,9 @@ const [tasks, setTasks] = useState([]);
 const [loading, setLoading] = useState(true);
 const [loadError, setLoadError] = useState("");
 const [owners, setOwners] = useState([]);
-
-const [session, setSession] = useState("");
-
 const [sessions, setSessions] = useState([]);
+const [session, setSession] = useState("");
+const [toast, setToast] = useState({ message: "", type: "success" });
 const [dateMode, setDateMode] = useState("");
 
 
@@ -119,11 +118,19 @@ async function loadFilters() {
     const data = await response.json();
 
     setOwners(data.owners || []);
-setSessions(data.sessions || []);
+    setSessions(data.sessions || []);
   } catch (err) {
     console.error(err);
   }
 }
+
+const showToast = (message, type = "success") => {
+  setToast({ message, type });
+  window.setTimeout(() => {
+    setToast({ message: "", type });
+  }, 3000);
+};
+
   // Debounce search and cancel obsolete requests so earlier responses cannot
   // overwrite the result for the user's latest term.
   useEffect(() => {
@@ -185,7 +192,7 @@ useEffect(() => {
   endDate={endDate}
   setEndDate={setEndDate}
 />
-      <TaskTable
+<TaskTable
         tasks={tasks}
         loading={loading}
         error={loadError}
@@ -193,7 +200,58 @@ useEffect(() => {
           search.trim() || priority || status || owner || session ||
           dateMode || selectedDate || endDate
         )}
+                    onSyncComplete={(actionId, data, app) => {
+          setTasks((prev) =>
+            prev.map((t) =>
+              t.id === actionId
+                ? {
+                    ...t,
+                    ...(app === "google"
+                      ? {
+                          google_synced: true,
+                          google_event_id: data.event_id,
+                          google_event_url: data.event_url || "",
+                          google_last_synced: new Date().toISOString(),
+                        }
+                      : {
+                          notion_synced: true,
+                          notion_page_id: data.page_id,
+                          notion_page_url: data.page_url || "",
+                          notion_last_synced: new Date().toISOString(),
+                        }),
+                  }
+                : t,
+            ),
+          );
+          const appName = typeof app === "string"
+            ? app.charAt(0).toUpperCase() + app.slice(1)
+            : "Notion";
+          showToast(`Synced to ${appName}`);
+        }}
       />
+      {toast.message && (
+        <motion.div
+          initial={{ opacity: 0, y: 16, scale: 0.95 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          transition={{ duration: 0.25, ease: "easeOut" }}
+          style={{
+            position: "fixed",
+            bottom: "24px",
+            right: "24px",
+            background: "#16a34a",
+            color: "#fff",
+            padding: "12px 18px",
+            borderRadius: "10px",
+            boxShadow: "0 10px 20px rgba(0,0,0,0.2)",
+            fontFamily: "'Space Mono', monospace",
+            fontSize: "14px",
+            fontWeight: 600,
+            zIndex: 9999,
+          }}
+        >
+          {toast.message}
+        </motion.div>
+      )}
     </motion.div>
   );
 }

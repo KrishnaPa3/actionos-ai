@@ -1,11 +1,11 @@
 import "./SyncDialog.css";
 
 import Button from "../ui/Button";
-import notionLogo from "../../assets/integrations/notion-darkmode.svg";import {
+import notionLogo from "../../assets/integrations/notion-darkmode.svg";
+import {
     X,
-    RefreshCw,
+    Plug,
     CheckCircle2,
-    Lock
 } from "../ui/icons";
 
 export default function SyncDialog({
@@ -104,11 +104,6 @@ export default function SyncDialog({
 
                         </div>
 
-                        <Lock
-                            size={18}
-                            className="integrationLocked"
-                        />
-
                     </div>
 
                     <div className="integrationCard disabled">
@@ -131,11 +126,6 @@ export default function SyncDialog({
 
                         </div>
 
-                        <Lock
-                            size={18}
-                            className="integrationLocked"
-                        />
-
                     </div>
 
                 </div>
@@ -151,11 +141,11 @@ export default function SyncDialog({
 
                     <Button
                         variant="primary"
-                        icon={<RefreshCw size={16} />}
+                        icon={<Plug size={16} />}
                         onClick={onSync}
                         disabled={syncing}
                     >
-                        {syncing ? "Syncing..." : "Sync"}
+                        {syncing ? "Connecting..." : "Connect & Sync"}
                     </Button>
 
                 </div>

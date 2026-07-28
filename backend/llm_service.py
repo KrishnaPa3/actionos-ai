@@ -1,20 +1,14 @@
-from openai import OpenAI
 from prompts.extraction_prompt import SYSTEM_PROMPT
+from services.ai.factory import get_ai_provider
 
-client = OpenAI(
-    base_url="http://localhost:11434/v1",
-    api_key="ollama"
-)
 
 def extract_from_llm(transcript: str):
 
-    response = client.chat.completions.create(
-        model="qwen3:8b",
-        messages=[
-            {"role": "system", "content": SYSTEM_PROMPT},
-            {"role": "user", "content": transcript}
-        ],
-        temperature=0
+    provider = get_ai_provider()
+
+    return provider.chat(
+        system_prompt=SYSTEM_PROMPT,
+        user_prompt=transcript,
+        temperature=0.0,
     )
 
-    return response.choices[0].message.content

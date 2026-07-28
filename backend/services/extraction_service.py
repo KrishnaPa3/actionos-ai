@@ -1,17 +1,10 @@
 import json
 from datetime import datetime
 
-from openai import OpenAI
-
 from prompts.extraction_prompt import SYSTEM_PROMPT
 from schemas.extraction import ExtractionResult
+from services.ai.factory import get_ai_provider
 from services.normalize_service import normalize_extraction
-
-
-client = OpenAI(
-    base_url="http://localhost:11434/v1",
-    api_key="ollama"
-)
 
 
 def extract_structured_data(
@@ -38,25 +31,13 @@ Transcript:
 {transcript}
 """
 
-    response = client.chat.completions.create(
-        model="qwen3:8b",
-        messages=[
-            {
-                "role": "system",
-                "content": SYSTEM_PROMPT
-            },
-            {
-                "role": "user",
-                "content": user_prompt
-            }
-        ],
-        temperature=0,
-        response_format={
-            "type": "json_object"
-        }
-    )
-
-    content = response.choices[0].message.content.strip()
+    provider = get_ai_provider()
+    content = provider.chat(
+        system_prompt=SYSTEM_PROMPT,
+        user_prompt=user_prompt,
+        temperature=0.0,
+        response_format={"type": "json_object"},
+    ).strip()
 
     # Remove markdown code fences if the model adds them
     if content.startswith("```"):

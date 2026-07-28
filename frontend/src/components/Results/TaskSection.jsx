@@ -8,7 +8,6 @@ import EmptySection from "./EmptySection";
 import ActionButtons from "./ActionButtons";
 import { useNavigate } from "react-router-dom"; 
 import ReminderPanel from "../ReminderPanel";
-import SyncDialog from "../integrations/SyncDialog";
 import {
     CheckSquare,
     User,
@@ -21,16 +20,16 @@ export default function TaskSection({
     tasks,
     onCompleteTask,
     onDeleteTask,
-    onUpdateTask
+    onUpdateTask,
+    onSyncTask,
+    syncingTaskId,
+    googleSyncMap,
 
 }) {
 
     const [editingTask, setEditingTask] = useState(null);
 const navigate = useNavigate();
     const [editedTask, setEditedTask] = useState({});
-    const [syncOpen, setSyncOpen] = useState(false);
-const [selectedTask, setSelectedTask] = useState(null);
-const [syncing, setSyncing] = useState(false);
 
     if (!tasks || tasks.length === 0) {
 
@@ -297,7 +296,7 @@ const [syncing, setSyncing] = useState(false);
 
                                     (
 
-                                        <ActionButtons
+<ActionButtons
 
                                             compact
 
@@ -324,13 +323,20 @@ const [syncing, setSyncing] = useState(false);
                                             }}
 
                                             onConfirm={() => onCompleteTask(task)}
-                                            onSync={() => {
-    setSelectedTask(task);
-    setSyncOpen(true);
-}}
-
 
                                             onDelete={() => onDeleteTask(task)}
+
+                                            showSync={true}
+                                            syncing={syncingTaskId === task.id}
+                                            notionSynced={!!(task.notion_synced && task.notion_page_id)}
+                                            notionPageUrl={task.notion_page_url || null}
+                                            googleSynced={!!(task.google_synced && task.google_event_id)}
+                                            googleEventUrl={task.google_event_url || null}
+                                            onSync={(app) => {
+                                                if (onSyncTask) {
+                                                    onSyncTask(task.id, app);
+                                                }
+                                            }}
 
                                         />
 
@@ -681,10 +687,12 @@ const [syncing, setSyncing] = useState(false);
                                 )
 
                             }
+                            {task.status !== "completed" && (
                             <ReminderPanel
     actionId={task.id}
     dueDate={task.due_date}
 />
+                            )}
 
                         </EditableCard>
 
@@ -693,50 +701,6 @@ const [syncing, setSyncing] = useState(false);
                 })}
 
             </div>
-            <SyncDialog
-    open={syncOpen}
-    syncing={syncing}
-    onClose={() => {
-        setSyncOpen(false);
-        setSelectedTask(null);
-    }}
-    onSync={async () => {
-
-        if (!selectedTask) return;
-
-        setSyncing(true);
-
-        try {
-
-            const response = await apiFetch(
-                `/actions/${selectedTask.id}/confirm`,
-                {
-                    method: "PATCH"
-                }
-            );
-
-            const data = await response.json();
-
-            console.log(data);
-
-            alert("Task synced to Notion!");
-
-            setSyncOpen(false);
-
-        } catch (err) {
-
-            console.error(err);
-
-            alert("Sync failed.");
-
-        } finally {
-
-            setSyncing(false);
-
-        }
-
-    }}
-/>
 
         </section>
 

@@ -1,0 +1,46 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.whl
+.venv/
+.venv312/
+*.egg-info/
+dist/
+build/
+
+# Environment
+.env
+.env.*
+!.env.example
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Git
+.git/
+.gitignore
+
+# Test data (not needed in production)
+test_data/
+test_auth_diag.py
+test_auth_diag2.py
+test_dates.py
+migrate_tasks.py
+sample_transcript.txt
+*.md
+
+# Uploads (will be mounted as volume)
+uploads/
+uploads/*.wav
+uploads/*.mp3
+uploads/*.m4a
+uploads/*.ogg

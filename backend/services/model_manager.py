@@ -91,10 +91,10 @@ def get_diarizer() -> Any:
 
     with _model_lock:
         if _diarizer is None:
-            from dotenv import load_dotenv
             from whisperx.diarize import DiarizationPipeline
 
-            load_dotenv()
+            # HF_TOKEN is loaded from .env via config.py at startup.
+            # No need to call load_dotenv() here.
             hf_token = os.getenv("HF_TOKEN")
             if not hf_token:
                 raise RuntimeError("HF_TOKEN not found in .env")

@@ -61,6 +61,8 @@ def list_upcoming_reminders(db: Any, user_id: str) -> list[dict]:
                 owner,
                 priority,
                 status,
+                confirmed,
+                deleted,
                 due_date,
                 session_id,
                 sessions(

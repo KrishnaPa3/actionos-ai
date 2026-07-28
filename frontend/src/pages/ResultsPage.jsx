@@ -15,6 +15,7 @@ import EditItemModal from "../components/EditItemModal";
 import EditActionPlanModal from "../components/results/EditActionPlanModal";
 import TranscriptSection from "../components/results/TranscriptSection";
 
+import { motion } from "motion/react";
 import {
     FileText,
     Pencil,
@@ -42,6 +43,13 @@ export default function ResultsPage() {
         type: "success"
     });
 
+    const showToast = (message, type = "success") => {
+        setToast({ message, type });
+        window.setTimeout(() => {
+            setToast({ message: "", type });
+        }, 3000);
+    };
+
     const [editing, setEditing] = useState(false);
     const [meetingName, setMeetingName] = useState("");
 
@@ -58,6 +66,10 @@ export default function ResultsPage() {
     const [deletingActionPlan, setDeletingActionPlan] = useState(false);
     const [editingActionPlan, setEditingActionPlan] = useState(null);
     const [editingActionPlanIndex, setEditingActionPlanIndex] = useState(null);
+
+    const [syncingTaskId, setSyncingTaskId] = useState(null);
+    const [notionSyncMap, setNotionSyncMap] = useState({});
+    const [googleSyncMap, setGoogleSyncMap] = useState({});
 
     const location = useLocation();
 
@@ -355,6 +367,9 @@ async function deleteTask() {
         );
 
         setTaskToDelete(null);
+
+        // Tell the Navbar that reminders changed
+        window.dispatchEvent(new Event("remindersUpdated"));
 
         setToast({
             message: "Task deleted",
@@ -1017,6 +1032,71 @@ async function saveMeetingName() {
             onCompleteTask={completeTask}
             onDeleteTask={setTaskToDelete}
             onUpdateTask={updateTask}
+            onSyncTask={async (taskId, app) => {
+              setSyncingTaskId(taskId);
+              try {
+                const endpoint = app === "google"
+                  ? "/integrations/google/sync-task"
+                  : "/integrations/notion/sync-task";
+                const response = await apiFetch(endpoint, {
+                  method: "POST",
+                  body: JSON.stringify({ action_id: taskId }),
+                });
+                const data = await response.json();
+                if (data.success) {
+                  if (app === "google") {
+                    setGoogleSyncMap((prev) => ({
+                      ...prev,
+                      [taskId]: {
+                        synced: true,
+                        eventUrl: data.event_url || "",
+                      },
+                    }));
+                    setActions((prev) =>
+                      prev.map((a) =>
+                        a.id === taskId
+                          ? {
+                              ...a,
+                              google_synced: true,
+                              google_event_id: data.event_id,
+                              google_event_url: data.event_url || "",
+                              google_last_synced: new Date().toISOString(),
+                            }
+                          : a,
+                      ),
+                    );
+                  } else {
+                    setNotionSyncMap((prev) => ({
+                      ...prev,
+                      [taskId]: {
+                        synced: true,
+                        pageUrl: data.page_url || "",
+                      },
+                    }));
+                    setActions((prev) =>
+                      prev.map((a) =>
+                        a.id === taskId
+                          ? {
+                              ...a,
+                              notion_synced: true,
+                              notion_page_id: data.page_id,
+                              notion_page_url: data.page_url || "",
+                              notion_last_synced: new Date().toISOString(),
+                            }
+                          : a,
+                      ),
+                    );
+                  }
+                }
+              } catch (err) {
+                console.error("Sync failed:", err);
+              } finally {
+                setSyncingTaskId(null);
+              }
+            }}
+            syncingTaskId={syncingTaskId}
+            notionSyncMap={notionSyncMap}
+            googleSyncMap={googleSyncMap}
           />
 
         </Card>
@@ -1174,7 +1254,10 @@ async function saveMeetingName() {
       />
 
       {toast.message && (
-        <div
+        <motion.div
+          initial={{ opacity: 0, y: 16, scale: 0.95 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          transition={{ duration: 0.25, ease: "easeOut" }}
           style={{
             position: "fixed",
             bottom: "24px",
@@ -1202,12 +1285,10 @@ async function saveMeetingName() {
             fontWeight: 600,
 
             zIndex: 9999,
-
-            animation: "fadeIn 0.3s ease",
           }}
         >
           {toast.message}
-        </div>
+        </motion.div>
       )}
 
     </div>

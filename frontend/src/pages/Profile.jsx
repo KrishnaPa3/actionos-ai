@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "motion/react";
 import { useAuth } from "../auth/AuthContext";
 import { apiFetch } from "../lib/api";
@@ -20,6 +21,8 @@ import {
   X,
   Save,
   LoaderCircle,
+  Trash2,
+  TriangleAlert,
 } from "../components/ui/icons";
 
 import "./Profile.css";
@@ -209,6 +212,7 @@ function ProfileSkeleton() {
 /* ─── Main Profile Page ─── */
 
 function Profile() {
+  const navigate = useNavigate();
   const { user } = useAuth();
 
   const [profile, setProfile] = useState(null);
@@ -216,6 +220,10 @@ function Profile() {
   const [error, setError] = useState(null);
 
   const [showPasswordDialog, setShowPasswordDialog] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deleteConfirmText, setDeleteConfirmText] = useState("");
+  const [deleting, setDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState("");
 
   const [toasts, setToasts] = useState([]);
 
@@ -283,6 +291,30 @@ function Profile() {
     // and performs reauthentication. We just need to show confirmation and close.
     addToast("Password updated successfully");
     setShowPasswordDialog(false);
+  };
+
+  const handleDeleteAccount = async () => {
+    if (deleteConfirmText !== "DELETE") {
+      setDeleteError('Please type "DELETE" to confirm');
+      return;
+    }
+    setDeleting(true);
+    setDeleteError("");
+    try {
+      const res = await apiFetch("/profile/delete-account", {
+        method: "DELETE",
+      });
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        throw new Error(errData.detail || "Failed to delete account");
+      }
+      await supabase.auth.signOut();
+      navigate("/login");
+    } catch (e) {
+      setDeleteError(e.message || "Failed to delete account");
+    } finally {
+      setDeleting(false);
+    }
   };
 
   const validateUsername = (val) => {
@@ -443,6 +475,35 @@ function Profile() {
             copyable
           />
         </ProfileCard>
+
+        {/* Danger Zone */}
+        <ProfileCard title="Danger Zone" delay={0.3}>
+          <div className="profile-danger-content">
+            <div className="profile-danger-icon">
+              <TriangleAlert size={24} />
+            </div>
+            <div className="profile-danger-text">
+              <strong>Delete Account & Data</strong>
+              <p>
+                Permanently remove your account, profile, meetings, tasks, reminders, and integration settings.
+              </p>
+              <p className="profile-danger-warning">
+                This action is permanent and cannot be undone.
+              </p>
+            </div>
+          </div>
+          <button
+            className="profile-btn profile-btn-danger"
+            onClick={() => {
+              setDeleteConfirmText("");
+              setDeleteError("");
+              setShowDeleteModal(true);
+            }}
+          >
+            <Trash2 size={16} />
+            Delete Account
+          </button>
+        </ProfileCard>
       </div>
 
       {/* Dialogs */}
@@ -452,6 +513,66 @@ function Profile() {
           onSave={handlePasswordChange}
           onClose={() => setShowPasswordDialog(false)}
         />
+      )}
+
+      {/* Delete Account Confirmation Modal */}
+      {showDeleteModal && (
+        <div className="profile-modal-overlay" onClick={() => !deleting && setShowDeleteModal(false)}>
+          <motion.div
+            className="profile-modal"
+            initial={{ opacity: 0, scale: 0.95, y: 10 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.95, y: 10 }}
+            transition={{ duration: 0.2, ease: "easeOut" }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="profile-modal-header">
+              <h3>Delete Account</h3>
+              <p>This action cannot be undone.</p>
+            </div>
+            <div className="profile-modal-body">
+              <p>
+                Type <strong>DELETE</strong> below to confirm you want to permanently delete your account and all associated data.
+              </p>
+              <input
+                className="profile-input"
+                type="text"
+                value={deleteConfirmText}
+                onChange={(e) => setDeleteConfirmText(e.target.value)}
+                placeholder='Type "DELETE" to confirm'
+                autoFocus
+                disabled={deleting}
+              />
+              {deleteError && <p className="profile-field-error" style={{ marginTop: 8 }}>{deleteError}</p>}
+            </div>
+            <div className="profile-modal-actions">
+              <button
+                className="profile-btn profile-btn-ghost"
+                onClick={() => setShowDeleteModal(false)}
+                disabled={deleting}
+              >
+                Cancel
+              </button>
+              <button
+                className="profile-btn profile-btn-danger"
+                onClick={handleDeleteAccount}
+                disabled={deleting || deleteConfirmText !== "DELETE"}
+              >
+                {deleting ? (
+                  <>
+                    <LoaderCircle size={16} className="spin" />
+                    Deleting...
+                  </>
+                ) : (
+                  <>
+                    <Trash2 size={16} />
+                    Permanently Delete
+                  </>
+                )}
+              </button>
+            </div>
+          </motion.div>
+        </div>
       )}
     </div>
   );

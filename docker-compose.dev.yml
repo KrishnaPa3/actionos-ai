@@ -1,0 +1,28 @@
+# =============================================================================
+# ActionOS - Local Development Override
+#
+# Enables hot-reload and mounts the source code as a volume so changes
+# are reflected immediately without rebuilding the image.
+#
+# Usage:
+#   docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d
+# =============================================================================
+
+version: "3.9"
+
+services:
+  backend:
+    # Override the command to enable hot-reload
+    command: >
+      uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+    # Mount source code for live edits
+    volumes:
+      - ./backend:/app:ro
+      # Keep named volume mounts from the base compose
+      - huggingface_cache:/root/.cache/huggingface
+      - whisper_cache:/root/.cache/whisper
+      - torch_cache:/root/.cache/torch
+      - uploads:/app/uploads
+    # Expose debug port if needed
+    ports:
+      - "5678:5678"

@@ -91,4 +91,5 @@ export {
   LogOut,
   Eye,
   EyeOff,
+  Plug,
 } from "lucide-react";

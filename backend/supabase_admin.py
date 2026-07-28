@@ -10,10 +10,11 @@ Do NOT replace the existing supabase_client — keep them separate.
 """
 
 import os
-from dotenv import load_dotenv
+
 from supabase import create_client
 
-load_dotenv()
+# Environment variables are loaded once in config.py.
+# No need to call load_dotenv() here.
 
 supabase_admin = create_client(
     os.getenv("SUPABASE_URL"),

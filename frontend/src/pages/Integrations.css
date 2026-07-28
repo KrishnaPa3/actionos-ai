@@ -29,7 +29,9 @@
 
 .integrationGrid {
     display: flex;
-    justify-content: center;
+    flex-direction: column;
+    align-items: center;
+    gap: 28px;
 }
 
 .integrationCard {
@@ -214,19 +216,52 @@
     border: none;
     border-radius: 12px;
 
-    background: #2563eb;
-    color: white;
-
     font-size: .9rem;
     font-weight: 600;
 
-    cursor: not-allowed;
-    opacity: .65;
+    cursor: pointer;
+    transition: .2s ease;
+}
+
+.integrationButton.connect {
+    background: #2563eb;
+    color: white;
+    opacity: 1;
+    cursor: pointer;
+}
+
+.integrationButton.connect:hover {
+    background: #3b82f6;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 16px rgba(37, 99, 235, .35);
+}
+
+.integrationButton.connected {
+    background: rgba(34, 197, 94, .15);
+    color: #4ade80;
+    border: 1px solid rgba(74, 222, 128, .35);
+    cursor: pointer;
+}
+
+.integrationButton.connected:hover {
+    background: rgba(34, 197, 94, .25);
+    transform: translateY(-1px);
 }
 
 .integrationButton svg {
     width: 16px;
     height: 16px;
+}
+
+.integrationCard.disabled {
+    opacity: .55;
+    cursor: default;
+}
+
+.integrationCard.disabled:hover {
+    transform: none;
+    border-color: #22314d;
+    box-shadow: none;
 }
 
 .comingSoon {
@@ -293,6 +328,106 @@
     width: 38px;
     height: 38px;
     object-fit: contain;
+    display: block;
+}
 
-    filter: brightness(0) invert(1);
+/* ---------- DATABASE SELECTOR ---------- */
+
+.databaseSelector {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    width: 100%;
+}
+
+.databaseSelect {
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid #2a3f5e;
+    border-radius: 10px;
+    color: #edf4ff;
+    font-size: 0.95rem;
+    padding: 10px 14px;
+    width: 100%;
+    max-width: 380px;
+    font-family: inherit;
+    outline: none;
+    cursor: pointer;
+    transition: border-color 0.2s ease;
+}
+
+.databaseSelect:focus {
+    border-color: #3b82f6;
+}
+
+.databaseSelect option {
+    background: #0d1524;
+    color: #edf4ff;
+}
+
+.databaseLoading {
+    color: #7088ad;
+    font-size: 0.9rem;
+    font-style: italic;
+}
+
+.databaseError {
+    color: #fb7185;
+    font-size: 0.85rem;
+}
+
+.databaseSelected {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    flex-wrap: wrap;
+}
+
+.databaseName {
+    color: #4ade80;
+    font-weight: 600;
+    font-size: 0.95rem;
+}
+
+/* ---------- ACTION BUTTONS ---------- */
+
+.integrationButton.save {
+    background: #2563eb;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 10px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: 0.2s ease;
+    font-family: inherit;
+}
+
+.integrationButton.save:hover:not(:disabled) {
+    background: #3b82f6;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 16px rgba(37, 99, 235, 0.35);
+}
+
+.integrationButton.save:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.integrationButton.changeDb {
+    background: rgba(59, 130, 246, 0.12);
+    color: #60a5fa;
+    border: 1px solid rgba(59, 130, 246, 0.35);
+    padding: 8px 16px;
+    border-radius: 10px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: 0.2s ease;
+    font-family: inherit;
+}
+
+.integrationButton.changeDb:hover {
+    background: rgba(59, 130, 246, 0.22);
+    transform: translateY(-1px);
 }

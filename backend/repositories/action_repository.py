@@ -132,6 +132,7 @@ def update_action_fields(db: Any, user_id: str, action_id: str, fields: dict) ->
         .update(fields)
         .eq("user_id", user_id)
         .eq("id", action_id)
+        .select("*")
         .execute()
     )
     return response.data[0] if response.data else None

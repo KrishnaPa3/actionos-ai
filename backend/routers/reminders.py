@@ -19,9 +19,23 @@ async def get_reminders(ctx: AuthContext = Depends(get_auth_context)):
     raw_reminders = reminder_repository.list_upcoming_reminders(ctx.db, ctx.user_id)
 
     reminders = []
+    stale_ids = []
+
     for reminder in raw_reminders:
         action = reminder.get("actions") or {}
         session = action.get("sessions") or {}
+
+        # Exclude reminders for completed, confirmed, or deleted tasks, or missing actions
+        if (
+            not action
+            or not action.get("id")
+            or action.get("deleted") is True
+            or action.get("status") == "completed"
+            or action.get("confirmed") is True
+        ):
+            if reminder.get("id"):
+                stale_ids.append(reminder["id"])
+            continue
 
         reminders.append({
             "id": reminder["id"],
@@ -37,6 +51,12 @@ async def get_reminders(ctx: AuthContext = Depends(get_auth_context)):
             "meeting_name": session.get("meeting_name"),
             "is_default": reminder.get("is_default", False),
         })
+
+    if stale_ids:
+        try:
+            ctx.db.table("reminders").delete().in_("id", stale_ids).execute()
+        except Exception as e:
+            print(f"[REMINDERS] Failed to clean up stale reminders: {e}")
 
     return reminders
 

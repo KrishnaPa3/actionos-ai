@@ -7,10 +7,8 @@ from datetime import datetime, timezone
 from fastapi import APIRouter, Depends
 
 from dependencies.database import AuthContext, get_auth_context
-from dependencies.notion import get_notion_service
 from repositories import action_repository, reminder_repository
 from schemas.requests import ReminderCreate, UpdateActionRequest
-from services.notion_sync_service import create_task_or_raise, update_task_best_effort, update_status_best_effort
 from utils.errors import raise_404
 
 router = APIRouter()
@@ -58,7 +56,6 @@ async def update_action(
     action_id: str,
     request: UpdateActionRequest,
     ctx: AuthContext = Depends(get_auth_context),
-    notion_service=Depends(get_notion_service),
 ):
     action = action_repository.update_action_fields(
         ctx.db,
@@ -76,9 +73,6 @@ async def update_action(
     if action is None:
         raise_404("Task not found")
 
-    if action.get("notion_page_id"):
-        update_task_best_effort(notion_service, action)
-
     return {"success": True, "message": "Task updated", "action": action}
 
 
@@ -89,6 +83,8 @@ async def delete_action(action_id: str, ctx: AuthContext = Depends(get_auth_cont
     if action is None:
         raise_404("Task not found")
 
+    reminder_repository.delete_reminders_for_action(ctx.db, ctx.user_id, action_id)
+
     return {"success": True, "message": "Task deleted", "action": action}
 
 
@@ -96,7 +92,6 @@ async def delete_action(action_id: str, ctx: AuthContext = Depends(get_auth_cont
 async def complete_action(
     action_id: str,
     ctx: AuthContext = Depends(get_auth_context),
-    notion_service=Depends(get_notion_service),
 ):
     action = action_repository.get_action(ctx.db, ctx.user_id, action_id)
 
@@ -113,9 +108,6 @@ async def complete_action(
     }
 
     updated_action = action_repository.update_action_fields(ctx.db, ctx.user_id, action_id, update_data)
-
-    if action.get("notion_page_id"):
-        update_status_best_effort(notion_service, action["notion_page_id"], new_status)
 
     if new_status == "completed":
         reminder_repository.delete_reminders_for_action(ctx.db, ctx.user_id, action_id)
@@ -138,7 +130,6 @@ async def complete_action(
 async def confirm_action(
     action_id: str,
     ctx: AuthContext = Depends(get_auth_context),
-    notion_service=Depends(get_notion_service),
 ):
     action = action_repository.get_action(ctx.db, ctx.user_id, action_id)
 
@@ -152,28 +143,29 @@ async def confirm_action(
             "action": action,
         }
 
-    notion_page = create_task_or_raise(notion_service, action)
-
     updated_action = action_repository.update_action_fields(
         ctx.db,
         ctx.user_id,
         action_id,
         {
             "confirmed": True,
-            "notion_page_id": notion_page["page_id"],
-            "notion_page_url": notion_page["page_url"],
         },
     )
 
+    reminder_repository.delete_reminders_for_action(ctx.db, ctx.user_id, action_id)
+
     return {
         "success": True,
-        "message": "Task confirmed and synced to Notion.",
+        "message": "Task confirmed.",
         "action": updated_action,
     }
 
 
 @router.get("/actions/{action_id}/reminders")
 async def get_action_reminders(action_id: str, ctx: AuthContext = Depends(get_auth_context)):
+    action = action_repository.get_action(ctx.db, ctx.user_id, action_id)
+    if not action or action.get("deleted") is True or action.get("status") == "completed" or action.get("confirmed") is True:
+        return {"reminders": []}
     reminders = reminder_repository.get_action_reminders(ctx.db, ctx.user_id, action_id)
     return {"reminders": reminders}
 

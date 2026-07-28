@@ -1,0 +1,108 @@
+# =============================================================================
+# ActionOS - Production Docker Compose
+#
+# Services:
+#   ollama     - Local LLM inference (Qwen3)
+#   backend    - FastAPI application (GPU-enabled)
+#
+# Usage:
+#   docker compose up -d
+#   docker compose logs -f
+#
+# For local development (hot-reload):
+#   docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d
+# =============================================================================
+
+version: "3.9"
+
+x-common-env: &common-env
+  # === Supabase (REQUIRED) ===
+  SUPABASE_URL: ${SUPABASE_URL:?SUPABASE_URL is required}
+  SUPABASE_KEY: ${SUPABASE_KEY:?SUPABASE_KEY is required}
+  SUPABASE_SERVICE_ROLE_KEY: ${SUPABASE_SERVICE_ROLE_KEY:?SUPABASE_SERVICE_ROLE_KEY is required}
+
+  # === AI Provider ===
+  AI_PROVIDER: ${AI_PROVIDER:-ollama}
+  OLLAMA_BASE_URL: http://ollama:11434/v1
+  OLLAMA_MODEL: ${OLLAMA_MODEL:-qwen3:8b}
+
+  # === Notion (optional) ===
+  NOTION_API_KEY: ${NOTION_API_KEY:-}
+  NOTION_DATABASE_ID: ${NOTION_DATABASE_ID:-}
+
+  # === HuggingFace (required for WhisperX diarization) ===
+  HF_TOKEN: ${HF_TOKEN:-}
+
+  # === CORS ===
+  CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:5173,http://localhost:3000}
+
+  # === Debug ===
+  DEBUG_TIMING: ${DEBUG_TIMING:-0}
+
+services:
+  # ===========================================================================
+  # Ollama - Local LLM inference server
+  # ===========================================================================
+  ollama:
+    image: ollama/ollama:latest
+    container_name: actionos-ollama
+    restart: unless-stopped
+    runtime: nvidia
+    environment:
+      - NVIDIA_VISIBLE_DEVICES=all
+    volumes:
+      - ollama_models:/root/.ollama
+    ports:
+      - "11434:11434"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:11434"]
+      interval: 30s
+      timeout: 10s
+      start_period: 60s
+      retries: 5
+
+  # ===========================================================================
+  # Backend - ActionOS FastAPI application
+  # ===========================================================================
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: actionos-backend
+    restart: unless-stopped
+    runtime: nvidia
+    environment:
+      <<: *common-env
+    volumes:
+      # Model caches (persist between restarts)
+      - huggingface_cache:/root/.cache/huggingface
+      - whisper_cache:/root/.cache/whisper
+      - torch_cache:/root/.cache/torch
+      # Uploaded audio files
+      - uploads:/app/uploads
+    ports:
+      - "8000:8000"
+    depends_on:
+      ollama:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      start_period: 30s
+      retries: 3
+
+# =============================================================================
+# Persistent Volumes
+# =============================================================================
+volumes:
+  ollama_models:
+    name: actionos_ollama_models
+  huggingface_cache:
+    name: actionos_huggingface_cache
+  whisper_cache:
+    name: actionos_whisper_cache
+  torch_cache:
+    name: actionos_torch_cache
+  uploads:
+    name: actionos_uploads

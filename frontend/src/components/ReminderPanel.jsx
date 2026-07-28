@@ -100,6 +100,15 @@ import { apiFetch } from "../lib/api";
     return () => window.clearTimeout(timeout);
 }, [actionId, expanded, loadReminders]);
 
+      // Re-fetch reminders when a task is completed/confirmed elsewhere so
+      // the panel reflects that the backend has deleted the reminders.
+      useEffect(() => {
+        if (!actionId) return;
+        const handleGlobalUpdate = () => { void loadReminders(); };
+        window.addEventListener("remindersUpdated", handleGlobalUpdate);
+        return () => window.removeEventListener("remindersUpdated", handleGlobalUpdate);
+      }, [actionId, loadReminders]);
+
       /* ==========================================
         Create reminder
       ========================================== */

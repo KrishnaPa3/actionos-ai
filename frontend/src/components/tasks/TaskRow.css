@@ -318,3 +318,27 @@
 .task-source.clickable:hover span{
     text-decoration:underline;
 }
+
+/* Notion Sync */
+
+.notion-synced-group{
+    display:flex;
+    align-items:center;
+    gap:8px;
+}
+
+.notion-synced-label{
+    display:flex;
+    align-items:center;
+    gap:6px;
+    color:#4ADE80;
+    font-size:.82rem;
+    font-weight:600;
+    padding:4px 10px;
+    border-radius:6px;
+    background:rgba(74,222,128,.1);
+}
+
+.notion-synced-label svg{
+    flex-shrink:0;
+}
