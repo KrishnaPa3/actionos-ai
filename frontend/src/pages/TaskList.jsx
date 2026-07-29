@@ -213,12 +213,19 @@ useEffect(() => {
                           google_event_url: data.event_url || "",
                           google_last_synced: new Date().toISOString(),
                         }
-                      : {
-                          notion_synced: true,
-                          notion_page_id: data.page_id,
-                          notion_page_url: data.page_url || "",
-                          notion_last_synced: new Date().toISOString(),
-                        }),
+                      : app === "slack"
+                        ? {
+                            slack_synced: true,
+                            slack_message_ts: data.message_ts || null,
+                            slack_channel_id: data.channel_id || null,
+                            slack_last_synced: new Date().toISOString(),
+                          }
+                        : {
+                            notion_synced: true,
+                            notion_page_id: data.page_id,
+                            notion_page_url: data.page_url || "",
+                            notion_last_synced: new Date().toISOString(),
+                          }),
                   }
                 : t,
             ),

@@ -2,6 +2,7 @@ import { useEffect, useState, useCallback } from "react";
 import "./Integrations.css";
 import notionLogo from "../assets/integrations/notion-darkmode.svg";
 import googleCalendarLogo from "../assets/integrations/google-calendar.svg";
+import slackLogo from "../assets/integrations/slack-logo.svg";
 import { apiFetch } from "../lib/api";
 
 export default function Integrations() {
@@ -22,6 +23,15 @@ export default function Integrations() {
     workspace_name: null,
     loading: true,
   });
+
+  // ── Slack state ───────────────────────────────────────────────────
+  const [slackConnected, setSlackConnected] = useState(false);
+  const [slackLoading, setSlackLoading] = useState(false);
+  const [slackChannels, setSlackChannels] = useState([]);
+  const [selectedSlackChannel, setSelectedSlackChannel] = useState("");
+  const [selectedSlackChannelName, setSelectedSlackChannelName] = useState("");
+  const [savingSlackChannel, setSavingSlackChannel] = useState(false);
+  const [slackError, setSlackError] = useState("");
 
   // ── Notion handlers ───────────────────────────────────────────────
 
@@ -217,6 +227,137 @@ export default function Integrations() {
     }
   }
 
+  // ── Slack handlers ────────────────────────────────────────────────
+
+  const loadSlackChannels = useCallback(async () => {
+    try {
+      const response = await apiFetch("/integrations/slack/channels");
+      if (!response.ok) {
+        throw new Error(`Slack channels request failed: ${response.status}`);
+      }
+      const data = await response.json();
+      setSlackChannels(data || []);
+      if (selectedSlackChannel) {
+        const match = data.find((item) => item.id === selectedSlackChannel);
+        if (match) setSelectedSlackChannelName(match.name || "");
+      }
+    } catch (err) {
+      console.error("Slack channels error:", err);
+      setSlackError("Failed to load Slack channels. Please try again.");
+    }
+  }, [selectedSlackChannel]);
+
+  const loadSlackStatus = useCallback(async () => {
+    try {
+      const response = await apiFetch("/integrations/slack/status");
+      if (!response.ok) {
+        throw new Error(`Slack status request failed: ${response.status}`);
+      }
+      const data = await response.json();
+      setSlackConnected(data.connected === true);
+      setSelectedSlackChannel(data.default_channel || "");
+      setSelectedSlackChannelName(data.default_channel_name || "");
+    } catch (err) {
+      console.error("Slack status error:", err);
+      setSlackConnected(false);
+      setSelectedSlackChannel("");
+      setSelectedSlackChannelName("");
+    }
+  }, []);
+
+  useEffect(() => {
+    loadSlackStatus();
+  }, [loadSlackStatus]);
+
+  useEffect(() => {
+    if (slackConnected && slackChannels.length === 0) {
+      loadSlackChannels();
+    }
+  }, [slackConnected, slackChannels.length, loadSlackChannels]);
+
+  // Reload Slack status when returning from OAuth redirect
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("slack") === "connected") {
+      loadSlackStatus();
+      // Clean up the URL without a full page reload
+      const cleanUrl = window.location.pathname + window.location.hash;
+      window.history.replaceState(null, "", cleanUrl);
+    }
+  }, [loadSlackStatus]);
+
+  async function handleSlackConnect() {
+    setSlackLoading(true);
+    try {
+      const response = await apiFetch("/oauth/slack/login");
+      if (!response.ok) {
+        throw new Error(`Slack login request failed: ${response.status}`);
+      }
+      const data = await response.json();
+      if (data.authorization_url) {
+        // Redirect the full page to Slack's OAuth consent screen
+        window.location.href = data.authorization_url;
+      } else {
+        alert("Failed to get Slack authorization URL.");
+      }
+    } catch (err) {
+      console.error("Slack connect error:", err);
+      alert("Failed to initiate Slack connection. Please try again.");
+    } finally {
+      setSlackLoading(false);
+    }
+  }
+
+  async function handleSlackDisconnect() {
+    if (!window.confirm("Disconnect Slack integration?")) return;
+    try {
+      const response = await apiFetch("/integrations/slack/disconnect", { method: "POST" });
+      if (!response.ok) {
+        throw new Error(`Slack disconnect request failed: ${response.status}`);
+      }
+      const data = await response.json();
+      if (data.success) {
+        setSlackConnected(false);
+        setSelectedSlackChannel("");
+        setSelectedSlackChannelName("");
+        setSlackChannels([]);
+      }
+    } catch (err) {
+      console.error("Slack disconnect error:", err);
+      alert("Failed to disconnect Slack. Please try again.");
+    }
+  }
+
+  async function handleSaveSlackChannel() {
+    if (!selectedSlackChannel) return;
+    setSavingSlackChannel(true);
+    setSlackError("");
+    try {
+      const response = await apiFetch("/integrations/slack/default-channel", {
+        method: "POST",
+        body: JSON.stringify({
+          channel_id: selectedSlackChannel,
+          channel_name: selectedSlackChannelName || "",
+        }),
+      });
+      if (!response.ok) {
+        throw new Error(`Slack save channel request failed: ${response.status}`);
+      }
+      const data = await response.json();
+      if (data.success) {
+        setSelectedSlackChannel(data.default_channel);
+        setSelectedSlackChannelName(data.default_channel_name || "");
+      } else {
+        setSlackError("Failed to save default Slack channel.");
+      }
+    } catch (err) {
+      console.error("Slack save channel error:", err);
+      setSlackError("Failed to save default Slack channel. Please try again.");
+    } finally {
+      setSavingSlackChannel(false);
+    }
+  }
+
   return (
     <div className="integrationsPage">
       <div className="integrationsHeader">
@@ -357,15 +498,84 @@ export default function Integrations() {
           )}
         </div>
 
-        {/* ── Slack Card (placeholder) ─────────────────────────────── */}
-        <div className="integrationCard disabled">
+        {/* ── Slack Card ────────────────────────────────────────────── */}
+        <div className="integrationCard">
           <div className="integrationTop">
             <div className="integrationInfo">
-              <div className="integrationLogo"><span>S</span></div>
-              <div><h2>Slack</h2><p>Coming soon</p></div>
+              <div className="integrationLogo">
+                <img src={slackLogo} alt="Slack" className="integrationLogoImage" />
+              </div>
+              <div>
+                <h2>Slack</h2>
+                <p className="integrationDescription">Send meeting summaries, tasks, and reminders to your Slack workspace.</p>
+              </div>
             </div>
-            <span className="status disconnected">Unavailable</span>
+            <span className={slackConnected ? "status connected" : "status disconnected"}>
+              {slackConnected ? "Connected" : "Not Connected"}
+            </span>
           </div>
+          {slackLoading ? (
+            <div className="integrationLoading">Redirecting to Slack...</div>
+          ) : (
+            <>
+              <div className="integrationRow">
+                <label>Status</label>
+                <p>{slackConnected ? "Connected" : "Not connected"}</p>
+              </div>
+              <div className="integrationRow">
+                <label>Auth</label>
+                <p>OAuth 2.0</p>
+              </div>
+              {slackConnected && (
+                <div className="integrationRow">
+                  <label>Default Channel</label>
+                  {slackChannels.length > 0 ? (
+                    <div className="databaseSelector">
+                      <select
+                        className="databaseSelect"
+                        value={selectedSlackChannel}
+                        onChange={(e) => {
+                          setSelectedSlackChannel(e.target.value);
+                          const match = slackChannels.find((item) => item.id === e.target.value);
+                          setSelectedSlackChannelName(match?.name || "");
+                        }}
+                      >
+                        <option value="">Select a Slack Channel</option>
+                        {slackChannels.map((channel) => (
+                          <option key={channel.id} value={channel.id}>
+                            {channel.name}
+                          </option>
+                        ))}
+                      </select>
+                      <button
+                        className="integrationButton save"
+                        onClick={handleSaveSlackChannel}
+                        disabled={!selectedSlackChannel || savingSlackChannel}
+                      >
+                        <span>{savingSlackChannel ? "Saving..." : "Save"}</span>
+                      </button>
+                    </div>
+                  ) : (
+                    <span className="databaseLoading">Loading Slack channels...</span>
+                  )}
+                  {slackError && <span className="databaseError">{slackError}</span>}
+                </div>
+              )}
+
+              <div className="integrationFooter">
+                {slackConnected ? (
+                  <button className="integrationButton disconnect" onClick={handleSlackDisconnect}>
+                    <span>Disconnect</span>
+                  </button>
+                ) : (
+                  <button className="integrationButton connect" onClick={handleSlackConnect}>
+                    <span>Connect Slack</span>
+                  </button>
+                )}
+                <span className="comingSoon">More coming soon</span>
+              </div>
+            </>
+          )}
         </div>
       </div>
     </div>

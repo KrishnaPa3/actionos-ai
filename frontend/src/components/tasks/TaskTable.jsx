@@ -50,6 +50,8 @@ import TaskRow from "./TaskRow";
     googleSynced={task.google_synced || false}
     googleEventId={task.google_event_id || null}
     googleEventUrl={task.google_event_url || null}
+    slackSynced={!!(task.slack_synced && task.slack_message_ts)}
+    slackMessageTs={task.slack_message_ts || null}
     onSyncComplete={onSyncComplete}
 />
         ))}

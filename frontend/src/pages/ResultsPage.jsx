@@ -1037,7 +1037,9 @@ async function saveMeetingName() {
               try {
                 const endpoint = app === "google"
                   ? "/integrations/google/sync-task"
-                  : "/integrations/notion/sync-task";
+                  : app === "notion"
+                    ? "/integrations/notion/sync-task"
+                    : "/integrations/slack/sync-task";
                 const response = await apiFetch(endpoint, {
                   method: "POST",
                   body: JSON.stringify({ action_id: taskId }),
@@ -1065,7 +1067,7 @@ async function saveMeetingName() {
                           : a,
                       ),
                     );
-                  } else {
+                  } else if (app === "notion") {
                     setNotionSyncMap((prev) => ({
                       ...prev,
                       [taskId]: {
@@ -1082,6 +1084,20 @@ async function saveMeetingName() {
                               notion_page_id: data.page_id,
                               notion_page_url: data.page_url || "",
                               notion_last_synced: new Date().toISOString(),
+                            }
+                          : a,
+                      ),
+                    );
+                  } else if (app === "slack") {
+                    setActions((prev) =>
+                      prev.map((a) =>
+                        a.id === taskId
+                          ? {
+                              ...a,
+                              slack_synced: true,
+                              slack_message_ts: data.message_ts || null,
+                              slack_channel_id: data.channel_id || null,
+                              slack_last_synced: new Date().toISOString(),
                             }
                           : a,
                       ),

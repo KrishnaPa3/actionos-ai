@@ -410,21 +410,7 @@ Returns a list of:
     # ================================================================
     # DEBUG: Log the exact response structure from the Search API
     # ================================================================
-    print("========== NOTION SEARCH API RESPONSE DEBUG ==========")
-    import json
-    print(f"Total results: {len(results.get('results', []))}")
-    for i, item in enumerate(results.get("results", [])):
-        print(f"--------------------------------")
-        print(f"RESULT {i + 1}")
-        print(f"  object:   {item.get('object', 'MISSING')}")
-        print(f"  id:       {item.get('id', 'MISSING')}")
-        print(f"  url:      {item.get('url', 'MISSING')}")
-        print(f"  parent:   {item.get('parent', 'MISSING')}")
-        print(f"  title:    {item.get('title', 'MISSING')}")
-        print(f"  type:     {item.get('type', 'N/A')}")
-        # Dump the full item keys for complete visibility
-        print(f"  all keys: {list(item.keys())}")
-    print("========================================================")
+
 
     return databases
 

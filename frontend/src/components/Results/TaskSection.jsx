@@ -332,6 +332,8 @@ const navigate = useNavigate();
                                             notionPageUrl={task.notion_page_url || null}
                                             googleSynced={!!(task.google_synced && task.google_event_id)}
                                             googleEventUrl={task.google_event_url || null}
+                                            slackSynced={!!(task.slack_synced && task.slack_message_ts)}
+                                            slackMessageTs={task.slack_message_ts || null}
                                             onSync={(app) => {
                                                 if (onSyncTask) {
                                                     onSyncTask(task.id, app);

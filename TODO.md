@@ -1,28 +1,39 @@
-# Sync Button Dropdown Fix - Implementation Plan
+# Slack Task Sync — Implementation TODO
 
-## Step 1: ActionButtons.jsx ✅
-- [x] Add Google Calendar sync option to dropdown menu
-- [x] Make post-sync state a dropdown with "Open in Notion"/"Open in Google Calendar" links
-- [x] Add props: `notionSynced`, `notionPageUrl`, `googleSynced`, `googleEventUrl`
-- [x] Show ExternalLink icon for already-synced apps in dropdown
+## Phase 1 — Backend
 
-## Step 2: TaskRow.jsx ✅  
-- [x] Replace simple "Sync to Notion" button with dropdown menu
-- [x] Add Notion and Google Calendar options in dropdown
-- [x] Add Google sync props (`googleSynced`, `googleEventUrl`)
-- [x] On sync: call appropriate API; on already-synced: open URL
+### 1a. Slack Service (`backend/integrations/slack/service.py`)
+- [x] Create `SlackService` class with:
+  - `list_channels()` — calls `client.conversations_list()`, filters archived
+  - `send_task_message()` — formats task as Slack message blocks, posts to channel
 
-## Step 3: TaskTable.jsx ✅
-- [x] Pass Google sync data alongside Notion data
+### 1b. Slack Router (`backend/integrations/slack/router.py`)
+- [ ] Add `GET /integrations/slack/channels` — list available channels
+- [ ] Add `POST /integrations/slack/default-channel` — save default channel in config
+- [ ] Add `POST /integrations/slack/sync-task` — full sync flow (mirror Google)
 
-## Step 4: TaskList.jsx ✅
-- [x] Pass Google sync from action fields to TaskTable
-- [x] Update onSyncComplete to handle both Notion and Google
+### 1c. Slack Client (`backend/integrations/slack/client.py`)
+- [ ] Update `get_client()` to also return config data if needed (or just use from router)
 
-## Step 5: ResultsPage.jsx ✅
-- [x] Update onSyncTask to accept app parameter and call appropriate endpoint
-- [x] Maintain Google sync state alongside Notion sync state
+## Phase 2 — Frontend
 
-## Step 6: TaskSection.jsx ✅
-- [x] Pass Google sync props and onSyncTask with app identifier to ActionButtons
+### 2a. Integrations Page (`frontend/src/pages/Integrations.jsx`)
+- [ ] Fetch Slack channels when connected
+- [ ] Add channel dropdown selector (like Notion's database selector)
+- [ ] Save default channel
+- [ ] Show current channel selection
+
+### 2b. Action Buttons (`frontend/src/components/results/ActionButtons.jsx`)
+- [ ] Add Slack sync option in the dropdown
+- [ ] Add Slack synced state icon + "Open in Slack" link
+
+### 2c. Task Section (`frontend/src/components/Results/TaskSection.jsx`)
+- [ ] Pass `slackSynced`, `slackChannelId`, `slackMessageTs` props
+
+### 2d. Results Page (`frontend/src/pages/ResultsPage.jsx`)
+- [ ] Add Slack sync handler — POST to `/integrations/slack/sync-task`
+- [ ] Update local state with sync metadata
+
+## Phase 3 — Database Migration
+- [ ] Add columns: `slack_synced`, `slack_message_ts`, `slack_channel_id`, `slack_last_synced`
 

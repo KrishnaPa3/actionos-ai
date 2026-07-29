@@ -6,6 +6,7 @@ import ReminderPanel from "../ReminderPanel";
 
 import notionLogo from "../../assets/integrations/notion-darkmode.svg";
 import googleCalendarLogo from "../../assets/integrations/google-calendar.svg";
+import slackLogo from "../../assets/integrations/slack-logo.svg";
 
 import {
   ListChecks,
@@ -43,6 +44,8 @@ export default function TaskRow({
   googleSynced = false,
   googleEventId = null,
   googleEventUrl = null,
+  slackSynced = false,
+  slackMessageTs = null,
   onSyncComplete,
 }) {
   const navigate = useNavigate();
@@ -70,7 +73,9 @@ export default function TaskRow({
     try {
       const endpoint = app === "google"
         ? "/integrations/google/sync-task"
-        : "/integrations/notion/sync-task";
+        : app === "notion"
+          ? "/integrations/notion/sync-task"
+          : "/integrations/slack/sync-task";
       const response = await apiFetch(endpoint, {
         method: "POST",
         body: JSON.stringify({ action_id: actionId }),
@@ -299,6 +304,34 @@ export default function TaskRow({
                       >
                         <img src={googleCalendarLogo} alt="Google Calendar" style={iconStyle} />
                         <span>Sync to Google Calendar</span>
+                      </button>
+                    )}
+
+                    {/* Slack */}
+                    {slackSynced ? (
+                      <button
+                        disabled
+                        style={{
+                          ...dropdownItemStyle,
+                          opacity: 0.65,
+                          cursor: "default",
+                        }}
+                      >
+                        <img src={slackLogo} alt="Slack" style={iconStyle} />
+                        <span>Already sent to Slack</span>
+                      </button>
+                    ) : (
+                      <button
+                        onClick={() => {
+                          setSyncMenuOpen(false);
+                          handleSyncToApp("slack");
+                        }}
+                        style={dropdownItemStyle}
+                        onMouseEnter={(e) => e.currentTarget.style.background = "#334155"}
+                        onMouseLeave={(e) => e.currentTarget.style.background = "transparent"}
+                      >
+                        <img src={slackLogo} alt="Slack" style={iconStyle} />
+                        <span>Send to Slack</span>
                       </button>
                     )}
 

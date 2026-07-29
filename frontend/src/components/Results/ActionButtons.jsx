@@ -3,6 +3,7 @@ import Button from "../ui/Button";
 
 import notionLogo from "../../assets/integrations/notion-darkmode.svg";
 import googleCalendarLogo from "../../assets/integrations/google-calendar.svg";
+import slackLogo from "../../assets/integrations/slack-logo.svg";
 import {
     Pencil,
     BadgeCheck,
@@ -47,6 +48,10 @@ export default function ActionButtons({
     // Google Calendar sync state
     googleSynced = false,
     googleEventUrl = null,
+
+    // Slack sync state
+    slackSynced = false,
+    slackMessageTs = null,
 
     compact = false
 
@@ -295,6 +300,34 @@ export default function ActionButtons({
                                     >
                                         <img src={googleCalendarLogo} alt="Google Calendar" style={iconStyle} />
                                         <span>Sync to Google Calendar</span>
+                                    </button>
+                                )}
+
+                                {/* Slack */}
+                                {slackSynced ? (
+                                    <button
+                                        disabled
+                                        style={{
+                                            ...dropdownItemStyle,
+                                            opacity: 0.65,
+                                            cursor: "default",
+                                        }}
+                                    >
+                                        <img src={slackLogo} alt="Slack" style={iconStyle} />
+                                        <span>Already sent to Slack</span>
+                                    </button>
+                                ) : (
+                                    <button
+                                        onClick={() => {
+                                            setSyncMenuOpen(false);
+                                            onSync?.("slack");
+                                        }}
+                                        style={dropdownItemStyle}
+                                        onMouseEnter={(e) => e.currentTarget.style.background = "#334155"}
+                                        onMouseLeave={(e) => e.currentTarget.style.background = "transparent"}
+                                    >
+                                        <img src={slackLogo} alt="Slack" style={iconStyle} />
+                                        <span>Send to Slack</span>
                                     </button>
                                 )}
 

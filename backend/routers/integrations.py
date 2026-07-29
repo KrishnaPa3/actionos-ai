@@ -14,17 +14,19 @@ from fastapi import APIRouter
 
 from integrations.notion.router import router as notion_router
 from integrations.google.router import router as google_router
+from integrations.slack.router import router as slack_router
 
 router = APIRouter()
 router.include_router(notion_router)
 router.include_router(google_router)
+router.include_router(slack_router)
 
 
 @router.get("/integrations")
 async def list_integrations():
     """
     List available integrations and their status.
-    Notion and Google Calendar are supported via OAuth.
+    Notion, Google Calendar, and Slack are supported via OAuth.
     """
     return {
         "integrations": [
@@ -43,6 +45,14 @@ async def list_integrations():
                 "auth_type": "oauth",
                 "status_endpoint": "/integrations/google/status",
                 "login_endpoint": "/oauth/google/login",
+            },
+            {
+                "name": "slack",
+                "display_name": "Slack",
+                "description": "Send meeting summaries, tasks, and reminders to your Slack workspace",
+                "auth_type": "oauth",
+                "status_endpoint": "/integrations/slack/status",
+                "login_endpoint": "/oauth/slack/login",
             },
         ]
     }
