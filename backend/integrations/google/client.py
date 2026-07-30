@@ -5,10 +5,10 @@ Provides per-user authenticated Google Calendar clients using OAuth
 tokens stored in the integrations table.
 """
 
-import os
-
 from google.oauth2.credentials import Credentials
 from googleapiclient.discovery import build
+
+from config import GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET
 
 
 def get_client(user_id: str, db=None):
@@ -70,8 +70,8 @@ def get_client(user_id: str, db=None):
         token=response.data["access_token"],
         refresh_token=response.data.get("refresh_token"),
         token_uri="https://oauth2.googleapis.com/token",
-        client_id=os.getenv("GOOGLE_CLIENT_ID"),
-        client_secret=os.getenv("GOOGLE_CLIENT_SECRET"),
+        client_id=GOOGLE_CLIENT_ID,
+        client_secret=GOOGLE_CLIENT_SECRET,
     )
 
     service = build(

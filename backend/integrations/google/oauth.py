@@ -8,11 +8,12 @@ See:
 https://developers.google.com/identity/protocols/oauth2/web-server
 """
 
-import os
 import secrets
 from urllib.parse import urlencode
 
 import httpx
+
+from config import GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, GOOGLE_REDIRECT_URI
 
 
 GOOGLE_AUTH_URL = "https://accounts.google.com/o/oauth2/v2/auth"
@@ -27,14 +28,10 @@ GOOGLE_OAUTH_SCOPES = [
 
 def get_oauth_config() -> dict:
     """
-    Read OAuth credentials from environment variables.
+    Read OAuth credentials from centralized configuration.
     """
 
-    client_id = os.getenv("GOOGLE_CLIENT_ID")
-    client_secret = os.getenv("GOOGLE_CLIENT_SECRET")
-    redirect_uri = os.getenv("GOOGLE_REDIRECT_URI")
-
-    if not client_id or not client_secret or not redirect_uri:
+    if not GOOGLE_CLIENT_ID or not GOOGLE_CLIENT_SECRET or not GOOGLE_REDIRECT_URI:
         raise RuntimeError(
             "Google OAuth is not configured. "
             "Set GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, "
@@ -42,9 +39,9 @@ def get_oauth_config() -> dict:
         )
 
     return {
-        "client_id": client_id,
-        "client_secret": client_secret,
-        "redirect_uri": redirect_uri,
+        "client_id": GOOGLE_CLIENT_ID,
+        "client_secret": GOOGLE_CLIENT_SECRET,
+        "redirect_uri": GOOGLE_REDIRECT_URI,
     }
 
 

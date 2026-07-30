@@ -41,7 +41,7 @@ function Signup() {
             email,
             password,
             options: {
-               emailRedirectTo: "http://localhost:5173/auth/callback",
+               emailRedirectTo: `${import.meta.env.VITE_SITE_URL || window.location.origin}/auth/callback`,
                 data: {
                     username,
                     full_name: fullName,

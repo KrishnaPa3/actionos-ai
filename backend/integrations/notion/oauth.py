@@ -7,9 +7,10 @@ authorization codes for access tokens using the Notion API.
 See https://developers.notion.com/docs/authorization
 """
 
-import os
 import secrets
 from urllib.parse import urlencode
+
+from config import NOTION_CLIENT_ID, NOTION_CLIENT_SECRET, NOTION_REDIRECT_URI
 
 
 NOTION_AUTH_URL = "https://api.notion.com/v1/oauth/authorize"
@@ -18,21 +19,17 @@ NOTION_OAUTH_SCOPES = ["read:user", "read:database", "write:database"]
 
 
 def get_oauth_config() -> dict:
-    """Read OAuth credentials from environment variables."""
-    client_id = os.getenv("NOTION_CLIENT_ID")
-    client_secret = os.getenv("NOTION_CLIENT_SECRET")
-    redirect_uri = os.getenv("NOTION_REDIRECT_URI")
-
-    if not client_id or not client_secret or not redirect_uri:
+    """Read OAuth credentials from centralized configuration."""
+    if not NOTION_CLIENT_ID or not NOTION_CLIENT_SECRET or not NOTION_REDIRECT_URI:
         raise RuntimeError(
             "Notion OAuth is not configured. "
             "Set NOTION_CLIENT_ID, NOTION_CLIENT_SECRET, and NOTION_REDIRECT_URI."
         )
 
     return {
-        "client_id": client_id,
-        "client_secret": client_secret,
-        "redirect_uri": redirect_uri,
+        "client_id": NOTION_CLIENT_ID,
+        "client_secret": NOTION_CLIENT_SECRET,
+        "redirect_uri": NOTION_REDIRECT_URI,
     }
 
 

@@ -18,8 +18,14 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     g++ \
     && rm -rf /var/lib/apt/lists/*
 
+# Install dependencies into a dedicated prefix that we can copy across stages.
+# Using a virtualenv here avoids the /root vs non-root user mismatch that
+# breaks `pip install --user` when the runtime image switches to a non-root user.
+RUN python -m venv /opt/venv
+ENV PATH=/opt/venv/bin:$PATH
+
 COPY requirements.txt .
-RUN pip install --user --no-cache-dir -r requirements.txt
+RUN pip install --no-cache-dir -r requirements.txt
 
 
 # =============================================================================
@@ -47,10 +53,10 @@ RUN ln -sf /usr/bin/python3.12 /usr/bin/python3 && \
     ln -sf /usr/bin/python3 /usr/bin/python
 
 # --------------------------------------------------------------------------
-# Copy Python packages from builder stage
+# Copy Python virtualenv from builder stage
 # --------------------------------------------------------------------------
-COPY --from=builder /root/.local /root/.local
-ENV PATH=/root/.local/bin:$PATH
+COPY --from=builder /opt/venv /opt/venv
+ENV PATH=/opt/venv/bin:$PATH
 
 # --------------------------------------------------------------------------
 # Create application user (non-root)
@@ -68,15 +74,16 @@ COPY . .
 # Ensure uploads directory exists
 RUN mkdir -p /app/uploads && chown -R actionos:actionos /app/uploads
 
-# Create cache directories for models
+# Create cache directories for models (owned by actionos so the non-root
+# process can write downloaded models at runtime)
 RUN mkdir -p /root/.cache/huggingface /root/.cache/whisper /root/.cache/torch && \
-    mkdir -p /root/.ollama
+    chown -R actionos:actionos /root/.cache
 
 # --------------------------------------------------------------------------
 # Health check
 # --------------------------------------------------------------------------
 HEALTHCHECK --interval=30s --timeout=10s --start-period=15s --retries=3 \
-    CMD curl -f http://localhost:8000/health || exit 1
+    CMD curl -f "http://localhost:8000/health" || exit 1
 
 # --------------------------------------------------------------------------
 # Expose port

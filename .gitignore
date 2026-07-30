@@ -3,10 +3,20 @@ __pycache__/
 backend/__pycache__/
 *.pyc
 .venv/
+.venv312/
+backend/.venv312/
+
+# Environment files (keep secrets out of git, but allow templates)
 .env
+backend/.env
+frontend/.env
+# Templates ARE committed so new developers can copy them:
+# .env.example, .env.local, .env.docker, .env.production
+# backend/.env.example, frontend/.env.example
 
 # Uploads
 backend/uploads/
+uploads/
 
 # Node
 node_modules/
@@ -18,9 +28,5 @@ dist/
 .DS_Store
 Thumbs.db
 
-backend/.venv312/
-.venv312/
-
 # Scripts
 scripts/
-.env.example

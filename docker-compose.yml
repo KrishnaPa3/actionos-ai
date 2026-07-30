@@ -1,16 +1,23 @@
 # =============================================================================
-# ActionOS - Production Docker Compose
+# ActionOS - Docker Compose (Full Stack)
 #
 # Services:
 #   ollama     - Local LLM inference (Qwen3)
 #   backend    - FastAPI application (GPU-enabled)
+#   frontend   - Vite React app served via nginx
 #
 # Usage:
 #   docker compose up -d
 #   docker compose logs -f
 #
-# For local development (hot-reload):
+# For local development with hot-reload:
 #   docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d
+#
+# Environment:
+#   Docker Compose reads variables from the root .env file for
+#   interpolation (${VAR} syntax).  All Docker-specific values
+#   (service URLs, CORS, OAuth redirect URIs) are injected here so
+#   developers do NOT need to edit backend/.env or frontend/.env.
 # =============================================================================
 
 version: "3.9"
@@ -20,21 +27,47 @@ x-common-env: &common-env
   SUPABASE_URL: ${SUPABASE_URL:?SUPABASE_URL is required}
   SUPABASE_KEY: ${SUPABASE_KEY:?SUPABASE_KEY is required}
   SUPABASE_SERVICE_ROLE_KEY: ${SUPABASE_SERVICE_ROLE_KEY:?SUPABASE_SERVICE_ROLE_KEY is required}
+  SUPABASE_JWT_SECRET: ${SUPABASE_JWT_SECRET:-}
 
   # === AI Provider ===
   AI_PROVIDER: ${AI_PROVIDER:-ollama}
   OLLAMA_BASE_URL: http://ollama:11434/v1
   OLLAMA_MODEL: ${OLLAMA_MODEL:-qwen3:8b}
-
-  # === Notion (optional) ===
-  NOTION_API_KEY: ${NOTION_API_KEY:-}
-  NOTION_DATABASE_ID: ${NOTION_DATABASE_ID:-}
+  OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+  OPENAI_MODEL: ${OPENAI_MODEL:-gpt-4o}
+  GEMINI_API_KEY: ${GEMINI_API_KEY:-}
+  GEMINI_MODEL: ${GEMINI_MODEL:-gemini-2.5-pro}
+  ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+  ANTHROPIC_MODEL: ${ANTHROPIC_MODEL:-claude-sonnet-4}
 
   # === HuggingFace (required for WhisperX diarization) ===
   HF_TOKEN: ${HF_TOKEN:-}
 
-  # === CORS ===
-  CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:5173,http://localhost:3000}
+  # === Notion Integration (optional) ===
+  NOTION_API_KEY: ${NOTION_API_KEY:-}
+  NOTION_DATABASE_ID: ${NOTION_DATABASE_ID:-}
+  NOTION_CLIENT_ID: ${NOTION_CLIENT_ID:-}
+  NOTION_CLIENT_SECRET: ${NOTION_CLIENT_SECRET:-}
+  # Docker-internal backend URL for OAuth callbacks
+  NOTION_REDIRECT_URI: ${NOTION_REDIRECT_URI:-http://backend:8000/oauth/notion/callback}
+
+  # === Google Calendar Integration (optional) ===
+  GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
+  GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
+  GOOGLE_REDIRECT_URI: ${GOOGLE_REDIRECT_URI:-http://backend:8000/oauth/google/callback}
+
+  # === Slack Integration (optional) ===
+  SLACK_CLIENT_ID: ${SLACK_CLIENT_ID:-}
+  SLACK_CLIENT_SECRET: ${SLACK_CLIENT_SECRET:-}
+  SLACK_REDIRECT_URI: ${SLACK_REDIRECT_URI:-http://backend:8000/oauth/slack/callback}
+
+  # === Frontend / API URLs (Docker-internal) ===
+  # These are the URLs used INSIDE the Docker network.
+  # For browser-accessible URLs (OAuth redirects to frontend), set
+  # FRONTEND_URL to the public-facing URL.
+  FRONTEND_URL: ${FRONTEND_URL:-http://frontend:5173}
+  BACKEND_URL: ${BACKEND_URL:-http://backend:8000}
+  CORS_ORIGINS: ${CORS_ORIGINS:-http://frontend:5173}
 
   # === Debug ===
   DEBUG_TIMING: ${DEBUG_TIMING:-0}
@@ -91,6 +124,26 @@ services:
       timeout: 10s
       start_period: 30s
       retries: 3
+
+  # ===========================================================================
+  # Frontend - ActionOS React application (Vite build + nginx serve)
+  # ===========================================================================
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        VITE_API_URL: ${VITE_API_URL:-http://localhost:8000}
+        VITE_SUPABASE_URL: ${VITE_SUPABASE_URL:?VITE_SUPABASE_URL is required}
+        VITE_SUPABASE_ANON_KEY: ${VITE_SUPABASE_ANON_KEY:?VITE_SUPABASE_ANON_KEY is required}
+        VITE_SITE_URL: ${VITE_SITE_URL:-http://localhost:5173}
+    container_name: actionos-frontend
+    restart: unless-stopped
+    ports:
+      - "5173:5173"
+    depends_on:
+      backend:
+        condition: service_healthy
 
 # =============================================================================
 # Persistent Volumes

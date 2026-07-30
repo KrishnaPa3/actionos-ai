@@ -8,11 +8,12 @@ See:
 https://api.slack.com/authentication/oauth-v2
 """
 
-import os
 import secrets
 from urllib.parse import urlencode
 
 import httpx
+
+from config import SLACK_CLIENT_ID, SLACK_CLIENT_SECRET, SLACK_REDIRECT_URI
 
 
 SLACK_AUTH_URL = "https://slack.com/oauth/v2/authorize"
@@ -28,14 +29,10 @@ SLACK_OAUTH_SCOPES = [
 
 def get_oauth_config() -> dict:
     """
-    Read OAuth credentials from environment variables.
+    Read OAuth credentials from centralized configuration.
     """
 
-    client_id = os.getenv("SLACK_CLIENT_ID")
-    client_secret = os.getenv("SLACK_CLIENT_SECRET")
-    redirect_uri = os.getenv("SLACK_REDIRECT_URI")
-
-    if not client_id or not client_secret or not redirect_uri:
+    if not SLACK_CLIENT_ID or not SLACK_CLIENT_SECRET or not SLACK_REDIRECT_URI:
         raise RuntimeError(
             "Slack OAuth is not configured. "
             "Set SLACK_CLIENT_ID, SLACK_CLIENT_SECRET, "
@@ -43,9 +40,9 @@ def get_oauth_config() -> dict:
         )
 
     return {
-        "client_id": client_id,
-        "client_secret": client_secret,
-        "redirect_uri": redirect_uri,
+        "client_id": SLACK_CLIENT_ID,
+        "client_secret": SLACK_CLIENT_SECRET,
+        "redirect_uri": SLACK_REDIRECT_URI,
     }
 
 

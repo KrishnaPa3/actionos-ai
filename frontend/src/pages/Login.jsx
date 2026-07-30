@@ -127,7 +127,7 @@ function Login() {
             type: "signup",
             email,
             options: {
-                emailRedirectTo: "http://localhost:5173/auth/callback",
+                emailRedirectTo: `${import.meta.env.VITE_SITE_URL || window.location.origin}/auth/callback`,
             },
         });
 

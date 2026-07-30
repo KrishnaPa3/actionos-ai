@@ -12,7 +12,6 @@ Handles the OAuth authorization flow and connection lifecycle:
 """
 
 import logging
-import os
 import traceback
 from datetime import datetime, timezone
 from typing import Any, Optional
@@ -21,6 +20,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from fastapi.responses import RedirectResponse
 from pydantic import BaseModel
 
+from config import FRONTEND_URL
 from dependencies.auth import get_current_user
 from dependencies.database import AuthContext, get_auth_context
 from dependencies.notion import get_notion_client
@@ -202,9 +202,8 @@ async def notion_callback(
     # ----------------------------------------------------------------
     # 3. Redirect the user back to the frontend
     # ----------------------------------------------------------------
-    frontend_url = os.getenv("FRONTEND_URL", "http://localhost:5173")
     return RedirectResponse(
-        url=f"{frontend_url}/integrations?notion=connected",
+        url=f"{FRONTEND_URL}/integrations?notion=connected",
         status_code=302,
     )
 
@@ -667,9 +666,8 @@ async def notion_sync_task(
 
     # Build a session link URL for the action's source meeting page
     session_link = None
-    frontend_url = os.getenv("FRONTEND_URL", "http://localhost:5173")
     if action.get("session_id"):
-        session_link = f"{frontend_url}/results/{action['session_id']}"
+        session_link = f"{FRONTEND_URL}/results/{action['session_id']}"
 
     summary_parts = []
     if action.get("description"):
