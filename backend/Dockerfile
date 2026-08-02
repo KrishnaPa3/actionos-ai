@@ -1,101 +1,106 @@
 # =============================================================================
-# ActionOS Backend - Multi-stage Docker Image
-#
-# Stage 1: Build dependencies
-# Stage 2: Runtime image (CUDA-enabled for GPU inference)
+# ActionOS Backend - Production Dockerfile
+# CUDA 12.6 + Python 3.12
 # =============================================================================
 
-# =============================================================================
-# STAGE 1: Python dependency builder
-# =============================================================================
-FROM python:3.12-slim AS builder
-
-WORKDIR /build
-
-# Install system build deps
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    gcc \
-    g++ \
-    && rm -rf /var/lib/apt/lists/*
-
-# Install dependencies into a dedicated prefix that we can copy across stages.
-# Using a virtualenv here avoids the /root vs non-root user mismatch that
-# breaks `pip install --user` when the runtime image switches to a non-root user.
-RUN python -m venv /opt/venv
-ENV PATH=/opt/venv/bin:$PATH
-
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
-
-
-# =============================================================================
-# STAGE 2: Runtime image
-# =============================================================================
-FROM nvidia/cuda:12.4.1-runtime-ubuntu22.04
+FROM nvidia/cuda:12.6.3-runtime-ubuntu24.04
 
 ENV DEBIAN_FRONTEND=noninteractive
 ENV PYTHONUNBUFFERED=1
 ENV PIP_NO_CACHE_DIR=1
 
-# --------------------------------------------------------------------------
-# Install system dependencies
-# --------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
+# Install Python 3.12 + system dependencies
+# -----------------------------------------------------------------------------
+
 RUN apt-get update && apt-get install -y --no-install-recommends \
     python3.12 \
     python3.12-venv \
     python3-pip \
     ffmpeg \
     curl \
+    git \
+    ca-certificates \
+    build-essential \
     && rm -rf /var/lib/apt/lists/*
 
-# Create a symlink so python3 points to python3.12
-RUN ln -sf /usr/bin/python3.12 /usr/bin/python3 && \
-    ln -sf /usr/bin/python3 /usr/bin/python
+# -----------------------------------------------------------------------------
+# Create virtual environment
+# -----------------------------------------------------------------------------
 
-# --------------------------------------------------------------------------
-# Copy Python virtualenv from builder stage
-# --------------------------------------------------------------------------
-COPY --from=builder /opt/venv /opt/venv
-ENV PATH=/opt/venv/bin:$PATH
+RUN python3.12 -m venv /opt/venv
 
-# --------------------------------------------------------------------------
-# Create application user (non-root)
-# --------------------------------------------------------------------------
-RUN groupadd -r actionos && useradd -r -g actionos -d /app -s /bin/false actionos
+ENV PATH="/opt/venv/bin:$PATH"
 
-# --------------------------------------------------------------------------
-# Set up application directory
-# --------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
+# Upgrade packaging tools
+# -----------------------------------------------------------------------------
+
+RUN python3.12 -m pip install --upgrade pip setuptools wheel
+
+# -----------------------------------------------------------------------------
+# Install CUDA-enabled PyTorch
+# -----------------------------------------------------------------------------
+
+RUN pip install --no-cache-dir \
+    torch==2.13.0 \
+    torchvision==0.28.0 \
+    torchaudio==2.11.0 \
+    --index-url https://download.pytorch.org/whl/cu126
+
+# -----------------------------------------------------------------------------
+# Install Python dependencies
+# -----------------------------------------------------------------------------
+
 WORKDIR /app
 
-# Copy application code
+COPY requirements.txt .
+
+RUN pip install --no-cache-dir -r requirements.txt
+
+# -----------------------------------------------------------------------------
+# Copy application
+# -----------------------------------------------------------------------------
+
 COPY . .
 
-# Ensure uploads directory exists
-RUN mkdir -p /app/uploads && chown -R actionos:actionos /app/uploads
+# -----------------------------------------------------------------------------
+# Create non-root user
+# -----------------------------------------------------------------------------
 
-# Create cache directories for models (owned by actionos so the non-root
-# process can write downloaded models at runtime)
-RUN mkdir -p /root/.cache/huggingface /root/.cache/whisper /root/.cache/torch && \
-    chown -R actionos:actionos /root/.cache
+RUN useradd -m actionos && \
+    mkdir -p /app/uploads && \
+    mkdir -p /home/actionos/.cache/huggingface && \
+    mkdir -p /home/actionos/.cache/torch && \
+    chown -R actionos:actionos /app /home/actionos
 
-# --------------------------------------------------------------------------
-# Health check
-# --------------------------------------------------------------------------
-HEALTHCHECK --interval=30s --timeout=10s --start-period=15s --retries=3 \
-    CMD curl -f "http://localhost:8000/health" || exit 1
-
-# --------------------------------------------------------------------------
-# Expose port
-# --------------------------------------------------------------------------
-EXPOSE 8000
-
-# --------------------------------------------------------------------------
-# Run as non-root user
-# --------------------------------------------------------------------------
 USER actionos
 
-# --------------------------------------------------------------------------
-# Start the application
-# --------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
+# Cache locations
+# -----------------------------------------------------------------------------
+
+ENV HOME=/home/actionos
+ENV HF_HOME=/home/actionos/.cache/huggingface
+ENV TRANSFORMERS_CACHE=/home/actionos/.cache/huggingface
+ENV TORCH_HOME=/home/actionos/.cache/torch
+ENV XDG_CACHE_HOME=/home/actionos/.cache
+
+# -----------------------------------------------------------------------------
+# Health Check
+# -----------------------------------------------------------------------------
+
+HEALTHCHECK --interval=30s --timeout=10s --start-period=20s --retries=3 \
+    CMD curl -f http://localhost:8000/health || exit 1
+
+# -----------------------------------------------------------------------------
+# Expose API
+# -----------------------------------------------------------------------------
+
+EXPOSE 8000
+
+# -----------------------------------------------------------------------------
+# Start FastAPI
+# -----------------------------------------------------------------------------
+
 CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]

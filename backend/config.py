@@ -47,7 +47,7 @@ BACKEND_URL = os.getenv("BACKEND_URL", "http://localhost:8000")
 # ----------------------------------------------------
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-UPLOAD_DIR = os.path.join(BASE_DIR, "uploads")
+UPLOAD_DIR = os.getenv("UPLOAD_DIR", "/app/uploads")
 
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 
