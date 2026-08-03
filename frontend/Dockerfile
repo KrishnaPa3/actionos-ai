@@ -8,7 +8,7 @@
 # =============================================================================
 # STAGE 1: Build
 # =============================================================================
-FROM node:20-slim AS builder
+FROM node:20.14.0-slim AS builder
 
 WORKDIR /app
 
@@ -36,7 +36,7 @@ RUN npm run build
 # =============================================================================
 # STAGE 2: Serve with nginx
 # =============================================================================
-FROM nginx:alpine
+FROM nginx:1.27.2-alpine
 
 # Copy built assets from builder stage
 COPY --from=builder /app/dist /usr/share/nginx/html

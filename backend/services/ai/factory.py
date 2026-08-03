@@ -12,6 +12,7 @@ from typing import Optional
 
 from config import AI_PROVIDER
 from services.ai.base import AIProvider
+from utils.logging import logger
 
 # ---------------------------------------------------------------------------
 # Cached singleton
@@ -76,7 +77,7 @@ def get_ai_provider() -> AIProvider:
         provider_cls = getattr(module, class_name)
         _provider = provider_cls()
 
-        print(f"AI provider initialized: {provider_name}")
+        logger.info("AI provider initialized", extra={"provider": provider_name})
 
         return _provider
 

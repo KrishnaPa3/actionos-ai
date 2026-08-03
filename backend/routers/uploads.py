@@ -14,22 +14,69 @@ This router only orchestrates; the heavy lifting for step 4 lives in
 services/meeting_pipeline_service.py so this file stays readable.
 """
 
+import mimetypes
 import os
 import shutil
 import uuid
 from datetime import datetime, timezone
+from pathlib import Path
 
-from fastapi import APIRouter, Depends, File, UploadFile
+from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
 
-from config import UPLOAD_DIR
+from config import MAX_UPLOAD_SIZE, UPLOAD_DIR
 from dependencies.database import AuthContext, get_auth_context
 from dependencies.whisper import get_whisper_model
 from services import meeting_pipeline_service, transcription
 from services.model_manager import warm_audio_models
 from repositories.session_repository import create_session, generate_meeting_name
 from supabase_client import supabase
+from utils.logging import logger
 
 router = APIRouter()
+
+_ALLOWED_MIME_TYPES = {
+    "audio/mpeg",
+    "audio/mp3",
+    "audio/wav",
+    "audio/x-wav",
+    "audio/x-m4a",
+    "audio/mp4",
+    "audio/m4a",
+    "audio/ogg",
+    "audio/webm",
+    "audio/flac",
+    "audio/x-flac",
+    "audio/aac",
+}
+_ALLOWED_EXTENSIONS = {
+    ".mp3",
+    ".wav",
+    ".m4a",
+    ".mp4",
+    ".ogg",
+    ".webm",
+    ".flac",
+    ".aac",
+}
+
+
+def validate_upload_file(filename: str | None, content_type: str | None, size: int) -> None:
+    if size <= 0:
+        raise ValueError("Upload is empty.")
+
+    if size > MAX_UPLOAD_SIZE:
+        raise ValueError(
+            f"Upload exceeds the maximum allowed size of {MAX_UPLOAD_SIZE} bytes."
+        )
+
+    extension = (Path(filename or "").suffix or "").lower()
+    guessed_mime, _ = mimetypes.guess_type(filename or "")
+
+    if extension not in _ALLOWED_EXTENSIONS and (content_type not in _ALLOWED_MIME_TYPES and guessed_mime not in _ALLOWED_MIME_TYPES):
+        raise ValueError("Unsupported file type.")
+
+    if content_type and content_type not in _ALLOWED_MIME_TYPES and guessed_mime not in _ALLOWED_MIME_TYPES:
+        raise ValueError("Unsupported MIME type.")
 
 
 @router.post("/warm-audio-models")
@@ -48,7 +95,7 @@ def warm_audio_models_for_recording(
 def _upload_to_storage(file_path: str, unique_name: str, content_type: str) -> str | None:
     """STEP 1b: push the raw audio file to Supabase Storage and return its public URL."""
     try:
-        print("Uploading audio to Supabase Storage...")
+        logger.info("Uploading audio to Supabase Storage", extra={"event": "upload_storage"})
 
         with open(file_path, "rb") as audio_file:
             supabase.storage.from_("audio-files").upload(
@@ -57,12 +104,11 @@ def _upload_to_storage(file_path: str, unique_name: str, content_type: str) -> s
                 file_options={"content-type": content_type},
             )
 
-        print("Audio uploaded successfully!")
+        logger.info("Audio uploaded successfully", extra={"event": "upload_storage"})
         return supabase.storage.from_("audio-files").get_public_url(unique_name)
 
-    except Exception:
-        import traceback
-        traceback.print_exc()
+    except Exception as exc:
+        logger.exception("Audio upload to storage failed", extra={"event": "upload_storage"})
         return None
 
 
@@ -75,6 +121,21 @@ async def upload_audio(
     user = ctx.user
     db = ctx.db
     upload_started_at = datetime.now(timezone.utc)
+
+    if file.filename is None:
+        raise HTTPException(status_code=400, detail="Missing filename.")
+
+    try:
+        file.file.seek(0, os.SEEK_END)
+        size = file.file.tell()
+        file.file.seek(0)
+    except Exception:
+        size = 0
+
+    try:
+        validate_upload_file(file.filename, file.content_type, size)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
 
     unique_name = f"{uuid.uuid4()}_{file.filename}"
     file_path = os.path.join(UPLOAD_DIR, unique_name)
@@ -119,8 +180,7 @@ async def upload_audio(
         )
 
     except Exception as e:
-        import traceback
-        traceback.print_exc()
+        logger.exception("Failed to save meeting", extra={"event": "upload_pipeline"})
 
         return {
             "success": False,

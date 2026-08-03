@@ -68,6 +68,11 @@ CORS_ALLOW_ORIGINS = [origin.strip() for origin in _raw_origins.split(",") if or
 # Set DEBUG_TIMING=1 to restore the old "always print" behaviour.
 
 DEBUG_TIMING = os.getenv("DEBUG_TIMING", "1") == "1"
+LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO").upper()
+MAX_UPLOAD_SIZE = int(os.getenv("MAX_UPLOAD_SIZE", str(20 * 1024 * 1024)))
+UPLOAD_RATE_LIMIT = os.getenv("UPLOAD_RATE_LIMIT", "20/minute")
+AUTH_RATE_LIMIT = os.getenv("AUTH_RATE_LIMIT", "30/minute")
+OAUTH_RATE_LIMIT = os.getenv("OAUTH_RATE_LIMIT", "20/minute")
 
 # ----------------------------------------------------
 # Supabase

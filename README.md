@@ -416,6 +416,35 @@ Without a GPU, the services will fall back to CPU mode (significantly slower tra
 | `CORS_ORIGINS` | No | `http://localhost:5173` | Comma-separated CORS origins |
 | `DEBUG_TIMING` | No | `1` | Enable timing instrumentation |
 | `UPLOAD_DIR` | No | `/app/uploads` | Audio upload directory |
+| `MAX_UPLOAD_SIZE` | No | `20971520` | Maximum upload size in bytes (20 MiB) |
+| `UPLOAD_RATE_LIMIT` | No | `20/minute` | Upload endpoint rate limit |
+| `AUTH_RATE_LIMIT` | No | `30/minute` | Auth/login endpoint rate limit |
+| `OAUTH_RATE_LIMIT` | No | `20/minute` | OAuth callback/login rate limit |
+| `LOG_LEVEL` | No | `INFO` | Backend logging verbosity |
+
+---
+
+## Production Hardening Notes
+
+### Health endpoint
+
+The backend exposes a structured health endpoint at `/health` that returns backend, Supabase, Ollama, model-manager, and GPU status in JSON. The response uses `200` for healthy or degraded services and `503` when a dependency is unhealthy.
+
+### Upload limits
+
+Audio uploads are validated before processing. Empty files are rejected, oversized files are blocked based on `MAX_UPLOAD_SIZE`, and unsupported filenames or MIME types return `400` errors.
+
+### Rate limiting
+
+The backend applies lightweight rate limiting to upload, auth/login, and OAuth routes. Exceeding the configured limit returns `429`.
+
+### Logging
+
+The backend uses a single structured Python logger with timestamps and module context. Logs are intended for container-friendly stdout output.
+
+### Docker version pinning
+
+The Docker configuration now uses pinned image versions for the Ollama service and the frontend runtime images where practical, reducing drift and improving reproducibility in production.
 
 ---
 

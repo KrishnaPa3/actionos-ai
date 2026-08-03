@@ -20,11 +20,15 @@ that used to live inline in each handler.
 import os
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
-from config import CORS_ALLOW_ORIGINS
+from starlette.responses import JSONResponse
 
+from config import CORS_ALLOW_ORIGINS
 from routers import actions, decisions, extraction, integrations, profile, reminders, risks, sessions, uploads
+from utils.health import build_health_report
+from utils.logging import REQUEST_PATH, logger
+from utils.rate_limit import RateLimitMiddleware
 
 
 @asynccontextmanager
@@ -73,6 +77,17 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+app.add_middleware(RateLimitMiddleware)
+
+
+@app.middleware("http")
+async def request_logging_middleware(request: Request, call_next):
+    token = REQUEST_PATH.set(request.url.path)
+    try:
+        response = await call_next(request)
+        return response
+    finally:
+        REQUEST_PATH.reset(token)
 
 
 @app.get("/")
@@ -83,11 +98,9 @@ def root():
 @app.get("/health")
 async def health():
     """Health check endpoint for container orchestrators and load balancers."""
-    return {
-        "status": "healthy",
-        "service": "ActionOS Backend",
-        "version": "1.0.0",
-    }
+    report = build_health_report()
+    status_code = 200 if report["status"] in {"healthy", "degraded"} else 503
+    return JSONResponse(status_code=status_code, content=report)
 
 
 app.include_router(sessions.router)

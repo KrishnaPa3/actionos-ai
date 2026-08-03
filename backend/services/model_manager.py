@@ -9,7 +9,8 @@ import os
 from threading import RLock
 from typing import Any
 
-from config import WHISPER_COMPUTE_TYPE, WHISPER_DEVICE, WHISPER_MODEL_SIZE
+from config import HF_TOKEN, WHISPER_COMPUTE_TYPE, WHISPER_DEVICE, WHISPER_MODEL_SIZE
+from utils.logging import logger
 
 
 _model_lock = RLock()
@@ -17,6 +18,19 @@ _whisper_model: Any | None = None
 _whisperx_model: Any | None = None
 _diarizer: Any | None = None
 _alignment_models: dict[str, tuple[Any, Any]] = {}
+
+
+def get_model_manager_status() -> str:
+    try:
+        import faster_whisper  # noqa: F401
+        import whisperx  # noqa: F401
+    except Exception:
+        return "unhealthy"
+
+    if not HF_TOKEN:
+        return "degraded"
+
+    return "healthy"
 
 
 def get_whisperx_device() -> str:
@@ -35,15 +49,15 @@ def get_whisper() -> Any:
         if _whisper_model is None:
             from faster_whisper import WhisperModel
 
-            print("Loading Whisper model...")
+            logger.info("Loading Whisper model")
             _whisper_model = WhisperModel(
                 WHISPER_MODEL_SIZE,
                 device=WHISPER_DEVICE,
                 compute_type=WHISPER_COMPUTE_TYPE,
             )
-            print("Whisper model loaded!")
+            logger.info("Whisper model loaded")
         else:
-            print("Using cached Whisper model.")
+            logger.info("Using cached Whisper model")
 
         return _whisper_model
 
@@ -58,12 +72,12 @@ def get_whisperx() -> Any:
 
             device = get_whisperx_device()
             compute_type = "float16" if device == "cuda" else "int8"
-            print(f"WhisperX using device: {device}")
-            print("Loading WhisperX model...")
+            logger.info("WhisperX using device: %s", device)
+            logger.info("Loading WhisperX model")
             _whisperx_model = whisperx.load_model("base", device, compute_type=compute_type)
-            print("WhisperX model loaded!")
+            logger.info("WhisperX model loaded")
         else:
-            print("Using cached WhisperX model.")
+            logger.info("Using cached WhisperX model")
 
         return _whisperx_model
 
@@ -74,13 +88,13 @@ def get_align_model(language: str) -> tuple[Any, Any]:
         if language not in _alignment_models:
             import whisperx
 
-            print(f"Loading alignment model for language: {language}...")
+            logger.info("Loading alignment model for language: %s", language)
             _alignment_models[language] = whisperx.load_align_model(
                 language_code=language,
                 device=get_whisperx_device(),
             )
         else:
-            print(f"Using cached alignment model for language: {language}.")
+            logger.info("Using cached alignment model for language: %s", language)
 
         return _alignment_models[language]
 
@@ -99,11 +113,11 @@ def get_diarizer() -> Any:
             if not hf_token:
                 raise RuntimeError("HF_TOKEN not found in .env")
 
-            print("Loading Diarization model...")
+            logger.info("Loading Diarization model")
             _diarizer = DiarizationPipeline(token=hf_token, device=get_whisperx_device())
-            print("Diarization model loaded!")
+            logger.info("Diarization model loaded")
         else:
-            print("Using cached Diarization model.")
+            logger.info("Using cached Diarization model")
 
         return _diarizer
 
