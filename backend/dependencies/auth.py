@@ -31,17 +31,21 @@ def get_current_user(
         raise
 
     except Exception as e:
-        # A Supabase network/service failure is not an invalid user token.
-        # Returning 401 here made the frontend treat temporary connectivity
-        # problems as logout/authentication failures.
+        # TEMPORARY DIAGNOSTIC LOGGING
+        # This lets us see the actual error returned by Supabase
+        # instead of hiding it behind the generic 401 response.
+        print(f"[AUTH ERROR TYPE] {type(e).__name__}")
+        print(f"[AUTH ERROR] {e}")
+        print(f"[AUTH ERROR STATUS] {getattr(e, 'status', None)}")
+
         upstream_status = getattr(e, "status", None)
+
         if upstream_status in {400, 401, 403}:
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Invalid or expired authentication token.",
             ) from e
 
-        print(f"[AUTH SERVICE ERROR] {e}")
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
             detail="Authentication service is temporarily unavailable. Please retry.",
