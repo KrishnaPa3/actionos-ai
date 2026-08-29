@@ -1,3 +1,4 @@
+import { useLayoutEffect, useRef, useState } from "react";
 import { motion } from "motion/react";
 import "./StatsCards.css";
 
@@ -65,31 +66,86 @@ export default function StatsCards({ actions }) {
     }).length;
 
     const stats = [
-      { title: "Open Tasks", value: openTasks },
-      { title: "Due Today", value: dueToday },
-      { title: "Overdue", value: overdue },
-      { title: "Completed This Week", value: completedWeek },
+      { title: "Open Tasks", value: openTasks, tint: "#3B82F6" },
+      { title: "Due Today", value: dueToday, tint: "#F59E0B" },
+      { title: "Overdue", value: overdue, tint: "#EF4444" },
+      { title: "Completed This Week", value: completedWeek, tint: "#22C55E" },
     ];
 
+    // One wash of colour for the whole row, which travels to whichever card
+    // is selected — rather than four of them sitting lit up at once.
+    const [selected, setSelected] = useState(0);
+    const [wash, setWash] = useState(null);
+
+    const gridRef = useRef(null);
+    const cardRefs = useRef({});
+
+    useLayoutEffect(() => {
+        function place() {
+            const el = cardRefs.current[selected];
+
+            if (!el) return;
+
+            setWash({
+                left: el.offsetLeft,
+                top: el.offsetTop,
+                width: el.offsetWidth,
+                height: el.offsetHeight,
+            });
+        }
+
+        place();
+
+        // Fonts and the grid settle a beat after mount.
+        const settle = window.setTimeout(place, 260);
+
+        window.addEventListener("resize", place);
+
+        return () => {
+            window.clearTimeout(settle);
+            window.removeEventListener("resize", place);
+        };
+    }, [selected]);
+
+    const tint = stats[selected].tint;
+
     return (
-        <div className="statsGrid">
+        <div className="statsGrid" ref={gridRef}>
+
+            {wash && (
+                <span
+                    className="statWash"
+                    aria-hidden="true"
+                    style={{
+                        transform: `translate(${wash.left}px, ${wash.top}px)`,
+                        width: `${wash.width}px`,
+                        height: `${wash.height}px`,
+                        background: `radial-gradient(120% 120% at 82% 8%, ${tint}, transparent 68%)`,
+                    }}
+                />
+            )}
+
             {stats.map((stat, i) => (
-              <motion.div
+              <motion.button
+                type="button"
                 key={stat.title}
-                className="statCard"
+                ref={(el) => { cardRefs.current[i] = el; }}
+                className={`statCard${i === selected ? " isSelected" : ""}`}
                 custom={i}
                 variants={cardVariants}
                 initial="hidden"
                 animate="visible"
+                onClick={() => setSelected(i)}
+                aria-pressed={i === selected}
+                style={i === selected ? { borderColor: `${stat.tint}66` } : undefined}
                 whileHover={{
                   y: -4,
-                  boxShadow: "0 8px 30px rgba(59, 130, 246, 0.12)",
                   transition: { duration: 0.2 },
                 }}
               >
-                <p className="statTitle">{stat.title}</p>
                 <h2>{stat.value}</h2>
-              </motion.div>
+                <p className="statTitle">{stat.title}</p>
+              </motion.button>
             ))}
         </div>
     );

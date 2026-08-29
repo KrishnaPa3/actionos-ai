@@ -65,9 +65,12 @@ function BrandMark() {
   return (
     <span className="navMark">
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-        strokeWidth="1.7" strokeLinecap="round">
-        <path d="M12 20c4 0 7-2.4 7-5.6 0-2.6-2-4.4-4.6-4.4-2.1 0-3.6 1.3-3.6 3 0 1.4 1.1 2.4 2.5 2.4 1.1 0 1.9-.7 1.9-1.6" />
-        <path d="M12 20c-4.4 0-7.6-3.1-7.6-7.3C4.4 7.6 8 4 12.9 4" />
+        strokeWidth="2.2" strokeLinecap="round">
+        <path d="M2.6 10v4" />
+        <path d="M7.3 6.6v10.8" />
+        <path d="M12 3.2v17.6" />
+        <path d="M16.7 7.8v8.4" />
+        <path d="M21.4 9.8v4.4" />
       </svg>
     </span>
   );

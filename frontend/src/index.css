@@ -516,16 +516,6 @@ body .status {
 
 /* Page headers all sit left, so Integrations stops being the odd one out. */
 
-body .integrationsHeader {
-    margin: 0 0 34px;
-    max-width: 760px;
-    text-align: left;
-}
-
-body .integrationGrid {
-    align-items: stretch;
-}
-
 /* Auth pages float their card on the same wash as the rest of the app. */
 
 body .auth-page {
@@ -569,15 +559,7 @@ body .profile-container {
     margin: 0;
 }
 
-body .integrationCard {
-    max-width: 1040px;
-}
-
 /* Section rhythm inside pages */
-
-body .integrationGrid {
-    gap: 22px;
-}
 
 body .task-toolbar,
 body .task-filters {

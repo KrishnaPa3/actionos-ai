@@ -6,9 +6,9 @@
 }
 
 .integrationsHeader {
-    max-width: 900px;
-    margin: 0 auto 36px;
-    text-align: center;
+    max-width: 760px;
+    margin: 0 0 30px;
+    text-align: left;
 }
 
 .integrationsHeader h1 {
@@ -28,21 +28,21 @@
 }
 
 .integrationGrid {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 28px;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
+    gap: 22px;
+    align-items: start;
 }
 
 .integrationCard {
     width: 100%;
-    max-width: 920px;
 
-    background: linear-gradient(
-        180deg,
-        rgba(18, 27, 44, 0.98),
-        rgba(12, 19, 34, 0.98)
-    );
+    display: flex;
+    flex-direction: column;
+
+    background: var(--surface);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
 
     border: 1px solid rgba(148, 163, 184, .16);
     border-radius: 30px;
@@ -158,10 +158,11 @@
 /* ---------- INFO ROWS ---------- */
 
 .integrationRow {
-    display: grid;
-    grid-template-columns: 180px 1fr;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
 
-    align-items: center;
+    align-items: flex-start;
 
     padding: 18px 22px;
 
@@ -437,4 +438,42 @@
 .integrationButton.changeDb:hover {
     background: rgba(59, 130, 246, 0.22);
     transform: translateY(-1px);
+}
+
+/* ---------------------------------------------------
+   Redesign: the card column used to float at 920px in
+   a full-width page, with a 900px centred header above
+   it, so nothing shared an edge. Cards now fill a grid
+   that starts at the same gutter as every other page.
+--------------------------------------------------- */
+
+.integrationRow label {
+    font-size: 11.5px;
+    font-weight: 600;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    color: #8792A4;
+}
+
+.integrationRow p {
+    font-size: 15px;
+    font-weight: 600;
+    color: #E4E8EF;
+}
+
+.integrationTop {
+    margin-bottom: 22px;
+}
+
+.integrationFooter {
+    margin-top: auto;
+    padding-top: 18px;
+}
+
+@media (max-width: 900px) {
+
+    .integrationGrid {
+        grid-template-columns: 1fr;
+    }
+
 }

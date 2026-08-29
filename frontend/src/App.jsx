@@ -21,7 +21,6 @@ import Profile from "./pages/Profile";
 
 import ProtectedRoute from "./auth/ProtectedRoute";
 
-import { Target } from "./components/ui/icons";
 
 function LoadingScreen() {
   return (
@@ -36,19 +35,28 @@ function LoadingScreen() {
         gap: "24px",
       }}
     >
-      <motion.div
-        animate={{
-          scale: [1, 1.15, 1],
-          opacity: [0.7, 1, 0.7],
-        }}
-        transition={{
-          duration: 2,
-          repeat: Infinity,
-          ease: "easeInOut",
-        }}
-      >
-        <Target size={48} color="#3B82F6" />
-      </motion.div>
+      <div style={{ display: "flex", alignItems: "center", gap: "7px", height: "58px" }}>
+        {[0, 1, 2, 3, 4].map((i) => (
+          <motion.span
+            key={i}
+            animate={{ scaleY: [0.28, 1, 0.28] }}
+            transition={{
+              duration: 1.1,
+              repeat: Infinity,
+              ease: "easeInOut",
+              delay: i * 0.12,
+            }}
+            style={{
+              display: "block",
+              width: "6px",
+              height: "58px",
+              borderRadius: "999px",
+              background: "linear-gradient(180deg, #7FB0FF, #3B82F6)",
+              transformOrigin: "center",
+            }}
+          />
+        ))}
+      </div>
 
       <motion.p
         initial={{ opacity: 0 }}

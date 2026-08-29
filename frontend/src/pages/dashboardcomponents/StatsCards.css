@@ -1,16 +1,43 @@
 .statsGrid {
+    position: relative;
+
     display: grid;
     grid-template-columns: repeat(4, minmax(0, 1fr));
     gap: 20px;
 }
 
+/* The travelling wash. It sits behind the cards, which are translucent,
+   so the colour reads through the selected one and sweeps across the row
+   on its way there. */
+
+.statWash {
+    position: absolute;
+    top: 0;
+    left: 0;
+
+    z-index: 0;
+
+    border-radius: var(--r-lg);
+
+    filter: blur(30px);
+    opacity: .5;
+
+    pointer-events: none;
+
+    transition:
+        transform .5s cubic-bezier(.22, 1, .36, 1),
+        width .5s cubic-bezier(.22, 1, .36, 1),
+        height .5s cubic-bezier(.22, 1, .36, 1),
+        background .45s ease;
+}
+
 .statCard {
     position: relative;
-    overflow: hidden;
+    z-index: 1;
 
     display: flex;
-    flex-direction: column-reverse;
-    justify-content: flex-end;
+    flex-direction: column;
+    align-items: flex-start;
     gap: 8px;
 
     padding: 22px 24px 20px;
@@ -24,60 +51,24 @@
     backdrop-filter: blur(16px);
     -webkit-backdrop-filter: blur(16px);
 
+    text-align: left;
+    font-family: var(--body);
+    color: inherit;
+
     cursor: pointer;
 
     transition:
-        transform .22s cubic-bezier(.22, 1, .36, 1),
-        border-color .22s ease,
-        box-shadow .22s ease;
+        border-color .25s ease,
+        box-shadow .25s ease;
 }
 
-/* A soft wash of colour bleeding in from the corner, one per card. */
-
-.statCard::after {
-    content: "";
-    position: absolute;
-    top: -40px;
-    right: -30px;
-
-    width: 150px;
-    height: 150px;
-
-    border-radius: 999px;
-    filter: blur(34px);
-    opacity: .45;
-
-    background: #3B82F6;
-
-    pointer-events: none;
-}
-
-.statsGrid .statCard:nth-child(2)::after { background: #F59E0B; }
-.statsGrid .statCard:nth-child(3)::after { background: #EF4444; }
-.statsGrid .statCard:nth-child(4)::after { background: #22C55E; }
-
-.statCard:hover {
-    transform: translateY(-4px);
-    border-color: rgba(59, 130, 246, .42);
-    box-shadow: 0 30px 66px rgba(2, 6, 18, .52), inset 0 1px 0 rgba(255, 255, 255, .09);
-}
-
-.statTitle {
-    position: relative;
-    z-index: 1;
-
-    margin: 0;
-
-    color: #A8B2C2;
-    font-size: 13.5px;
-    font-weight: 600;
-    letter-spacing: .2px;
+.statCard.isSelected {
+    box-shadow:
+        0 30px 66px rgba(2, 6, 18, .52),
+        inset 0 1px 0 rgba(255, 255, 255, .10);
 }
 
 .statCard h2 {
-    position: relative;
-    z-index: 1;
-
     margin: 0;
 
     font-family: var(--display);
@@ -87,6 +78,15 @@
     letter-spacing: -.6px;
 
     color: #FFFDF8;
+}
+
+.statTitle {
+    margin: 0;
+
+    color: #A8B2C2;
+    font-size: 13.5px;
+    font-weight: 600;
+    letter-spacing: .2px;
 }
 
 @media (max-width: 1100px) {
