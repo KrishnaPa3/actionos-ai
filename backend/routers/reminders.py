@@ -14,6 +14,30 @@ from utils.errors import raise_404
 router = APIRouter()
 
 
+def _due_date_has_passed(due_date: str | None) -> bool:
+    """True when the task's deadline is in the past.
+
+    A reminder stays in the bell from the moment it is created until its
+    task's due date is crossed. A task with no due date has nothing to cross,
+    so it stays until the task is completed or deleted.
+
+    Unparseable dates count as not passed: hiding a reminder because of a
+    formatting quirk is worse than showing one a little too long.
+    """
+    if not due_date:
+        return False
+
+    try:
+        due = datetime.fromisoformat(str(due_date).replace("Z", "+00:00"))
+    except (TypeError, ValueError):
+        return False
+
+    if due.tzinfo is None:
+        due = due.replace(tzinfo=timezone.utc)
+
+    return due < datetime.now(timezone.utc)
+
+
 @router.get("/reminders")
 async def get_reminders(ctx: AuthContext = Depends(get_auth_context)):
     raw_reminders = reminder_repository.list_upcoming_reminders(ctx.db, ctx.user_id)
@@ -25,7 +49,8 @@ async def get_reminders(ctx: AuthContext = Depends(get_auth_context)):
         action = reminder.get("actions") or {}
         session = action.get("sessions") or {}
 
-        # Exclude reminders for completed, confirmed, or deleted tasks, or missing actions
+        # Reminders whose task is gone or finished are stale: drop them and
+        # clean them up.
         if (
             not action
             or not action.get("id")
@@ -35,6 +60,12 @@ async def get_reminders(ctx: AuthContext = Depends(get_auth_context)):
         ):
             if reminder.get("id"):
                 stale_ids.append(reminder["id"])
+            continue
+
+        # Past its deadline: hide it from the bell, but do NOT delete it. The
+        # task still exists and the user may reopen or reschedule it, and a GET
+        # should not destroy data.
+        if _due_date_has_passed(action.get("due_date")):
             continue
 
         reminders.append({

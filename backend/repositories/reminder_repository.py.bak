@@ -1,0 +1,129 @@
+"""
+Reminder data access.
+"""
+
+from datetime import datetime, timedelta, timezone
+from typing import Any
+
+
+def create_reminder(db: Any, payload: dict) -> dict:
+    response = db.table("reminders").insert(payload).execute()
+    return response.data[0]
+
+
+def create_default_reminder(
+    db: Any,
+    user_id: str,
+    action_id: str,
+    due_date: str,
+    hours_before: int,
+) -> None:
+    """
+    Shared "schedule a default reminder N hours before due_date" logic.
+
+    Previously duplicated with two slightly different lead times:
+      - 1 hour before, when an action is first created during upload
+      - 24 hours before, when an action is reset back to "pending"
+    Both call sites now share this single helper with `hours_before`
+    as the only difference, instead of two near-identical inline blocks.
+    """
+
+    due_time = datetime.fromisoformat(due_date.replace("Z", "+00:00"))
+    reminder_time = due_time - timedelta(hours=hours_before)
+
+    now = datetime.now(timezone.utc)
+    if reminder_time <= now:
+        reminder_time = now + timedelta(minutes=1)
+
+    create_reminder(db, {
+        "action_id": action_id,
+        "reminder_time": reminder_time.isoformat(),
+        "label": "Due Soon",
+        "is_default": True,
+        "dismissed": False,
+        "user_id": user_id,
+    })
+
+
+def delete_reminders_for_action(db: Any, user_id: str, action_id: str) -> None:
+    db.table("reminders").delete().eq("user_id", user_id).eq("action_id", action_id).execute()
+
+
+def list_upcoming_reminders(db: Any, user_id: str) -> list[dict]:
+    response = (
+        db
+        .table("reminders")
+        .select("""
+            *,
+            actions(
+                id,
+                title,
+                owner,
+                priority,
+                status,
+                confirmed,
+                deleted,
+                due_date,
+                session_id,
+                sessions(
+                    meeting_name
+                )
+            )
+        """)
+        .eq("user_id", user_id)
+        .eq("dismissed", False)
+        # The notification bell must show newly-created automatic reminders
+        # even when their task is due more than 24 hours from now.
+        .order("reminder_time")
+        .execute()
+    )
+    return response.data
+
+
+def get_action_reminders(db: Any, user_id: str, action_id: str) -> list[dict]:
+    response = (
+        db
+        .table("reminders")
+        .select("*")
+        .eq("user_id", user_id)
+        .eq("action_id", action_id)
+        .order("reminder_time")
+        .execute()
+    )
+    return response.data
+
+
+def update_reminder_time(db: Any, user_id: str, reminder_id: str, reminder_time: str) -> dict | None:
+    response = (
+        db
+        .table("reminders")
+        .update({
+            "reminder_time": reminder_time,
+            "updated_at": datetime.now(timezone.utc).isoformat(),
+        })
+        .eq("user_id", user_id)
+        .eq("id", reminder_id)
+        .execute()
+    )
+    return response.data[0] if response.data else None
+
+
+def snooze_reminder(db: Any, user_id: str, reminder_id: str, new_time: datetime) -> dict | None:
+    now = datetime.now(timezone.utc)
+    response = (
+        db
+        .table("reminders")
+        .update({
+            "reminder_time": new_time.isoformat(),
+            "dismissed": False,
+            "updated_at": now.isoformat(),
+        })
+        .eq("user_id", user_id)
+        .eq("id", reminder_id)
+        .execute()
+    )
+    return response.data[0] if response.data else None
+
+
+def delete_reminder(db: Any, user_id: str, reminder_id: str) -> None:
+    db.table("reminders").delete().eq("user_id", user_id).eq("id", reminder_id).execute()

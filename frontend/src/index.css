@@ -1,110 +1,84 @@
-@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&display=swap');
-
-@font-face {
-    font-family: "Audex";
-    src: url("/fonts/Audex-Regular.ttf") format("truetype");
-    font-weight: 400;
-    font-style: normal;
-}
-
-@font-face {
-    font-family: "Audex";
-    src: url("/fonts/Audex-Italic.ttf") format("truetype");
-    font-weight: 400;
-    font-style: italic;
-}
-
-@font-face {
-    font-family: "Deltha";
-    src: url("/fonts/Deltha.ttf") format("truetype");
-    font-weight: 400;
-    font-style: normal;
-}
-
-@font-face {
-    font-family: "HighVolume";
-    src: url("/fonts/High-Volume.otf") format("opentype");
-    font-weight: normal;
-    font-style: normal;
-}
+@import url('https://fonts.googleapis.com/css2?family=Instrument+Serif:ital,wght@0,400;1,400&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap');
 
 /* =====================================================
    THEME
+   Palette is unchanged from components/ui/colors.js.
+   What changed: type, radii, and the amount of air.
 ===================================================== */
 
 :root {
 
-    --text: #6b6375;
-    --text-h: #08060d;
-    --bg: #fff;
-    --border: #e5e4e7;
-    --code-bg: #f4f3ec;
+    /* --- ink & surfaces --- */
 
-    --accent: #aa3bff;
-    --accent-bg: rgba(170,59,255,.1);
-    --accent-border: rgba(170,59,255,.5);
+    --ink: #0B1120;
+    --ink-2: #111827;
+    --ink-3: #1F2937;
 
-    --social-bg: rgba(244,243,236,.5);
+    --cream: #F7F4EF;
+    --muted: #9CA3AF;
+    --hairline: rgba(148, 163, 184, .16);
 
-    --shadow:
-        rgba(0,0,0,.10) 0 10px 15px -3px,
-        rgba(0,0,0,.05) 0 4px 6px -2px;
+    --blue: #3B82F6;
+    --green: #22C55E;
+    --amber: #F59E0B;
+    --red: #EF4444;
 
-    /* Fonts */
+    --surface: linear-gradient(180deg, rgba(255,255,255,.052), rgba(255,255,255,.018));
+    --surface-raised: linear-gradient(180deg, rgba(255,255,255,.065), rgba(255,255,255,.022));
 
-    --body: "Deltha", serif;
-    --heading: "Orbitron", sans-serif;
-    --display: "Orbitron", sans-serif;
-    --mono: "Space Mono", monospace;
+    --card-shadow:
+        0 26px 60px rgba(2, 6, 18, .48),
+        inset 0 1px 0 rgba(255, 255, 255, .07);
 
-    /* Responsive Typography */
+    --card-shadow-sm:
+        0 16px 38px rgba(2, 6, 18, .34),
+        inset 0 1px 0 rgba(255, 255, 255, .06);
+
+    /* --- legacy aliases: existing rules keep working --- */
+
+    --text: #9CA3AF;
+    --text-h: #F7F4EF;
+    --bg: #0B1120;
+    --border: rgba(148, 163, 184, .16);
+    --code-bg: rgba(255, 255, 255, .05);
+
+    --accent: #3B82F6;
+    --accent-bg: rgba(59, 130, 246, .14);
+    --accent-border: rgba(59, 130, 246, .42);
+
+    --social-bg: rgba(255, 255, 255, .04);
+    --shadow: var(--card-shadow);
+
+    /* --- radii: roughly doubled, controls are capsules --- */
+
+    --r-sm: 16px;
+    --r-md: 20px;
+    --r-lg: 26px;
+    --r-xl: 30px;
+    --r-round: 999px;
+
+    /* --- fonts --- */
+
+    --display: "Instrument Serif", Georgia, "Times New Roman", serif;
+    --heading: "Instrument Serif", Georgia, "Times New Roman", serif;
+    --body: "Plus Jakarta Sans", "Segoe UI", system-ui, -apple-system, sans-serif;
+    --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
 
     font-size: clamp(16px, 0.9vw, 18px);
 
-    line-height: 145%;
-    letter-spacing: .18px;
+    line-height: 150%;
+    letter-spacing: .1px;
 
     color: var(--text);
     background: var(--bg);
+
+    color-scheme: dark;
 }
 
-@media (max-width:1024px){
+@media (max-width: 1024px) {
 
-    :root{
-
-        font-size:16px;
-
-    }
-
-}
-
-@media(prefers-color-scheme:dark){
-
-    :root{
-
-        --text:#9ca3af;
-        --text-h:#f3f4f6;
-        --bg:#16171d;
-        --border:#2e303a;
-        --code-bg:#1f2028;
-
-        --accent:#c084fc;
-        --accent-bg:rgba(192,132,252,.15);
-        --accent-border:rgba(192,132,252,.5);
-
-        --social-bg:rgba(47,48,58,.5);
-
-        --shadow:
-            rgba(0,0,0,.40) 0 10px 15px -3px,
-            rgba(0,0,0,.25) 0 4px 6px -2px;
-
-    }
-
-    #social .button-icon{
-
-        filter:invert(1) brightness(2);
-
+    :root {
+        font-size: 16px;
     }
 
 }
@@ -114,198 +88,446 @@
 ===================================================== */
 
 html,
-body{
+body {
+    margin: 0;
+    padding: 0;
 
-    margin:0;
-    padding:0;
+    width: 100%;
+    overflow-x: hidden;
 
-    width:100%;
-    overflow-x:hidden;
+    font-family: var(--body);
+    background: var(--ink);
+    color: var(--cream);
 
-    font-family:var(--mono);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
 
+/* The wash every page floats on. Fixed, so it does not scroll away. */
+
+body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: -2;
+    pointer-events: none;
+
+    background:
+        radial-gradient(880px 520px at 8% -10%, rgba(59, 130, 246, .22), transparent 62%),
+        radial-gradient(740px 470px at 95% 2%, rgba(34, 197, 94, .12), transparent 60%),
+        radial-gradient(980px 640px at 60% 110%, rgba(59, 130, 246, .10), transparent 66%),
+        var(--ink);
+}
+
+body::after {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+
+    opacity: .3;
+    mix-blend-mode: soft-light;
+
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3'/%3E%3C/filter%3E%3Crect width='120' height='120' filter='url(%23n)'/%3E%3C/svg%3E");
 }
 
 *,
 *::before,
-*::after{
-
-    box-sizing:border-box;
-
+*::after {
+    box-sizing: border-box;
 }
 
-#root{
+#root {
+    width: min(96vw, 1800px);
 
-    width:min(96vw, 1800px);
+    margin: 0 auto;
 
-    margin:0 auto;
+    display: flex;
+    flex-direction: column;
 
-    display:flex;
-    flex-direction:column;
+    min-height: 100svh;
 
-    min-height:100svh;
-
-    border-inline:1px solid var(--border);
-
-    text-align:center;
-
+    text-align: left;
 }
 
-main{
+main {
+    width: 100%;
 
-    width:100%;
-
-    padding-inline:clamp(16px,2vw,40px);
-
+    padding-inline: clamp(16px, 2vw, 40px);
 }
 
-/* Smaller laptops */
+@media (max-width: 1280px) {
 
-@media (max-width:1280px){
-
-    #root{
-
-        width:100%;
-        border-inline:none;
-
+    #root {
+        width: 100%;
     }
 
+}
+
+::selection {
+    background: rgba(59, 130, 246, .3);
+    color: #FFFDF8;
+}
+
+::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+    background: rgba(148, 163, 184, .22);
+    border-radius: 999px;
+    border: 2px solid transparent;
+    background-clip: content-box;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: rgba(148, 163, 184, .34);
+    background-clip: content-box;
 }
 
 /* =====================================================
    HEADINGS
 ===================================================== */
 
-h1{
+h1 {
+    font-family: var(--display);
 
-    font-family:var(--heading);
+    color: var(--text-h);
 
-    color:var(--text-h);
+    font-weight: 400;
 
-    font-weight:500;
+    font-size: 60px;
 
-    font-size:56px;
+    letter-spacing: -1.2px;
+    line-height: 1.03;
 
-    letter-spacing:-1.68px;
-
-    margin:32px 0;
-
+    margin: 28px 0;
 }
 
-@media(max-width:1024px){
+@media (max-width: 1024px) {
 
-    h1{
-
-        font-size:36px;
-        margin:20px 0;
-
+    h1 {
+        font-size: 38px;
+        margin: 20px 0;
     }
 
 }
 
-h2:not(.section-title){
+h2:not(.section-title) {
+    font-family: var(--display);
 
-    font-family:var(--heading);
+    color: var(--text-h);
 
-    color:var(--text-h);
+    font-weight: 400;
 
-    font-weight:500;
+    font-size: 27px;
 
-    font-size:24px;
+    line-height: 1.12;
 
-    line-height:118%;
+    letter-spacing: -.3px;
 
-    letter-spacing:-0.24px;
-
-    margin:0 0 8px;
-
+    margin: 0 0 8px;
 }
 
-@media(max-width:1024px){
+@media (max-width: 1024px) {
 
-    h2:not(.section-title){
-
-        font-size:20px;
-
+    h2:not(.section-title) {
+        font-size: 23px;
     }
 
 }
 
-/* =====================================================
-   ORBITRON SECTION HEADINGS
-===================================================== */
+h3 {
+    font-family: var(--body);
+    font-weight: 600;
+    letter-spacing: .1px;
+    color: #EDF0F5;
+}
 
-.section-title{
+/* Section headings used to be uppercase Orbitron with wide tracking,
+   which is where a lot of the blocky feeling lived. */
 
-    font-family:var(--display) !important;
+.section-title {
+    font-family: var(--display) !important;
 
-    font-size:1.6rem;
+    font-size: 1.6rem;
 
-    font-weight:700;
+    font-weight: 400;
 
-    text-transform:uppercase;
+    text-transform: none;
 
-    letter-spacing:.12em;
+    letter-spacing: -.3px;
 
-    color:var(--text-h);
+    color: var(--text-h);
 
-    margin-bottom:15px;
+    margin-bottom: 14px;
+}
 
+/* A small caps label, for the things that genuinely are labels. */
+
+.eyebrow {
+    font-size: 10.5px;
+    letter-spacing: .18em;
+    text-transform: uppercase;
+    color: var(--muted);
+    font-weight: 600;
 }
 
 /* =====================================================
    TEXT
 ===================================================== */
 
-p{
+p {
+    margin: 0;
+    text-wrap: pretty;
+}
 
-    margin:0;
+a {
+    color: #8AB4FF;
+    text-decoration: none;
+}
 
+a:hover {
+    color: #BFD6FF;
+}
+
+button,
+input,
+select,
+textarea {
+    font-family: var(--body);
 }
 
 code,
-.counter{
+.counter {
+    font-family: var(--mono);
 
-    font-family:var(--mono);
+    display: inline-flex;
 
-    display:inline-flex;
+    border-radius: 8px;
 
-    border-radius:4px;
-
-    color:var(--text-h);
-
+    color: var(--text-h);
 }
 
-code{
+code {
+    font-size: 14px;
+    line-height: 135%;
 
-    font-size:15px;
+    padding: 4px 8px;
 
-    line-height:135%;
+    background: var(--code-bg);
+}
 
-    padding:4px 8px;
+/* =====================================================
+   SHARED SURFACES
+===================================================== */
 
-    background:var(--code-bg);
-
+.aos-card {
+    background: var(--surface);
+    border: 1px solid var(--hairline);
+    border-radius: var(--r-lg);
+    box-shadow: var(--card-shadow);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
 }
 
 /* =====================================================
    ANIMATIONS
 ===================================================== */
 
-@keyframes fadeIn{
+@keyframes fadeIn {
 
-    from{
-
-        opacity:0;
-        transform:translateY(10px);
-
+    from {
+        opacity: 0;
+        transform: translateY(10px);
     }
 
-    to{
-
-        opacity:1;
-        transform:translateY(0);
-
+    to {
+        opacity: 1;
+        transform: translateY(0);
     }
 
+}
+
+@media (prefers-reduced-motion: reduce) {
+
+    *,
+    *::before,
+    *::after {
+        animation-duration: .01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: .01ms !important;
+    }
+
+}
+
+/* =====================================================
+   POLISH LAYER
+   One place for the redesign's shared surface treatment,
+   so individual component sheets stay mostly untouched.
+   `body ` prefixes only exist to win over component CSS.
+===================================================== */
+
+body .todayFocusCard,
+body .recentMeetingsCard,
+body .recentDecisionsCard,
+body .integrationCard,
+body .task-search-bar,
+body .task-filters,
+body .task-empty-state,
+body .auth-card {
+    background: var(--surface);
+    border: 1px solid var(--hairline);
+    border-radius: var(--r-lg);
+
+    box-shadow: var(--card-shadow);
+
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+}
+
+/* Instrument Serif ships one weight; without this the browser
+   fakes the bold and the headings look smeared. */
+
+body .todayFocusHeader h2,
+body .recentMeetingsHeader h2,
+body .recentDecisionsHeader h2,
+body .task-list-header h1,
+body .integrationsHeader h1,
+body .integrationsHeader h2,
+body .auth-brand h1,
+body .auth-card h2,
+body .profileHeader h1,
+body .title {
+    font-family: var(--display);
+    font-weight: 400;
+    letter-spacing: -.4px;
+    text-transform: none;
+    color: #FFFDF8;
+}
+
+body .task-list-header h1,
+body .integrationsHeader h1,
+body .profileHeader h1 {
+    font-size: clamp(36px, 3.8vw, 58px);
+    line-height: 1.03;
+    margin: 12px 0 0;
+}
+
+body .todayFocusHeader h2,
+body .recentMeetingsHeader h2,
+body .recentDecisionsHeader h2 {
+    font-size: 27px;
+}
+
+/* Sub-headings under a page title read as copy, not as a second title. */
+
+body .task-list-header p,
+body .integrationsHeader p,
+body .subtitle {
+    font-family: var(--body);
+    font-size: 14.5px;
+    font-weight: 400;
+    line-height: 1.6;
+    letter-spacing: .1px;
+    text-transform: none;
+    color: #A8B2C2;
+}
+
+/* Cards inside cards get the lighter treatment. */
+
+body .focusTask,
+body .meetingCard,
+body .decisionCard {
+    background: rgba(255, 255, 255, .035);
+    border: 1px solid rgba(148, 163, 184, .12);
+    border-radius: var(--r-md);
+}
+
+body .focusTask:hover,
+body .meetingCard:hover,
+body .decisionCard:hover {
+    background: rgba(255, 255, 255, .06);
+    border-color: rgba(59, 130, 246, .32);
+}
+
+/* Fields */
+
+body input[type="text"],
+body input[type="email"],
+body input[type="password"],
+body input[type="search"],
+body input[type="date"],
+body select,
+body textarea {
+    font-family: var(--body);
+    font-size: 13.5px;
+
+    color: var(--cream);
+
+    background: rgba(255, 255, 255, .035);
+    border: 1px solid var(--hairline);
+    border-radius: var(--r-sm);
+
+    outline: none;
+
+    transition: border-color .2s ease, background .2s ease;
+}
+
+body textarea {
+    line-height: 1.6;
+}
+
+body input:focus,
+body select:focus,
+body textarea:focus {
+    border-color: rgba(59, 130, 246, .42);
+    background: rgba(255, 255, 255, .06);
+}
+
+body input::placeholder,
+body textarea::placeholder {
+    color: #7C8697;
+}
+
+/* The search field is a capsule wherever it appears. */
+
+body .task-search-bar input,
+body .searchBar input {
+    border-radius: var(--r-round);
+}
+
+/* Badges and pills */
+
+body .priorityBadge,
+body .priority-pill,
+body .status-pill,
+body .task-type,
+body .decisionStatus,
+body .status {
+    border-radius: var(--r-round);
+    font-family: var(--body);
+    font-weight: 700;
+    letter-spacing: .3px;
+    text-transform: none;
+}
+
+/* Page headers all sit left, so Integrations stops being the odd one out. */
+
+body .integrationsHeader {
+    margin: 0 0 34px;
+    max-width: 760px;
+    text-align: left;
+}
+
+body .integrationGrid {
+    align-items: stretch;
+}
+
+/* Auth pages float their card on the same wash as the rest of the app. */
+
+body .auth-page {
+    background: transparent;
 }

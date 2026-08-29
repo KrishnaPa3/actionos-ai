@@ -24,13 +24,13 @@
 
     padding: 20px;
 
-    background: #0f172a;
+    background: linear-gradient(180deg, rgba(255,255,255,.052), rgba(255,255,255,.018));
 
-    border-radius: 12px;
+    border-radius: 20px;
 
     color: #e5e7eb;
 
-    font-family: "Space Mono", monospace;
+    font-family: var(--body);
 
     white-space: pre-wrap;
 
@@ -66,7 +66,7 @@
 
 .transcriptBody::-webkit-scrollbar-thumb {
 
-    background: #334155;
+    background: linear-gradient(180deg, rgba(255,255,255,.075), rgba(255,255,255,.028));
 
     border-radius: 999px;
 

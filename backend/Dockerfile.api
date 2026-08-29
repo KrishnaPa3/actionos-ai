@@ -1,0 +1,58 @@
+# =============================================================================
+# ActionOS API - the slim, GPU-free half of the backend.
+#
+# Replaces the old single 18GB CUDA image. Everything audio/ML now lives in
+# gpu-worker/ and is reached over HTTP, so this image needs no CUDA base, no
+# torch, no whisper, no pyannote and no ffmpeg.
+#
+# Expected result: roughly 250MB and a ~2s cold start, versus ~18GB and ~90s.
+# That also removes the need for the 240s startup probe currently configured
+# on the Cloud Run service.
+#
+# Build:
+#   docker build -f Dockerfile.api -t actionos-api .
+# =============================================================================
+
+FROM python:3.12-slim AS builder
+
+ENV PYTHONUNBUFFERED=1 \
+    PIP_NO_CACHE_DIR=1
+
+# gcc is needed only to build a couple of wheels; it stays in this stage.
+RUN apt-get update && apt-get install -y --no-install-recommends \
+        build-essential \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN python -m venv /opt/venv
+ENV PATH="/opt/venv/bin:$PATH"
+
+RUN pip install --no-cache-dir --upgrade pip setuptools wheel
+
+COPY requirements-api.txt .
+RUN pip install --no-cache-dir -r requirements-api.txt
+
+# -----------------------------------------------------------------------------
+FROM python:3.12-slim AS runtime
+
+ENV PYTHONUNBUFFERED=1 \
+    PYTHONDONTWRITEBYTECODE=1 \
+    PATH="/opt/venv/bin:$PATH"
+
+COPY --from=builder /opt/venv /opt/venv
+
+WORKDIR /app
+COPY . .
+
+# UPLOAD_DIR is only a staging path on the way to Supabase Storage. On Cloud
+# Run this filesystem is in-memory, so anything written here is charged
+# against the memory limit - the upload handler deletes files promptly.
+ENV UPLOAD_DIR=/tmp/uploads
+
+RUN useradd -m actionos \
+    && mkdir -p /tmp/uploads \
+    && chown -R actionos:actionos /app /tmp/uploads
+USER actionos
+
+EXPOSE 8080
+
+CMD ["sh", "-c", "uvicorn main:app --host 0.0.0.0 --port ${PORT:-8080}"]

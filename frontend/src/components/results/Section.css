@@ -3,7 +3,7 @@
 }
 
 .result-section h2.section-title {
-    font-family: "Orbitron", sans-serif;
+    font-family: var(--body);
     font-size: 1.5rem;
     font-weight: 700;
     letter-spacing: 0.12em;
@@ -24,7 +24,7 @@
 .priority {
     font-weight: bold;
     padding: 4px 10px;
-    border-radius: 8px;
+    border-radius: 16px;
 }
 
 .priority.high {

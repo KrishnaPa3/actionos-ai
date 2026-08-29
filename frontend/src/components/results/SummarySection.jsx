@@ -76,7 +76,7 @@ export default function SummarySection({ summary }) {
                         <span
                             style={{
                                 lineHeight: 1.7,
-                                fontFamily: '"Space Mono", monospace',
+                                fontFamily: "var(--body)",
                                 fontSize: "16px"
                             }}
                         >

@@ -17,7 +17,7 @@ export default function EditableCard({
             hover
             style={{
                 marginBottom: "18px",
-                fontFamily: '"Space Mono", monospace',
+                fontFamily: "var(--body)",
                 transition: "all 0.35s ease",
                 ...style
             }}
@@ -49,7 +49,7 @@ export default function EditableCard({
                         style={{
                             margin: 0,
                             color: COLORS.text,
-                            fontFamily: '"Space Mono", monospace',
+                            fontFamily: "var(--body)",
                             fontSize: "24px",
                             fontWeight: 700,
                             lineHeight: 1.35,
@@ -86,7 +86,7 @@ export default function EditableCard({
                     display: "flex",
                     flexDirection: "column",
                     gap: "8px",
-                    fontFamily: '"Space Mono", monospace'
+                    fontFamily: "var(--body)"
                 }}
             >
 

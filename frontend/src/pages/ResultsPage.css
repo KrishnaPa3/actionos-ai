@@ -1,7 +1,10 @@
 .results-page {
-    max-width: 1000px;
+    max-width: 1160px;
     margin: auto;
-    padding: 30px;
-    background: #f5f7fb;
+
+    padding: 8px 4px 56px;
+
+    background: transparent;
+
     min-height: 100vh;
 }

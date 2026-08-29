@@ -312,7 +312,7 @@ function VoiceRecorder() {
 
       <PageHeader
         icon={<CircleDot size={30} />}
-        title="Record Meeting"
+        title="Record a meeting"
       />
 
       <Card>
@@ -339,7 +339,7 @@ function VoiceRecorder() {
             }
             style={{
               fontSize: "56px",
-              fontFamily: '"Space Mono", monospace',
+              fontFamily: "var(--body)",
               fontWeight: 700,
             }}
           >
@@ -376,7 +376,7 @@ function VoiceRecorder() {
 
           <p
             style={{
-              fontFamily: '"Space Mono", monospace',
+              fontFamily: "var(--body)",
               margin: 0,
             }}
           >
@@ -387,7 +387,7 @@ function VoiceRecorder() {
 
             <p
               style={{
-                fontFamily: '"Space Mono", monospace',
+                fontFamily: "var(--body)",
                 textAlign: "center",
                 margin: 0,
               }}
@@ -409,7 +409,7 @@ function VoiceRecorder() {
 
         <PageHeader
           icon={<Upload size={22} />}
-          title="Upload Recording"
+          title="Upload a recording"
           subtitle="Already have an audio file? Upload it here."
         />
 
@@ -502,7 +502,7 @@ function VoiceRecorder() {
           />
           <p
             style={{
-              fontFamily: '"Space Mono", monospace',
+              fontFamily: "var(--body)",
               lineHeight: 1.8,
               whiteSpace: "pre-wrap",
             }}
@@ -516,7 +516,7 @@ function VoiceRecorder() {
         <Card style={{ marginTop: "24px" }}>
           <PageHeader
             icon={<FileText size={22} />}
-            title="Meeting Ready"
+            title="Recap ready"
             subtitle="Your meeting has been processed."
           />
           <div

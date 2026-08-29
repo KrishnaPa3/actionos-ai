@@ -49,7 +49,7 @@ def save_extraction_results(
     # STEP 3 - update session with extraction
     update_session_extraction(db, user_id, session_id, structured_data)
 
-    # STEP 4 - save actions (+ default 1h-before reminder when a due date exists)
+    # STEP 4 - save actions (+ a default reminder for every task)
     for task in structured_data.get("tasks", []):
         if not isinstance(task, dict):
             task = {"task": str(task)}
@@ -59,13 +59,15 @@ def save_extraction_results(
 
         new_action = action_repository.create_action(db, action_payload)
 
-        if new_action.get("due_date"):
-            try:
-                reminder_repository.create_default_reminder(
-                    db, user_id, new_action["id"], new_action["due_date"], hours_before=1
-                )
-            except Exception as e:
-                print("Reminder creation failed:", e)
+        # Every task gets a reminder, including ones with no stated deadline.
+        # Previously this was gated on a due date, so a recording that named
+        # tasks without deadlines produced an empty notification bell.
+        try:
+            reminder_repository.create_default_reminder(
+                db, user_id, new_action["id"], new_action.get("due_date"), hours_before=1
+            )
+        except Exception as e:
+            print("Reminder creation failed:", e)
 
     # STEP 5 - save risks
     for risk in structured_data.get("risks", []):

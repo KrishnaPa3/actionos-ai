@@ -1,12 +1,14 @@
+// Roughly doubled. Anything the user clicks is a capsule.
+
 export const RADIUS = {
 
-    sm: "8px",
+    sm: "16px",
 
-    md: "12px",
+    md: "20px",
 
-    lg: "16px",
+    lg: "26px",
 
-    xl: "20px",
+    xl: "30px",
 
     round: "999px"
 

@@ -43,9 +43,9 @@ RUN python3.12 -m pip install --upgrade pip setuptools wheel
 # -----------------------------------------------------------------------------
 
 RUN pip install --no-cache-dir \
-    torch==2.13.0 \
-    torchvision==0.28.0 \
-    torchaudio==2.11.0 \
+    torch==2.8.0 \
+    torchvision==0.23.0 \
+    torchaudio==2.8.0 \
     --index-url https://download.pytorch.org/whl/cu126
 
 # -----------------------------------------------------------------------------
@@ -91,7 +91,7 @@ ENV XDG_CACHE_HOME=/home/actionos/.cache
 # -----------------------------------------------------------------------------
 
 HEALTHCHECK --interval=30s --timeout=10s --start-period=20s --retries=3 \
-    CMD curl -f http://localhost:8000/health || exit 1
+    CMD curl -f http://localhost:${PORT:-8000}/health || exit 1
 
 # -----------------------------------------------------------------------------
 # Expose API
@@ -103,4 +103,4 @@ EXPOSE 8000
 # Start FastAPI
 # -----------------------------------------------------------------------------
 
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["sh", "-c", "uvicorn main:app --host 0.0.0.0 --port ${PORT:-8000}"]

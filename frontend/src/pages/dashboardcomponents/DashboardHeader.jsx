@@ -1,4 +1,8 @@
 import { motion } from "motion/react";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "../../auth/AuthContext";
+import { Mic } from "../../components/ui/icons";
+import Button from "../../components/ui/Button";
 import "./DashboardHeader.css";
 
 const greetingVariants = {
@@ -18,12 +22,17 @@ const itemVariants = {
 };
 
 export default function DashboardHeader() {
+    const navigate = useNavigate();
+    const { user } = useAuth();
+
     const hour = new Date().getHours();
 
-    let greeting = "Good Evening";
+    let greeting = "Good evening";
 
-    if (hour < 12) greeting = "Good Morning";
-    else if (hour < 17) greeting = "Good Afternoon";
+    if (hour < 12) greeting = "Good morning";
+    else if (hour < 17) greeting = "Good afternoon";
+
+    const firstName = (user?.user_metadata?.username || "").split(" ")[0];
 
     const date = new Date().toLocaleDateString("en-GB", {
         weekday: "long",
@@ -40,8 +49,25 @@ export default function DashboardHeader() {
               initial="hidden"
               animate="visible"
             >
-                <motion.h1 variants={itemVariants}>{greeting}</motion.h1>
-                <motion.p variants={itemVariants}>{date}</motion.p>
+                <motion.p variants={itemVariants} className="eyebrow">{date}</motion.p>
+                <motion.h1 variants={itemVariants}>
+                    {firstName ? `${greeting}, ${firstName}` : greeting}
+                </motion.h1>
+            </motion.div>
+
+            <motion.div
+              variants={itemVariants}
+              initial="hidden"
+              animate="visible"
+              className="dashboardHeaderAction"
+            >
+                <Button
+                  size="lg"
+                  icon={<Mic size={18} />}
+                  onClick={() => navigate("/record")}
+                >
+                    Record a meeting
+                </Button>
             </motion.div>
         </div>
     );

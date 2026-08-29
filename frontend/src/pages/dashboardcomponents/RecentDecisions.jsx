@@ -62,7 +62,7 @@ export default function RecentDecisions({ decisions }) {
 
             <div className="recentDecisionsHeader">
 
-                <h2>Pending Decisions</h2>
+                <h2>Decisions to make</h2>
 
                 <span>{recentDecisions.length}</span>
 

@@ -113,7 +113,7 @@ const navigate = useNavigate();
 
                                                 borderRadius: "8px",
 
-                                                fontFamily: "'Space Mono', monospace"
+                                                fontFamily: "var(--body)"
 
                                             }}
 
@@ -159,7 +159,7 @@ const navigate = useNavigate();
 
                                             whiteSpace: "nowrap",
 
-                                            fontFamily: "'Space Mono', monospace"
+                                            fontFamily: "var(--body)"
 
                                         }}
 
@@ -246,7 +246,7 @@ const navigate = useNavigate();
 
                                                     cursor: "pointer",
 
-                                                    fontFamily: "'Space Mono', monospace"
+                                                    fontFamily: "var(--body)"
 
                                                 }}
 
@@ -278,7 +278,7 @@ const navigate = useNavigate();
 
                                                     cursor: "pointer",
 
-                                                    fontFamily: "'Space Mono', monospace"
+                                                    fontFamily: "var(--body)"
 
                                                 }}
 
@@ -381,7 +381,7 @@ const navigate = useNavigate();
 
                                                     borderRadius: "8px",
 
-                                                    fontFamily: "'Space Mono', monospace"
+                                                    fontFamily: "var(--body)"
 
                                                 }}
 
@@ -449,7 +449,7 @@ const navigate = useNavigate();
 
                                                     borderRadius:"8px",
 
-                                                    fontFamily:"'Space Mono', monospace"
+                                                    fontFamily: "var(--body)"
 
                                                 }}
 
@@ -547,7 +547,7 @@ const navigate = useNavigate();
 
                                                     borderRadius:"8px",
 
-                                                    fontFamily:"'Space Mono', monospace"
+                                                    fontFamily: "var(--body)"
 
                                                 }}
 
@@ -631,7 +631,7 @@ const navigate = useNavigate();
 
                                                     resize:"vertical",
 
-                                                    fontFamily:"'Space Mono', monospace"
+                                                    fontFamily: "var(--body)"
 
                                                 }}
 

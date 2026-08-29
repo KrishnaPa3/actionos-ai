@@ -165,7 +165,7 @@ export default function SessionsPage() {
 
     <PageHeader
         icon={<History size={30} />}
-        title="Meeting History"
+        title="Meetings"
         subtitle={`${meetings.length} meetings stored`}
     />
 
@@ -276,7 +276,7 @@ export default function SessionsPage() {
                         padding: "8px 16px",
                         cursor: "pointer",
                         fontWeight: 600,
-                        fontFamily: "'Space Mono', monospace",
+                        fontFamily: "var(--body)",
                         fontSize: "16px",
                     }}
                 >
@@ -312,7 +312,7 @@ export default function SessionsPage() {
                         padding: "12px 18px",
                         borderRadius: "10px",
                         boxShadow: "0 10px 20px rgba(0,0,0,0.2)",
-                        fontFamily: "'Space Mono', monospace",
+                        fontFamily: "var(--body)",
                         fontSize: "14px",
                         fontWeight: 600,
                         zIndex: 9999,

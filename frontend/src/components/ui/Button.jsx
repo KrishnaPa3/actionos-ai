@@ -1,5 +1,5 @@
 import { motion } from "motion/react";
-import { COLORS } from "./colors";
+import { COLORS, FONTS } from "./colors";
 import { RADIUS } from "./radius";
 
 export default function Button({
@@ -25,45 +25,53 @@ export default function Button({
     const variants = {
 
         primary: {
-            background: COLORS.primary,
-            color: COLORS.text,
-            border: "none"
+            background: "linear-gradient(180deg, #4C8DF7, #2E6FE0)",
+            color: "#FFFFFF",
+            border: "none",
+            boxShadow:
+                "0 12px 30px rgba(59, 130, 246, .30), inset 0 1px 0 rgba(255, 255, 255, .28)"
         },
 
         secondary: {
-            background: COLORS.surface,
-            color: COLORS.text,
-            border: `1px solid ${COLORS.border}`
+            background: "rgba(255, 255, 255, .045)",
+            color: "#E4E8EF",
+            border: `1px solid ${COLORS.hairline}`,
+            boxShadow: "inset 0 1px 0 rgba(255, 255, 255, .06)"
         },
 
         outline: {
-            background: "transparent",
-            color: COLORS.primary,
-            border: `1px solid ${COLORS.primary}`
+            background: COLORS.primarySoft,
+            color: COLORS.primaryInk,
+            border: "none",
+            boxShadow: `inset 0 0 0 1px ${COLORS.primaryRing}`
         },
 
         ghost: {
             background: "transparent",
-            color: COLORS.text,
-            border: "none"
+            color: COLORS.textSecondary,
+            border: "none",
+            boxShadow: "none"
         },
 
         success: {
-            background: COLORS.success,
-            color: COLORS.text,
-            border: "none"
+            background: COLORS.successSoft,
+            color: COLORS.successInk,
+            border: "none",
+            boxShadow: `inset 0 0 0 1px ${COLORS.successRing}`
         },
 
         warning: {
-            background: COLORS.warning,
-            color: COLORS.text,
-            border: "none"
+            background: COLORS.warningSoft,
+            color: COLORS.warningInk,
+            border: "none",
+            boxShadow: `inset 0 0 0 1px ${COLORS.warningRing}`
         },
 
         danger: {
-            background: COLORS.danger,
-            color: COLORS.text,
-            border: "none"
+            background: COLORS.dangerSoft,
+            color: COLORS.dangerInk,
+            border: "none",
+            boxShadow: `inset 0 0 0 1px ${COLORS.dangerRing}`
         }
 
     };
@@ -71,43 +79,50 @@ export default function Button({
     const sizes = {
 
         sm: {
-            padding: "8px 14px",
-            fontSize: "14px"
+            height: "40px",
+            padding: "0 15px",
+            fontSize: "13px"
         },
 
         md: {
-            padding: "10px 18px",
-            fontSize: "15px"
+            height: "46px",
+            padding: "0 20px",
+            fontSize: "13.5px"
         },
 
         lg: {
-            padding: "14px 24px",
-            fontSize: "16px"
+            height: "52px",
+            padding: "0 24px",
+            fontSize: "14px"
         }
 
     };
 
     const buttonBaseStyle = {
 
-        display: "flex",
+        display: "inline-flex",
 
         alignItems: "center",
 
         justifyContent: "center",
 
-        gap: "8px",
+        gap: "9px",
 
-        borderRadius: RADIUS.md,
+        borderRadius: RADIUS.round,
 
         cursor: disabled
             ? "not-allowed"
             : "pointer",
 
-        opacity: disabled ? 0.5 : 1,
+        opacity: disabled ? 0.45 : 1,
 
-        fontFamily: "inherit",
+        fontFamily: FONTS.body,
 
-        fontWeight: 600,
+        fontWeight: 700,
+
+        letterSpacing: ".1px",
+
+        whiteSpace: "nowrap",
 
         ...variants[variant],
 
@@ -129,9 +144,9 @@ export default function Button({
 
             style={buttonBaseStyle}
 
-            whileHover={!disabled ? { y: -2, transition: { duration: 0.15 } } : undefined}
+            whileHover={!disabled ? { y: -2, transition: { duration: 0.18 } } : undefined}
 
-            whileTap={!disabled ? { scale: 0.96, transition: { duration: 0.1 } } : undefined}
+            whileTap={!disabled ? { scale: 0.97, transition: { duration: 0.1 } } : undefined}
 
         >
 

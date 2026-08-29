@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
+import { useLocation } from "react-router-dom";
 import { motion } from "motion/react";
 
 import TaskListHeader from "../components/tasks/TaskListHeader";
@@ -26,7 +27,20 @@ function LoadingSpinner() {
 
 export default function TaskList() {
   // Search state
-const [search, setSearch] = useState("");
+const location = useLocation();
+
+const urlSearch = new URLSearchParams(location.search).get("search") || "";
+
+const [search, setSearch] = useState(urlSearch);
+const [seenUrlSearch, setSeenUrlSearch] = useState(urlSearch);
+
+// The navbar search arrives here as ?search=..., including while we are
+// already on this page. Adjusting during render rather than in an effect
+// keeps it off the cascading-render path.
+if (urlSearch !== seenUrlSearch) {
+  setSeenUrlSearch(urlSearch);
+  setSearch(urlSearch);
+}
 
 const [priority, setPriority] = useState("");
 const [status, setStatus] = useState("");
@@ -250,7 +264,7 @@ useEffect(() => {
             padding: "12px 18px",
             borderRadius: "10px",
             boxShadow: "0 10px 20px rgba(0,0,0,0.2)",
-            fontFamily: "'Space Mono', monospace",
+            fontFamily: "var(--body)",
             fontSize: "14px",
             fontWeight: 600,
             zIndex: 9999,

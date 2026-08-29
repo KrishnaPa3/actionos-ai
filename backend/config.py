@@ -118,3 +118,22 @@ SLACK_REDIRECT_URI = os.getenv(
 WHISPER_MODEL_SIZE = "base"
 WHISPER_DEVICE = "cpu"
 WHISPER_COMPUTE_TYPE = "int8"
+# ----------------------------------------------------
+# GPU worker (transcription + diarization)
+# ----------------------------------------------------
+# The audio pipeline no longer runs in this process. It lives in the
+# gpu-worker service and is reached over HTTP. Empty means "not configured",
+# which the transcription client turns into a clear error rather than a
+# confusing import failure.
+
+GPU_WORKER_URL = os.getenv("GPU_WORKER_URL", "").rstrip("/")
+
+# Transcription is minutes-long work in the worst case. This is the client
+# timeout, and should stay below the Cloud Run request timeout.
+GPU_WORKER_TIMEOUT = float(os.getenv("GPU_WORKER_TIMEOUT_SECONDS", "600"))
+
+# Optional bounds passed through to pyannote. Leave unset to let it decide -
+# the previous code hardcoded both to 2, which mis-modelled solo recordings
+# and any meeting with three or more people.
+DIARIZATION_MIN_SPEAKERS = os.getenv("DIARIZATION_MIN_SPEAKERS")
+DIARIZATION_MAX_SPEAKERS = os.getenv("DIARIZATION_MAX_SPEAKERS")

@@ -1,43 +1,55 @@
+import { FONTS } from "./colors";
+
 export const TYPOGRAPHY = {
 
     title: {
-
-        fontSize: "32px",
-
-        fontWeight: 700
-
+        fontFamily: FONTS.display,
+        fontSize: "56px",
+        fontWeight: 400,
+        letterSpacing: "-1px",
+        lineHeight: 1.03,
     },
 
     heading: {
-
-        fontSize: "24px",
-
-        fontWeight: 600
-
+        fontFamily: FONTS.display,
+        fontSize: "27px",
+        fontWeight: 400,
+        letterSpacing: "-.3px",
+        lineHeight: 1.12,
     },
 
     subheading: {
-
-        fontSize: "20px",
-
-        fontWeight: 600
-
+        fontFamily: FONTS.body,
+        fontSize: "15px",
+        fontWeight: 700,
+        letterSpacing: ".02em",
     },
 
     body: {
-
-        fontSize: "16px",
-
-        fontWeight: 400
-
+        fontFamily: FONTS.body,
+        fontSize: "15px",
+        fontWeight: 400,
+        lineHeight: 1.6,
     },
 
     small: {
+        fontFamily: FONTS.body,
+        fontSize: "12.5px",
+        fontWeight: 500,
+    },
 
-        fontSize: "14px",
+    meta: {
+        fontFamily: FONTS.body,
+        fontSize: "11.5px",
+        fontWeight: 500,
+    },
 
-        fontWeight: 400
-
-    }
+    eyebrow: {
+        fontFamily: FONTS.body,
+        fontSize: "10.5px",
+        fontWeight: 600,
+        letterSpacing: ".18em",
+        textTransform: "uppercase",
+    },
 
 };

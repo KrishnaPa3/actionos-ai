@@ -56,7 +56,7 @@ function LoadingScreen() {
         transition={{ delay: 0.3, duration: 0.6 }}
         style={{
           color: "#9CA3AF",
-          fontFamily: "'Space Mono', monospace",
+          fontFamily: "var(--body)",
           fontSize: "14px",
           letterSpacing: "2px",
         }}

@@ -152,7 +152,7 @@ const modalStyle = {
     borderRadius: "18px",
     border: "1px solid #374151",
     padding: "28px",
-    fontFamily: "'Space Mono', monospace",
+    fontFamily: "var(--body)",
 };
 
 const titleStyle = {
@@ -174,7 +174,7 @@ const inputStyle = {
     border: "1px solid #4b5563",
     background: "#111827",
     color: "#fff",
-    fontFamily: "'Space Mono', monospace",
+    fontFamily: "var(--body)",
 };
 
 const textareaStyle = {

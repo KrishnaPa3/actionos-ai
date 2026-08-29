@@ -93,7 +93,7 @@ def get_diarizer() -> Any:
         if _diarizer is None:
             from whisperx.diarize import DiarizationPipeline
 
-            # HF_TOKEN is loaded from .env via config.py at startup.
+            # HF_TOKEN is loaded through environment
             # No need to call load_dotenv() here.
             hf_token = os.getenv("HF_TOKEN")
             if not hf_token:
@@ -116,4 +116,4 @@ def warm_audio_models() -> None:
     """
     get_whisper()
     get_whisperx()
-    get_diarizer()
+    #get_diarizer()

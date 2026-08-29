@@ -15,30 +15,39 @@ def create_default_reminder(
     db: Any,
     user_id: str,
     action_id: str,
-    due_date: str,
+    due_date: str | None,
     hours_before: int,
 ) -> None:
     """
-    Shared "schedule a default reminder N hours before due_date" logic.
+    Schedule the automatic reminder for an action.
 
-    Previously duplicated with two slightly different lead times:
-      - 1 hour before, when an action is first created during upload
+    Lead times differ by call site:
+      - 1 hour before, when an action is created during upload
       - 24 hours before, when an action is reset back to "pending"
-    Both call sites now share this single helper with `hours_before`
-    as the only difference, instead of two near-identical inline blocks.
+
+    ``due_date`` may be None. Tasks extracted from a recording that never
+    mentions a deadline used to get no reminder at all, so they never appeared
+    in the notification bell. They now get one dated now, and stay in the bell
+    until the task is completed or deleted - there is no date for them to
+    cross. Reminders are hidden from the bell once their due date passes; see
+    routers/reminders.py.
     """
 
-    due_time = datetime.fromisoformat(due_date.replace("Z", "+00:00"))
-    reminder_time = due_time - timedelta(hours=hours_before)
-
     now = datetime.now(timezone.utc)
-    if reminder_time <= now:
-        reminder_time = now + timedelta(minutes=1)
+
+    if due_date:
+        due_time = datetime.fromisoformat(due_date.replace("Z", "+00:00"))
+        reminder_time = due_time - timedelta(hours=hours_before)
+        if reminder_time <= now:
+            reminder_time = now + timedelta(minutes=1)
+    else:
+        # No deadline was stated: surface it immediately rather than not at all.
+        reminder_time = now
 
     create_reminder(db, {
         "action_id": action_id,
         "reminder_time": reminder_time.isoformat(),
-        "label": "Due Soon",
+        "label": "Due Soon" if due_date else "No due date",
         "is_default": True,
         "dismissed": False,
         "user_id": user_id,

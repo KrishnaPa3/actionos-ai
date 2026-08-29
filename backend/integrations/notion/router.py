@@ -26,7 +26,7 @@ from dependencies.database import AuthContext, get_auth_context
 from dependencies.notion import get_notion_client
 from integrations.notion.client import get_client
 from integrations.notion.oauth import generate_oauth_url, exchange_code_for_token
-from integrations.notion.service import NotionOAuthService
+from integrations.notion.service import NotionOAuthService, NotionSchemaError
 from repositories import action_repository
 from repositories.session_repository import get_session
 
@@ -521,6 +521,9 @@ async def notion_select_database(
     # expect a real database UUID.
     current_config["database_id"] = actual_database_id
     current_config["database_name"] = database_name
+    # The 2025-09-03 API keeps the schema on the data source, so store its id
+    # too - ensure_schema() and every write need it.
+    current_config["data_source_id"] = body.database_id
 
     upd = (
         ctx.db
@@ -549,9 +552,34 @@ async def notion_select_database(
         "%s — saved config=%s", log_pref, current_config,
     )
 
+    # Add any columns this app writes that the chosen database lacks. Doing it
+    # here rather than at sync time means the user is still in "setting up"
+    # mode and can be told what changed. A failure must not undo the selection
+    # they just made, so it is reported, never raised.
+    schema_result = {"added": [], "already_present": [], "manual": []}
+    try:
+        svc = NotionOAuthService(
+            client=notion,
+            database_id=actual_database_id,
+            data_source_id=body.database_id,
+        )
+        schema_result = svc.ensure_schema()
+        logger.info("%s — ensure_schema=%s", log_pref, schema_result)
+    except Exception as exc:
+        logger.error(
+            "%s — ensure_schema failed: %s: %s",
+            log_pref, type(exc).__name__, exc,
+        )
+        schema_result["manual"] = [
+            {"name": name, "type": "", "reason": str(exc)[:200]}
+            for name in ("Owner", "Due Date", "Priority",
+                         "Status", "Source Summary", "Session Link")
+        ]
+
     return {
         "success": True,
         "database_name": database_name,
+        "schema": schema_result,
     }
 
 
@@ -662,7 +690,11 @@ async def notion_sync_task(
         print(f"Reason: Failed to create Notion client: {exc}")
         raise HTTPException(status_code=400, detail=str(exc))
 
-    svc = NotionOAuthService(client=notion, database_id=database_id)
+    svc = NotionOAuthService(
+        client=notion,
+        database_id=database_id,
+        data_source_id=config.get("data_source_id"),
+    )
 
     # Build a session link URL for the action's source meeting page
     session_link = None
@@ -685,6 +717,11 @@ async def notion_sync_task(
             session_link=session_link,
             status=action.get("status", "pending"),
         )
+    except NotionSchemaError as exc:
+        # Actionable by the user (wrong database, no title column), so give
+        # them the reason rather than a generic 502.
+        logger.warning("%s — Notion schema problem: %s", log_pref, exc)
+        raise HTTPException(status_code=400, detail=str(exc))
     except Exception as exc:
         logger.error(
             "%s — Notion create_task failed: %s: %s\n%s",

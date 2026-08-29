@@ -68,7 +68,7 @@ const modalStyle = {
     padding: "28px",
     textAlign: "center",
     boxShadow: "0 20px 40px rgba(0,0,0,.45)",
-    fontFamily: "'Space Mono', monospace",
+    fontFamily: "var(--body)",
 };
 
 const titleStyle = {
@@ -97,7 +97,7 @@ const cancelStyle = {
     borderRadius: "10px",
     padding: "10px 22px",
     cursor: "pointer",
-    fontFamily: "'Space Mono', monospace",
+    fontFamily: "var(--body)",
     fontSize: "16px",
 };
 
@@ -108,6 +108,6 @@ const deleteStyle = {
     borderRadius: "10px",
     padding: "10px 22px",
     cursor: "pointer",
-    fontFamily: "'Space Mono', monospace",
+    fontFamily: "var(--body)",
     fontSize: "16px",
 };

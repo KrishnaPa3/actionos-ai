@@ -1,16 +1,13 @@
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../auth/AuthContext";
 import { supabase } from "../lib/supabase";
 import { apiFetch } from "../lib/api";
 import { AnimatePresence, motion } from "motion/react";
 
-import Button from "./ui/Button";
-
 import {
-  Target,
   LayoutDashboard,
-  History,
+  Calendar,
   FileText,
   ListChecks,
   BellRing,
@@ -18,31 +15,131 @@ import {
   Mic,
   Blocks,
   ChevronDown,
+  Search,
   User,
   LogOut,
 } from "./ui/icons";
 
 import "./Navbar.css";
 
+const NAV_ITEMS = [
+  {
+    key: "dashboard",
+    label: "Dashboard",
+    Icon: LayoutDashboard,
+    path: "/",
+    isActive: (p) => p === "/" || p === "/dashboard",
+  },
+  {
+    key: "record",
+    label: "Record",
+    Icon: Mic,
+    path: "/record",
+    isActive: (p) => p === "/record",
+  },
+  {
+    key: "meetings",
+    label: "Meetings",
+    Icon: Calendar,
+    hasMenu: true,
+    isActive: (p) => p === "/sessions" || p.startsWith("/results"),
+  },
+  {
+    key: "tasks",
+    label: "Tasks",
+    Icon: ListChecks,
+    path: "/tasks",
+    isActive: (p) => p === "/tasks",
+  },
+  {
+    key: "integrations",
+    label: "Integrations",
+    Icon: Blocks,
+    path: "/integrations",
+    isActive: (p) => p === "/integrations",
+  },
+];
+
+/* The latte-art spiral that replaced the target mark. */
+function BrandMark() {
+  return (
+    <span className="navMark">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+        strokeWidth="1.7" strokeLinecap="round">
+        <path d="M12 20c4 0 7-2.4 7-5.6 0-2.6-2-4.4-4.6-4.4-2.1 0-3.6 1.3-3.6 3 0 1.4 1.1 2.4 2.5 2.4 1.1 0 1.9-.7 1.9-1.6" />
+        <path d="M12 20c-4.4 0-7.6-3.1-7.6-7.3C4.4 7.6 8 4 12.9 4" />
+      </svg>
+    </span>
+  );
+}
+
 export default function Navbar() {
   const navigate = useNavigate();
   const location = useLocation();
+  const { user } = useAuth();
 
   const [reminders, setReminders] = useState([]);
   const [showReminders, setShowReminders] = useState(false);
   const [showMeetings, setShowMeetings] = useState(false);
-  const [activeMenu, setActiveMenu] = useState(null);
-  const { user } = useAuth();
+  const [showProfileMenu, setShowProfileMenu] = useState(false);
+
+  const [condensed, setCondensed] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [query, setQuery] = useState("");
+  const [halo, setHalo] = useState({ left: 0, width: 0, ready: false });
 
   const profileRef = useRef(null);
   const meetingsRef = useRef(null);
+  const remindersRef = useRef(null);
+  const searchRef = useRef(null);
+  const navRowRef = useRef(null);
+  const itemRefs = useRef({});
 
-  const [showProfileMenu, setShowProfileMenu] = useState(false);
+  const activeKey =
+    (NAV_ITEMS.find((item) => item.isActive(location.pathname)) || {}).key || null;
 
-  const openResults = () => {
-    navigate("/results");
-    setShowMeetings(false);
-  };
+  /* ---- the halo that slides between tabs ---- */
+
+  useLayoutEffect(() => {
+    function place() {
+      const el = activeKey ? itemRefs.current[activeKey] : null;
+
+      if (!el) {
+        setHalo((h) => ({ ...h, ready: false }));
+        return;
+      }
+
+      setHalo({ left: el.offsetLeft, width: el.offsetWidth, ready: true });
+    }
+
+    place();
+
+    // Widths change while the condense transition runs, so measure again after it.
+    const settle = window.setTimeout(place, 340);
+
+    window.addEventListener("resize", place);
+
+    return () => {
+      window.clearTimeout(settle);
+      window.removeEventListener("resize", place);
+    };
+  }, [activeKey, condensed]);
+
+  /* ---- the bar contracts once you scroll ---- */
+
+  useEffect(() => {
+    function onScroll() {
+      setCondensed(window.scrollY > 24);
+    }
+
+    onScroll();
+
+    window.addEventListener("scroll", onScroll, { passive: true });
+
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
+  /* ---- reminders ---- */
 
   const loadReminders = async () => {
     try {
@@ -52,11 +149,6 @@ export default function Navbar() {
     } catch (error) {
       console.error("Failed to load reminders", error);
     }
-  };
-
-  const handleLogout = async () => {
-    await supabase.auth.signOut();
-    navigate("/login");
   };
 
   useEffect(() => {
@@ -78,16 +170,7 @@ export default function Navbar() {
     };
   }, []);
 
-  function openTask(reminder) {
-    navigate(`/results/${reminder.session_id}`, {
-      state: {
-        highlightActionId: reminder.action_id,
-      },
-    });
-
-    setShowReminders(false);
-    setActiveMenu(null);
-  }
+  /* ---- dismiss the open surfaces ---- */
 
   useEffect(() => {
     function handleClick(e) {
@@ -97,292 +180,323 @@ export default function Navbar() {
       if (meetingsRef.current && !meetingsRef.current.contains(e.target)) {
         setShowMeetings(false);
       }
+      if (remindersRef.current && !remindersRef.current.contains(e.target)) {
+        setShowReminders(false);
+      }
+      if (searchRef.current && !searchRef.current.contains(e.target) && !query) {
+        setSearchOpen(false);
+      }
     }
 
     document.addEventListener("mousedown", handleClick);
 
     return () => document.removeEventListener("mousedown", handleClick);
+  }, [query]);
+
+  useEffect(() => {
+    function onEscape(e) {
+      if (e.key !== "Escape") return;
+      setShowMeetings(false);
+      setShowProfileMenu(false);
+      setShowReminders(false);
+    }
+
+    document.addEventListener("keydown", onEscape);
+
+    return () => document.removeEventListener("keydown", onEscape);
   }, []);
 
+  const closeAll = () => {
+    setShowMeetings(false);
+    setShowProfileMenu(false);
+    setShowReminders(false);
+  };
+
+  function handleNavClick(item) {
+    if (item.hasMenu) {
+      setShowMeetings((open) => !open);
+      setShowProfileMenu(false);
+      setShowReminders(false);
+      return;
+    }
+
+    closeAll();
+    navigate(item.path);
+  }
+
+  function submitSearch(e) {
+    e.preventDefault();
+
+    const term = query.trim();
+
+    if (!term) {
+      setSearchOpen(true);
+      return;
+    }
+
+    navigate(`/tasks?search=${encodeURIComponent(term)}`);
+    setSearchOpen(false);
+  }
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    navigate("/login");
+  };
+
+  function openTask(reminder) {
+    navigate(`/results/${reminder.session_id}`, {
+      state: {
+        highlightActionId: reminder.action_id,
+      },
+    });
+
+    setShowReminders(false);
+  }
+
+  const displayName = user?.user_metadata?.username || user?.email || "";
+  const initial = (displayName || "U")[0].toUpperCase();
+
   return (
-    <nav className="navbar">
-      {/* Logo */}
-      <div
-        className="nav-logo"
-        onClick={() => navigate("/")}
-        style={{
-          display: "flex",
-          alignItems: "center",
-          gap: "12px",
-          cursor: "pointer",
-          userSelect: "none",
-        }}
-      >
-        <Target size={28} />
-        <span
-          style={{
-            fontSize: "22px",
-            fontWeight: "700",
-            letterSpacing: "0.5px",
-          }}
-        >
-          ActionOS
-        </span>
-      </div>
+    <div className={`navShell${condensed ? " isCondensed" : ""}`}>
+      <nav className="navbar">
+        {/* Brand */}
+        <div className="nav-logo" onClick={() => { closeAll(); navigate("/"); }}>
+          <BrandMark />
+          <span className="navWord">ActionOS</span>
+        </div>
 
-      {/* Navigation */}
-      <div
-        className="nav-links"
-        style={{
-          display: "flex",
-          alignItems: "center",
-          gap: "12px",
-        }}
-      >
-        {/* Dashboard */}
-        <Button
-          size="sm"
-          variant={
-            location.pathname === "/" || location.pathname === "/dashboard"
-              ? "primary"
-              : "ghost"
-          }
-          icon={<LayoutDashboard size={18} />}
-          onClick={() => navigate("/")}
-        >
-          Dashboard
-        </Button>
-
-        {/* Record */}
-        <Button
-          size="sm"
-          variant={location.pathname === "/record" ? "primary" : "ghost"}
-          icon={<Mic size={18} />}
-          onClick={() => navigate("/record")}
-        >
-          Record
-        </Button>
-
-        {/* Meetings Dropdown */}
-        <div ref={meetingsRef} className="meetingsDropdownWrapper">
-          <Button
-            size="sm"
-            variant={
-              location.pathname === "/sessions" ||
-              location.pathname.startsWith("/results")
-                ? "primary"
-                : "ghost"
-            }
-            icon={<History size={18} />}
-            onClick={() => {
-              setShowMeetings(!showMeetings);
-              setShowReminders(false);
-              setShowProfileMenu(false);
+        {/* Navigation */}
+        <div className="nav-links" ref={navRowRef}>
+          <span
+            className={`navHalo${halo.ready ? " isOn" : ""}`}
+            style={{
+              transform: `translateX(${halo.left}px)`,
+              width: `${halo.width}px`,
             }}
-            style={{ gap: "6px" }}
-          >
-            Meetings
-            <motion.span
-              animate={{ rotate: showMeetings ? 180 : 0 }}
-              transition={{ duration: 0.2 }}
-              style={{ display: "inline-flex" }}
-            >
-              <ChevronDown size={16} />
-            </motion.span>
-          </Button>
+            aria-hidden="true"
+          />
 
-          <AnimatePresence>
-            {showMeetings && (
-              <motion.div
-                className="meetingsDropdown"
-                initial={{ opacity: 0, y: -8, scale: 0.96 }}
-                animate={{ opacity: 1, y: 0, scale: 1 }}
-                exit={{ opacity: 0, y: -8, scale: 0.96 }}
-                transition={{ duration: 0.15, ease: "easeOut" }}
+          {NAV_ITEMS.map((item) => {
+            const active = item.key === activeKey;
+            const { Icon } = item;
+
+            return (
+              <div
+                key={item.key}
+                className="navSlot"
+                ref={item.hasMenu ? meetingsRef : undefined}
               >
                 <button
-                  className="dropdownItem"
-                  onClick={() => {
-                    navigate("/sessions");
-                    setShowMeetings(false);
-                  }}
+                  type="button"
+                  ref={(el) => { itemRefs.current[item.key] = el; }}
+                  className={`navItem${active ? " isActive" : ""}`}
+                  onClick={() => handleNavClick(item)}
+                  aria-current={active ? "page" : undefined}
+                  aria-expanded={item.hasMenu ? showMeetings : undefined}
                 >
-                  <History size={18} />
-                  <div className="dropdownItemText">
-                    <span className="dropdownItemLabel">Session History</span>
-                    <span className="dropdownItemDesc">
-                      Browse past meetings
-                    </span>
-                  </div>
-                </button>
-
-                <div className="dropdownDivider" />
-
-                <button
-                  className="dropdownItem"
-                  onClick={() => {
-                    openResults();
-                    setShowMeetings(false);
-                  }}
-                >
-                  <FileText size={18} />
-                  <div className="dropdownItemText">
-                    <span className="dropdownItemLabel">Session Info</span>
-                    <span className="dropdownItemDesc">
-                      View extracted insights
-                    </span>
-                  </div>
-                </button>
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </div>
-
-        {/* Tasks */}
-        <Button
-          size="sm"
-          variant={location.pathname === "/tasks" ? "primary" : "ghost"}
-          icon={<ListChecks size={18} />}
-          onClick={() => navigate("/tasks")}
-        >
-          Tasks
-        </Button>
-
-        {/* Integrations */}
-        <Button
-          size="sm"
-          variant={location.pathname === "/integrations" ? "primary" : "ghost"}
-          icon={<Blocks size={18} />}
-          onClick={() => navigate("/integrations")}
-        >
-          Integrations
-        </Button>
-
-        {/* Reminder Bell */}
-        <div
-          className="notificationBell"
-          onClick={() => {
-            setShowReminders(!showReminders);
-            setShowProfileMenu(false);
-            setActiveMenu(null);
-          }}
-        >
-          <BellRing size={20} />
-          {reminders.length > 0 && (
-            <span className="notificationCount">{reminders.length}</span>
-          )}
-        </div>
-
-        {/* Reminder Popup */}
-        {showReminders && (
-          <div className="reminderPopup">
-            <div className="reminderPopupHeader">
-              <span
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "8px",
-                }}
-              >
-                <BellRing size={18} />
-                Reminders
-              </span>
-              <span className="reminderCount">{reminders.length}</span>
-            </div>
-
-            {reminders.length === 0 ? (
-              <div className="emptyReminder">{"You're all caught up."}</div>
-            ) : (
-              reminders.map((reminder) => (
-                <div key={reminder.id} className="reminderCard">
-                  <div className="reminderHeader">
-                    <div>
-                      <div className="reminderTitle">{reminder.title}</div>
-                      <div
-                        className={
-                          reminder.is_default
-                            ? "autoReminderBadge"
-                            : "manualReminderBadge"
-                        }
-                      >
-                        {reminder.is_default
-                          ? "Auto Reminder"
-                          : "Custom Reminder"}
-                      </div>
-                    </div>
-
-                    <div className="reminderDue">
-                      <span role="img" aria-label="time">{'\u{1F552}'}</span>{" "}
-                      {new Date(reminder.due_date).toLocaleString()}
-                    </div>
-
-                    <button
-                      className="openReminder"
-                      onClick={() => openTask(reminder)}
+                  <Icon size={17} />
+                  <span className="navLabel">{item.label}</span>
+                  {item.hasMenu && (
+                    <motion.span
+                      className="navChev"
+                      animate={{ rotate: showMeetings ? 180 : 0 }}
+                      transition={{ duration: 0.22 }}
                     >
-                      <ExternalLink size={16} />
-                      <span>Open Task</span>
-                    </button>
-                  </div>
-                </div>
-              ))
-            )}
-          </div>
-        )}
+                      <ChevronDown size={14} />
+                    </motion.span>
+                  )}
+                </button>
 
-        {/* Profile Menu */}
-        <div ref={profileRef} className="profileMenuContainer">
-          <button
-            className="profileButton"
-            onClick={() => {
-              setShowProfileMenu(!showProfileMenu);
-              setShowReminders(false);
-            }}
-          >
-            <div className="profileAvatar">
-              {(
-                user?.user_metadata?.username ||
-                user?.email ||
-                "U"
-              )[0].toUpperCase()}
-            </div>
-            <span>
-              {user?.user_metadata?.username || user?.email}
-            </span>
-            <span>{'\u{25BC}'}</span>
-          </button>
+                {item.hasMenu && (
+                  <AnimatePresence>
+                    {showMeetings && (
+                      <motion.div
+                        className="meetingsDropdown"
+                        initial={{ opacity: 0, y: -10, scale: 0.97 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={{ opacity: 0, y: -10, scale: 0.97 }}
+                        transition={{ duration: 0.18, ease: "easeOut" }}
+                      >
+                        <button
+                          className="dropdownItem"
+                          onClick={() => {
+                            navigate("/sessions");
+                            setShowMeetings(false);
+                          }}
+                        >
+                          <span className="dropdownItemIcon isBlue">
+                            <Calendar size={18} />
+                          </span>
+                          <span className="dropdownItemText">
+                            <span className="dropdownItemLabel">All Meetings</span>
+                            <span className="dropdownItemDesc">
+                              Everything you have recorded
+                            </span>
+                          </span>
+                        </button>
 
-          {showProfileMenu && (
-            <div className="profileDropdown">
-              <div className="profileDropdownHeader">
-                <strong>
-                  {user?.user_metadata?.username || "User"}
-                </strong>
-                <small>{user?.email}</small>
+                        <button
+                          className="dropdownItem"
+                          onClick={() => {
+                            navigate("/results");
+                            setShowMeetings(false);
+                          }}
+                        >
+                          <span className="dropdownItemIcon isGreen">
+                            <FileText size={18} />
+                          </span>
+                          <span className="dropdownItemText">
+                            <span className="dropdownItemLabel">Meeting Recap</span>
+                            <span className="dropdownItemDesc">
+                              Summary, tasks, decisions, risks
+                            </span>
+                          </span>
+                        </button>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                )}
               </div>
-
-              <button
-                className="profileDropdownItem"
-                onClick={() => {
-                  navigate("/profile");
-                  setShowProfileMenu(false);
-                }}
-              >
-                <User size={16} />
-                Profile
-              </button>
-
-              <button
-                className="profileDropdownItem"
-                onClick={handleLogout}
-              >
-                <LogOut size={16} />
-                Sign Out
-              </button>
-            </div>
-          )}
+            );
+          })}
         </div>
-      </div>
-    </nav>
+
+        {/* Tools */}
+        <div className="navTools">
+          <form
+            ref={searchRef}
+            className={`navSearch${searchOpen ? " isOpen" : ""}`}
+            onSubmit={submitSearch}
+            onClick={() => setSearchOpen(true)}
+          >
+            <span className="navSearchIcon">
+              <Search size={17} />
+            </span>
+            <input
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Search tasks and owners"
+              aria-label="Search tasks"
+            />
+          </form>
+
+          <div className="navBellWrap" ref={remindersRef}>
+            <button
+              type="button"
+              className="navIconBtn"
+              onClick={() => {
+                setShowReminders((open) => !open);
+                setShowProfileMenu(false);
+                setShowMeetings(false);
+              }}
+              aria-label={`Reminders (${reminders.length})`}
+            >
+              <BellRing size={19} />
+              {reminders.length > 0 && (
+                <span className="notificationCount">{reminders.length}</span>
+              )}
+            </button>
+
+            <AnimatePresence>
+              {showReminders && (
+                <motion.div
+                  className="reminderPopup"
+                  initial={{ opacity: 0, y: -10, scale: 0.97 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: -10, scale: 0.97 }}
+                  transition={{ duration: 0.18, ease: "easeOut" }}
+                >
+                  <div className="reminderPopupHeader">
+                    <span>Reminders</span>
+                    <span className="reminderCount">{reminders.length}</span>
+                  </div>
+
+                  {reminders.length === 0 ? (
+                    <div className="emptyReminder">{"You're all caught up."}</div>
+                  ) : (
+                    reminders.map((reminder) => (
+                      <div key={reminder.id} className="reminderCard">
+                        <div className="reminderTitle">{reminder.title}</div>
+
+                        <div
+                          className={
+                            reminder.is_default
+                              ? "autoReminderBadge"
+                              : "manualReminderBadge"
+                          }
+                        >
+                          {reminder.is_default ? "Auto" : "Custom"}
+                        </div>
+
+                        <div className="reminderDue">
+                          {new Date(reminder.due_date).toLocaleString()}
+                        </div>
+
+                        <button
+                          className="openReminder"
+                          onClick={() => openTask(reminder)}
+                        >
+                          <ExternalLink size={15} />
+                          <span>Open task</span>
+                        </button>
+                      </div>
+                    ))
+                  )}
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+
+          <div className="profileMenuContainer" ref={profileRef}>
+            <button
+              type="button"
+              className="profileButton"
+              onClick={() => {
+                setShowProfileMenu((open) => !open);
+                setShowReminders(false);
+                setShowMeetings(false);
+              }}
+            >
+              <span className="profileAvatar">{initial}</span>
+              <span className="profileName">{displayName}</span>
+              <ChevronDown size={14} />
+            </button>
+
+            <AnimatePresence>
+              {showProfileMenu && (
+                <motion.div
+                  className="profileDropdown"
+                  initial={{ opacity: 0, y: -10, scale: 0.97 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: -10, scale: 0.97 }}
+                  transition={{ duration: 0.18, ease: "easeOut" }}
+                >
+                  <div className="profileDropdownHeader">
+                    <strong>{user?.user_metadata?.username || "User"}</strong>
+                    <small>{user?.email}</small>
+                  </div>
+
+                  <button
+                    className="profileDropdownItem"
+                    onClick={() => {
+                      navigate("/profile");
+                      setShowProfileMenu(false);
+                    }}
+                  >
+                    <User size={16} />
+                    Profile
+                  </button>
+
+                  <button className="profileDropdownItem" onClick={handleLogout}>
+                    <LogOut size={16} />
+                    Sign Out
+                  </button>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+        </div>
+      </nav>
+    </div>
   );
 }

@@ -35,7 +35,7 @@ export default function EmptySection({
 
                 marginTop: "10px",
 
-                fontFamily: '"Space Mono", monospace'
+                fontFamily: "var(--body)"
 
             }}
         >
@@ -59,7 +59,7 @@ export default function EmptySection({
 
                     fontWeight: 700,
 
-                    fontFamily: '"Space Mono", monospace'
+                    fontFamily: "var(--body)"
                 }}
             >
                 {title}
@@ -73,7 +73,7 @@ export default function EmptySection({
 
                     lineHeight: "1.6",
 
-                    fontFamily: '"Space Mono", monospace',
+                    fontFamily: "var(--body)",
 
                     fontSize: "15px"
                 }}

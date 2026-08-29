@@ -1,0 +1,21 @@
+# =============================================================================
+# ActionOS GPU worker dependencies.
+#
+# torch / torchaudio are NOT listed here - they are installed separately in
+# the Dockerfile from the CUDA 12.6 index so pip cannot substitute a CPU or
+# mismatched-CUDA wheel. torchvision is deliberately absent: nothing in an
+# audio pipeline uses it, and it costs ~1GB.
+#
+# openai-whisper is deliberately absent too. The pipeline uses faster-whisper
+# and whisperx; openai-whisper was a third, unused Whisper implementation.
+# =============================================================================
+
+fastapi==0.137.2
+uvicorn[standard]==0.51.0
+httpx==0.28.1
+pydantic==2.13.4
+
+# Speech pipeline. whisperx pulls pyannote-audio, transformers and friends.
+whisperx==3.8.6
+faster-whisper==1.2.1
+ctranslate2==4.8.0

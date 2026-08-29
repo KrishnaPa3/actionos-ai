@@ -3,7 +3,7 @@ import "./Integrations.css";
 import notionLogo from "../assets/integrations/notion-darkmode.svg";
 import googleCalendarLogo from "../assets/integrations/google-calendar.svg";
 import slackLogo from "../assets/integrations/slack-logo.svg";
-import { apiFetch } from "../lib/api";
+import { apiFetch, readErrorDetail } from "../lib/api";
 
 export default function Integrations() {
   // ── Notion state ──────────────────────────────────────────────────
@@ -16,6 +16,8 @@ export default function Integrations() {
   const [selectedDbId, setSelectedDbId] = useState("");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+  // What the backend did to the chosen database's columns when it was saved.
+  const [schemaNotice, setSchemaNotice] = useState(null);
 
   // ── Google Calendar state ─────────────────────────────────────────
   const [googleStatus, setGoogleStatus] = useState({
@@ -62,13 +64,17 @@ export default function Integrations() {
   async function handleConnect() {
     try {
       const response = await apiFetch("/oauth/notion/login");
-      const data = await response.json();
-      if (data.authorization_url) {
-        window.open(data.authorization_url, "_blank", "width=600,height=800");
+      if (!response.ok) {
+        throw new Error(await readErrorDetail(response));
       }
+      const data = await response.json();
+      if (!data.authorization_url) {
+        throw new Error("The server did not return a Notion authorization URL.");
+      }
+      window.open(data.authorization_url, "_blank", "width=600,height=800");
     } catch (err) {
-      console.error(err);
-      alert("Failed to initiate Notion connection.");
+      console.error("Notion connect error:", err);
+      alert(`Failed to initiate Notion connection.\n\n${err.message}`);
     }
   }
 
@@ -114,20 +120,32 @@ export default function Integrations() {
     if (!selectedDbId) return;
     setSaving(true);
     setError("");
+    setSchemaNotice(null);
     try {
       const response = await apiFetch("/integrations/notion/database", {
         method: "POST",
         body: JSON.stringify({ database_id: selectedDbId }),
       });
-      const data = await response.json();
-      if (data.success) {
-        await loadStatus();
-      } else {
-        setError("Failed to save database selection.");
+      if (!response.ok) {
+        throw new Error(await readErrorDetail(response));
       }
+      const data = await response.json();
+      if (!data.success) {
+        throw new Error("The server did not confirm the database selection.");
+      }
+      // The backend adds any columns this app writes that the database was
+      // missing. Tell the user what changed, and name anything Notion
+      // refused to create so they can add it by hand.
+      const schema = data.schema || {};
+      const added = schema.added || [];
+      const manual = schema.manual || [];
+      if (added.length || manual.length) {
+        setSchemaNotice({ added, manual });
+      }
+      await loadStatus();
     } catch (err) {
-      console.error(err);
-      setError("Failed to save database selection. Please try again.");
+      console.error("Save database error:", err);
+      setError(err.message || "Failed to save database selection. Please try again.");
     } finally {
       setSaving(false);
     }
@@ -136,6 +154,7 @@ export default function Integrations() {
   async function handleChangeDatabase() {
     setDatabases([]);
     setSelectedDbId("");
+    setSchemaNotice(null);
     await loadDatabases();
   }
 
@@ -191,7 +210,7 @@ export default function Integrations() {
     try {
       const response = await apiFetch("/oauth/google/login");
       if (!response.ok) {
-        throw new Error(`Google login request failed: ${response.status}`);
+        throw new Error(await readErrorDetail(response));
       }
       const data = await response.json();
       if (data.authorization_url) {
@@ -202,7 +221,7 @@ export default function Integrations() {
       }
     } catch (err) {
       console.error("Google connect error:", err);
-      alert("Failed to initiate Google Calendar connection. Please try again.");
+      alert(`Failed to initiate Google Calendar connection.\n\n${err.message}`);
     }
   }
 
@@ -291,7 +310,7 @@ export default function Integrations() {
     try {
       const response = await apiFetch("/oauth/slack/login");
       if (!response.ok) {
-        throw new Error(`Slack login request failed: ${response.status}`);
+        throw new Error(await readErrorDetail(response));
       }
       const data = await response.json();
       if (data.authorization_url) {
@@ -302,7 +321,7 @@ export default function Integrations() {
       }
     } catch (err) {
       console.error("Slack connect error:", err);
-      alert("Failed to initiate Slack connection. Please try again.");
+      alert(`Failed to initiate Slack connection.\n\n${err.message}`);
     } finally {
       setSlackLoading(false);
     }
@@ -428,6 +447,27 @@ export default function Integrations() {
                         <span className="databaseLoading">No databases found.</span>
                       )}
                       {error && <span className="databaseError">{error}</span>}
+                      {schemaNotice && (
+                        <span className="databaseNotice">
+                          {schemaNotice.added.length > 0 && (
+                            <>
+                              Added {schemaNotice.added.length} missing{" "}
+                              {schemaNotice.added.length === 1 ? "column" : "columns"} to
+                              this database: {schemaNotice.added.join(", ")}.
+                            </>
+                          )}
+                          {schemaNotice.manual.length > 0 && (
+                            <>
+                              {" "}Please add {schemaNotice.manual.length === 1 ? "this column" : "these columns"}{" "}
+                              in Notion yourself:{" "}
+                              {schemaNotice.manual
+                                .map((m) => (m.type ? `${m.name} (${m.type})` : m.name))
+                                .join(", ")}
+                              . Tasks will sync without {schemaNotice.manual.length === 1 ? "it" : "them"} in the meantime.
+                            </>
+                          )}
+                        </span>
+                      )}
                     </div>
                   )}
                 </div>

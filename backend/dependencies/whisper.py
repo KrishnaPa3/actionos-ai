@@ -1,9 +1,16 @@
-"""
-FastAPI dependency for the lazy faster-whisper singleton.
-"""
+"""REMOVED - kept only so a stale import fails loudly instead of silently.
 
-from services.model_manager import get_whisper
+The faster-whisper singleton used to live here and be injected into
+/upload-audio. Audio models no longer run in the API process at all; see
+services/transcription.py, which calls the gpu-worker service over HTTP.
+
+This module intentionally imports nothing. The API image does not contain
+torch, so importing the old model_manager here would break startup.
+"""
 
 
 def get_whisper_model():
-    return get_whisper()
+    raise RuntimeError(
+        "get_whisper_model() no longer exists. Audio models run in the "
+        "gpu-worker service. Use services.transcription.transcribe(audio_url)."
+    )

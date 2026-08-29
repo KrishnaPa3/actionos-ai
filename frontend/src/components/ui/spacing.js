@@ -4,12 +4,12 @@ export const SPACING = {
 
     sm: "10px",
 
-    md: "16px",
+    md: "18px",
 
-    lg: "24px",
+    lg: "26px",
 
-    xl: "32px",
+    xl: "34px",
 
-    xxl: "48px"
+    xxl: "52px"
 
 };

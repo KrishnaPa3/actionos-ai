@@ -26,7 +26,11 @@ import {
 } from "../ui/icons";
 
 import "./TaskRow.css";
-import { apiFetch } from "../../lib/api";
+import { apiFetch, readErrorDetail } from "../../lib/api";
+
+// Human names for the sync targets, used in error messages.
+const SYNC_APP_LABEL = { google: "Google Calendar", notion: "Notion", slack: "Slack" };
+
 
 export default function TaskRow({
   actionId,
@@ -80,12 +84,19 @@ export default function TaskRow({
         method: "POST",
         body: JSON.stringify({ action_id: actionId }),
       });
+      // Without this check a 400 ("No default Slack channel is configured")
+      // left data.success undefined and the UI did nothing at all, hiding a
+      // message that told the user exactly how to fix it.
+      if (!response.ok) {
+        throw new Error(await readErrorDetail(response));
+      }
       const data = await response.json();
       if (data.success && onSyncComplete) {
         onSyncComplete(actionId, data, app);
       }
     } catch (err) {
       console.error(`Failed to sync to ${app}:`, err);
+      alert(`Couldn't sync this task to ${SYNC_APP_LABEL[app] || app}.\n\n${err.message}`);
     } finally {
       setSyncing(false);
     }

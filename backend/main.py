@@ -53,8 +53,9 @@ async def lifespan(app: FastAPI):
         )
 
     # ------------------------------------------------------------------
-    # AI models are intentionally not initialized here. They are created on
-    # the first /upload-audio request by services.model_manager.
+    # AI models do not run in this process at all. Transcription and
+    # diarization live in the gpu-worker service; see
+    # services/transcription.py. Nothing here imports torch.
     # ------------------------------------------------------------------
     # Per-user integrations (Notion OAuth, etc.) are stored in the
     # oauth_connections table and accessed at request time via the

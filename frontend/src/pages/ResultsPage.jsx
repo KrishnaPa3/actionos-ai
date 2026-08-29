@@ -6,7 +6,11 @@ import {
 } from "react-router-dom";
 import { useEffect, useState } from "react";
 
-import { apiFetch } from "../lib/api";
+import { apiFetch, readErrorDetail } from "../lib/api";
+
+// Human names for the sync targets, used in error messages.
+const SYNC_APP_LABEL = { google: "Google Calendar", notion: "Notion", slack: "Slack" };
+
 
 import Card from "../components/ui/Card";
 import Button from "../components/ui/Button";
@@ -1044,6 +1048,10 @@ async function saveMeetingName() {
                   method: "POST",
                   body: JSON.stringify({ action_id: taskId }),
                 });
+                // See TaskRow: a non-2xx here used to be swallowed silently.
+                if (!response.ok) {
+                  throw new Error(await readErrorDetail(response));
+                }
                 const data = await response.json();
                 if (data.success) {
                   if (app === "google") {
@@ -1106,6 +1114,7 @@ async function saveMeetingName() {
                 }
               } catch (err) {
                 console.error("Sync failed:", err);
+                alert(`Couldn't sync this task to ${SYNC_APP_LABEL[app] || app}.\n\n${err.message}`);
               } finally {
                 setSyncingTaskId(null);
               }
@@ -1294,7 +1303,7 @@ async function saveMeetingName() {
 
             boxShadow: "0 10px 20px rgba(0,0,0,0.2)",
 
-            fontFamily: "'Space Mono', monospace",
+            fontFamily: "var(--body)",
 
             fontSize: "14px",
 

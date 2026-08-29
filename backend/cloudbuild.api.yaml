@@ -1,0 +1,33 @@
+# =============================================================================
+# Cloud Build config for the slim ActionOS API image.
+#
+# Uses Dockerfile.api (not the legacy CUDA Dockerfile). No secrets are needed
+# at build time: the API's credentials are injected by Cloud Run at runtime
+# from Secret Manager.
+#
+# Run from the backend/ directory:
+#   gcloud builds submit --config cloudbuild.api.yaml .
+# =============================================================================
+
+substitutions:
+  # NOTE: Cloud Build does not expand substitutions recursively, so the
+  # default value of a user substitution cannot reference ${PROJECT_ID} -
+  # it is passed through literally and rejected as an invalid image name.
+  # Hence the project id spelled out here. Override with --substitutions.
+  _IMAGE: 'asia-south1-docker.pkg.dev/krishna-test-504810/actionos/actionos-api:latest'
+
+steps:
+  - id: build
+    name: 'gcr.io/cloud-builders/docker'
+    args: ['build', '-f', 'Dockerfile.api', '-t', '${_IMAGE}', '.']
+
+  - id: push
+    name: 'gcr.io/cloud-builders/docker'
+    args: ['push', '${_IMAGE}']
+
+options:
+  logging: CLOUD_LOGGING_ONLY
+
+timeout: '1200s'
+images:
+  - '${_IMAGE}'

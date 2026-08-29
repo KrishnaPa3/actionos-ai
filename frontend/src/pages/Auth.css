@@ -4,7 +4,7 @@
 
 .auth-page {
     min-height: 100vh;
-    background: #0B1323;
+    background: transparent;
     display: flex;
     justify-content: center;
     align-items: center;
@@ -30,7 +30,7 @@
 }
 
 .auth-brand h1 {
-    font-family: "Orbitron";
+    font-family: var(--body);
     font-size: 5rem;
     color: #EEF4FF;
     margin-bottom: 18px;
@@ -39,7 +39,7 @@
 .auth-brand p {
     max-width: 520px;
 
-    font-family: "Space Mono";
+    font-family: var(--body);
     font-size: 1.15rem;
 
     line-height: 1.8;
@@ -57,7 +57,7 @@
 
 .auth-features div {
 
-    font-family: "Audex";
+    font-family: var(--body);
 
     color: #D9E5F5;
 
@@ -93,7 +93,7 @@
 
 .auth-card h2 {
 
-    font-family: "Orbitron";
+    font-family: var(--body);
 
     color: #EEF4FF;
 
@@ -104,7 +104,7 @@
 
 .auth-subtitle {
 
-    font-family: "Space Mono";
+    font-family: var(--body);
 
     color: #8D9BB1;
 
@@ -125,7 +125,7 @@
 
     color: #D6E2F3;
 
-    font-family: "Audex";
+    font-family: var(--body);
 }
 
 .auth-input {
@@ -136,15 +136,15 @@
 
     padding: 0 18px;
 
-    border-radius: 14px;
+    border-radius: 22px;
 
-    background: #0E1525;
+    background: rgba(255, 255, 255, .035);
 
     border: 1px solid rgba(86,116,173,.25);
 
     color: white;
 
-    font-family: "Space Mono";
+    font-family: var(--body);
 
     font-size: .95rem;
 
@@ -155,7 +155,7 @@
 
     outline: none;
 
-    border-color: #4F8CFF;
+    border-color: rgba(59, 130, 246, .42);
 
     box-shadow:
         0 0 0 4px rgba(79,140,255,.15);
@@ -180,13 +180,13 @@
 
     border: none;
 
-    border-radius: 14px;
+    border-radius: 22px;
 
-    background: #4F8CFF;
+    background: linear-gradient(180deg, #4C8DF7, #2E6FE0);
 
     color: white;
 
-    font-family: "Orbitron";
+    font-family: var(--body);
 
     font-size: .95rem;
 
@@ -197,7 +197,7 @@
 
 .auth-button:hover {
 
-    background: #3C79F4;
+    background: linear-gradient(180deg, #4C8DF7, #2E6FE0);
 
     transform: translateY(-2px);
 }
@@ -214,20 +214,20 @@
 
     color: white;
 
-    border-radius: 14px;
+    border-radius: 22px;
 
     border: 1px solid rgba(86,116,173,.25);
 
     cursor: pointer;
 
-    font-family: "Audex";
+    font-family: var(--body);
 
     transition: .25s;
 }
 
 .google-button:hover {
 
-    border-color: #4F8CFF;
+    border-color: rgba(59, 130, 246, .42);
 
     background: rgba(79,140,255,.08);
 }
@@ -248,7 +248,7 @@
 
     color: #74839A;
 
-    font-family: "Space Mono";
+    font-family: var(--body);
 }
 
 .auth-divider::before,
@@ -275,7 +275,7 @@
 
 .forgot-link {
     color: #6FA4FF;
-    font-family: "Audex";
+    font-family: var(--body);
     font-size: 0.85rem;
     text-decoration: none;
     transition: color 0.2s ease;
@@ -297,7 +297,7 @@
 
     color: #8C9BB0;
 
-    font-family: "Space Mono";
+    font-family: var(--body);
 }
 
 .auth-footer a {
@@ -335,7 +335,7 @@
 
     color: #8C9BB0;
 
-    font-family: "Space Mono";
+    font-family: var(--body);
 
     font-size: 0.85rem;
 }
@@ -348,7 +348,7 @@
 
     color: #6FA4FF;
 
-    font-family: "Audex";
+    font-family: var(--body);
 
     font-size: 0.9rem;
 
@@ -383,7 +383,7 @@
 
     padding: 14px;
 
-    border-radius: 12px;
+    border-radius: 20px;
 
     margin-bottom: 22px;
 
@@ -393,7 +393,7 @@
 
     color: #FFB2B2;
 
-    font-family: "Space Mono";
+    font-family: var(--body);
 }
 
 /* =====================================================
@@ -404,7 +404,7 @@
 
     padding: 14px;
 
-    border-radius: 12px;
+    border-radius: 20px;
 
     margin-bottom: 22px;
 
@@ -414,7 +414,7 @@
 
     color: #86EFAC;
 
-    font-family: "Space Mono";
+    font-family: var(--body);
 }
 
 /* =====================================================

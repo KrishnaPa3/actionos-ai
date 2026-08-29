@@ -4,11 +4,11 @@
 
     flex-direction:column;
 
-    background:#101827;
+    background: linear-gradient(180deg, rgba(255,255,255,.052), rgba(255,255,255,.018));
 
-    border:1px solid #22314D;
+    border: 1px solid rgba(148, 163, 184, .16);
 
-    border-radius:16px;
+    border-radius: 24px;
 
     padding:24px;
 
@@ -72,7 +72,7 @@
 
 .recentDecisionsBody::-webkit-scrollbar-thumb{
 
-    background:#2F4364;
+    background: linear-gradient(180deg, rgba(255,255,255,.075), rgba(255,255,255,.028));
 
     border-radius:999px;
 
@@ -90,11 +90,11 @@
 
     margin-bottom:14px;
 
-    background:#151F2F;
+    background: linear-gradient(180deg, rgba(255,255,255,.052), rgba(255,255,255,.018));
 
     border-left:4px solid;
 
-    border-radius:10px;
+    border-radius: 18px;
 
     transition:.2s ease;
 
