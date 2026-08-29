@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from "motion/react";
 
 import Card from "../components/ui/Card";
 import PageHeader from "../components/ui/PageHeader";
+import Loading from "../components/ui/Loading";
 import SearchBar from "../components/ui/SearchBar";
 import EmptyState from "../components/ui/EmptyState";
 import StatBadge from "../components/ui/StatBadge";
@@ -36,18 +37,6 @@ const meetingVariants = {
   },
 };
 
-function LoadingSpinner() {
-  return (
-    <div style={{ display: "flex", justifyContent: "center", marginTop: "80px" }}>
-      <motion.div
-        animate={{ rotate: 360 }}
-        transition={{ duration: 1.2, repeat: Infinity, ease: "linear" }}
-      >
-        <History size={36} color={COLORS.primary} />
-      </motion.div>
-    </div>
-  );
-}
 
 export default function SessionsPage() {
 
@@ -150,7 +139,7 @@ export default function SessionsPage() {
 
     if (loading) {
 
-        return <LoadingSpinner />;
+        return <Loading label="Loading your meetings" />;
 
     }
 

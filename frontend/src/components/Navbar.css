@@ -331,67 +331,6 @@
     flex-shrink: 0;
 }
 
-.navSearch {
-    display: flex;
-    align-items: center;
-    gap: 9px;
-
-    width: 46px;
-    height: 44px;
-
-    padding: 0 13px;
-
-    border-radius: 999px;
-    border: 1px solid rgba(148, 163, 184, .20);
-    background: rgba(255, 255, 255, .035);
-
-    overflow: hidden;
-    cursor: text;
-
-    transition:
-        width .42s cubic-bezier(.22, 1, .36, 1),
-        height .38s cubic-bezier(.22, 1, .36, 1),
-        border-color .25s ease;
-}
-
-.navSearch:hover {
-    border-color: rgba(148, 163, 184, .38);
-}
-
-.navSearch.isOpen {
-    width: 268px;
-    border-color: rgba(59, 130, 246, .42);
-}
-
-.navSearchIcon {
-    display: flex;
-    flex: none;
-    color: #93A1B5;
-}
-
-.navSearch input {
-    flex: 1;
-    min-width: 0;
-
-    border: none;
-    outline: none;
-    background: transparent;
-
-    color: var(--cream);
-    font-family: var(--body);
-    font-size: 14px;
-}
-
-.navSearch input::placeholder {
-    color: #7C8697;
-}
-
-.navShell.isCondensed .navSearch,
-.navShell.isCondensed .navIconBtn,
-.navShell.isCondensed .profileButton {
-    height: 38px;
-}
-
 .navIconBtn {
     position: relative;
 
@@ -803,17 +742,9 @@
         margin-left: 0;
     }
 
-    .navSearch.isOpen {
-        width: 200px;
-    }
-
 }
 
 @media (max-width: 820px) {
-
-    .navSearch {
-        display: none;
-    }
 
     .navbar {
         gap: 12px;

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { motion } from "motion/react";
 
 import DashboardHeader from "./dashboardcomponents/DashboardHeader";
@@ -6,6 +6,9 @@ import StatsCards from "./dashboardcomponents/StatsCards";
 import TodayFocus from "./dashboardcomponents/TodayFocus";
 import RecentMeetings from "./dashboardcomponents/RecentMeetings";
 import RecentDecisions from "./dashboardcomponents/RecentDecisions";
+import Loading from "../components/ui/Loading";
+import Button from "../components/ui/Button";
+import { RefreshCw } from "../components/ui/icons";
 import { apiFetch } from "../lib/api";
 import "./dashboardcomponents/Dashboard.css";
 
@@ -32,46 +35,84 @@ export default function Dashboard() {
     const [sessions, setSessions] = useState([]);
     const [decisions, setDecisions] = useState([]);
 
-    useEffect(() => {
-        loadActions();
-        loadSessions();
-        loadDecisions();
+    const [loading, setLoading] = useState(true);
+    const [failed, setFailed] = useState(false);
+    const [attempt, setAttempt] = useState(0);
+
+    const retry = useCallback(() => {
+        setFailed(false);
+        setLoading(true);
+        setAttempt((n) => n + 1);
     }, []);
 
-    async function loadActions() {
-        try {
-            const response = await apiFetch("/actions")
+    // Nothing renders until every panel has its data. Previously the page
+    // painted immediately with empty arrays and the content popped in.
+    useEffect(() => {
+        let alive = true;
 
-            const data = await response.json();
+        async function loadAll() {
+            try {
+                const [actionsRes, sessionsRes, decisionsRes] = await Promise.all([
+                    apiFetch("/actions"),
+                    apiFetch("/sessions"),
+                    apiFetch("/decisions"),
+                ]);
 
-            setActions(data.actions || []);
-        } catch (error) {
-            console.error("Failed to load actions:", error);
+                if (!actionsRes.ok || !sessionsRes.ok || !decisionsRes.ok) {
+                    throw new Error("Dashboard request failed");
+                }
+
+                const [actionsData, sessionsData, decisionsData] = await Promise.all([
+                    actionsRes.json(),
+                    sessionsRes.json(),
+                    decisionsRes.json(),
+                ]);
+
+                if (!alive) return;
+
+                setActions(actionsData.actions || []);
+                setSessions(sessionsData.sessions || []);
+                setDecisions(decisionsData.decisions || []);
+                setLoading(false);
+            } catch (error) {
+                console.error("Failed to load the dashboard:", error);
+
+                if (!alive) return;
+
+                setFailed(true);
+                setLoading(false);
+            }
         }
+
+        loadAll();
+
+        return () => {
+            alive = false;
+        };
+    }, [attempt]);
+
+    if (loading) {
+        return (
+            <Loading
+              label="Gathering your meetings"
+              hint="The API sleeps when it is idle, so the first load after a quiet spell takes a few seconds."
+            />
+        );
     }
 
-    async function loadSessions() {
-        try {
-            const response = await apiFetch("/sessions")
-
-            const data = await response.json();
-
-            setSessions(data.sessions || []);
-        } catch (error) {
-            console.error("Failed to load sessions:", error);
-        }
-    }
-
-    async function loadDecisions() {
-        try {
-    const response = await apiFetch("/decisions");
-
-            const data = await response.json();
-
-            setDecisions(data.decisions || []);
-        } catch (error) {
-            console.error("Failed to load decisions:", error);
-        }
+    if (failed) {
+        return (
+            <div className="dashboardError">
+                <h2>Could not reach the backend</h2>
+                <p>
+                    Nothing loaded, so rather than show you an empty dashboard: the API did
+                    not answer. It may still be starting up.
+                </p>
+                <Button icon={<RefreshCw size={17} />} onClick={retry}>
+                    Try again
+                </Button>
+            </div>
+        );
     }
 
     return (

@@ -88,3 +88,36 @@
     }
 
 }
+
+.dashboardError {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+
+    gap: 16px;
+
+    min-height: 60vh;
+    padding: 40px 20px;
+
+    text-align: center;
+}
+
+.dashboardError h2 {
+    margin: 0;
+
+    font-family: var(--display);
+    font-weight: 500;
+    font-size: 30px;
+
+    color: #FFFDF8;
+}
+
+.dashboardError p {
+    max-width: 460px;
+
+    font-size: 14.5px;
+    line-height: 1.65;
+
+    color: #8792A4;
+}

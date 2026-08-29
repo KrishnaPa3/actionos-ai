@@ -2,28 +2,15 @@ import { useCallback, useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
 import { motion } from "motion/react";
 
+import Loading from "../components/ui/Loading";
 import TaskListHeader from "../components/tasks/TaskListHeader";
 import TaskSearchBar from "../components/tasks/TaskSearchBar";
 import TaskFilters from "../components/tasks/TaskFilters";
 import TaskTable from "../components/tasks/TaskTable";
-import { ListChecks } from "../components/ui/icons";
-import { COLORS } from "../components/ui/colors";
 
 import "./TaskList.css";
 import { apiFetch } from "../lib/api";
 
-function LoadingSpinner() {
-  return (
-    <div style={{ display: "flex", justifyContent: "center", marginTop: "80px" }}>
-      <motion.div
-        animate={{ rotate: 360 }}
-        transition={{ duration: 1.2, repeat: Infinity, ease: "linear" }}
-      >
-        <ListChecks size={36} color={COLORS.primary} />
-      </motion.div>
-    </div>
-  );
-}
 
 export default function TaskList() {
   // Search state
@@ -165,7 +152,7 @@ useEffect(() => {
 }, []);
 
   if (loading && tasks.length === 0) {
-    return <LoadingSpinner />;
+    return <Loading label="Collecting your tasks" />;
   }
 
   return (

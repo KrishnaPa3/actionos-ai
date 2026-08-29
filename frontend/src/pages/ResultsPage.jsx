@@ -15,6 +15,7 @@ const SYNC_APP_LABEL = { google: "Google Calendar", notion: "Notion", slack: "Sl
 import Card from "../components/ui/Card";
 import Button from "../components/ui/Button";
 import PageHeader from "../components/ui/PageHeader";
+import Loading from "../components/ui/Loading";
 import EditItemModal from "../components/EditItemModal";
 import EditActionPlanModal from "../components/results/EditActionPlanModal";
 import TranscriptSection from "../components/results/TranscriptSection";
@@ -913,7 +914,7 @@ async function saveMeetingName() {
 }
   if (loading) {
 
-    return <h2>Loading meeting...</h2>;
+    return <Loading label="Loading meeting" />;
 
   }
 

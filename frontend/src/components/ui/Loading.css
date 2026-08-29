@@ -1,0 +1,126 @@
+.aosLoading {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+
+    gap: 22px;
+
+    padding: 60px 20px;
+}
+
+.aosLoading.isFull {
+    min-height: 60vh;
+}
+
+.aosLoadingStage {
+    position: relative;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    width: 150px;
+    height: 92px;
+}
+
+.aosLoadingGlow {
+    position: absolute;
+    inset: -30px;
+
+    border-radius: 999px;
+
+    background: radial-gradient(circle at 50% 50%, rgba(59, 130, 246, .3), transparent 68%);
+
+    filter: blur(20px);
+
+    animation: aosGlow 2.6s ease-in-out infinite;
+}
+
+@keyframes aosGlow {
+    0%, 100% { opacity: .45; transform: scale(.92); }
+    50%      { opacity: .9;  transform: scale(1.06); }
+}
+
+.aosBars {
+    position: relative;
+
+    display: flex;
+    align-items: center;
+    gap: 7px;
+
+    height: 72px;
+}
+
+.aosBars span {
+    display: block;
+
+    width: 7px;
+    height: 72px;
+
+    border-radius: 999px;
+
+    background: linear-gradient(180deg, #8FBAFF, #3B82F6);
+
+    transform-origin: center;
+}
+
+.aosBars span:nth-child(4) {
+    background: linear-gradient(180deg, #7EE2A2, #22C55E);
+}
+
+.aosLoadingLabel {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 2px;
+
+    margin: 0;
+
+    font-family: var(--display);
+    font-size: 26px;
+    font-weight: 500;
+    letter-spacing: -.1px;
+
+    color: #FFFDF8;
+}
+
+.aosDots {
+    display: inline-flex;
+    align-items: flex-end;
+    gap: 3px;
+
+    margin-left: 3px;
+    padding-bottom: 5px;
+}
+
+.aosDots i {
+    display: block;
+
+    width: 4px;
+    height: 4px;
+
+    border-radius: 999px;
+
+    background: #8AB4FF;
+}
+
+.aosLoadingHint {
+    margin: 0;
+
+    max-width: 340px;
+
+    text-align: center;
+
+    font-size: 13px;
+    line-height: 1.6;
+
+    color: #7C8697;
+}
+
+@media (prefers-reduced-motion: reduce) {
+
+    .aosLoadingGlow {
+        animation: none;
+    }
+
+}

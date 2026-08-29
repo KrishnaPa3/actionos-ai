@@ -15,7 +15,6 @@ import {
   Mic,
   Blocks,
   ChevronDown,
-  Search,
   User,
   LogOut,
 } from "./ui/icons";
@@ -87,13 +86,10 @@ export default function Navbar() {
   const [showProfileMenu, setShowProfileMenu] = useState(false);
 
   const [condensed, setCondensed] = useState(false);
-  const [searchOpen, setSearchOpen] = useState(false);
-  const [query, setQuery] = useState("");
 
   const profileRef = useRef(null);
   const meetingsRef = useRef(null);
   const remindersRef = useRef(null);
-  const searchRef = useRef(null);
 
   const activeKey =
     (NAV_ITEMS.find((item) => item.isActive(location.pathname)) || {}).key || null;
@@ -161,15 +157,12 @@ export default function Navbar() {
       if (remindersRef.current && !remindersRef.current.contains(e.target)) {
         setShowReminders(false);
       }
-      if (searchRef.current && !searchRef.current.contains(e.target) && !query) {
-        setSearchOpen(false);
-      }
     }
 
     document.addEventListener("mousedown", handleClick);
 
     return () => document.removeEventListener("mousedown", handleClick);
-  }, [query]);
+  }, []);
 
   useEffect(() => {
     function onEscape(e) {
@@ -202,19 +195,6 @@ export default function Navbar() {
     navigate(item.path);
   }
 
-  function submitSearch(e) {
-    e.preventDefault();
-
-    const term = query.trim();
-
-    if (!term) {
-      setSearchOpen(true);
-      return;
-    }
-
-    navigate(`/tasks?search=${encodeURIComponent(term)}`);
-    setSearchOpen(false);
-  }
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
@@ -332,22 +312,6 @@ export default function Navbar() {
 
         {/* Tools */}
         <div className="navTools">
-          <form
-            ref={searchRef}
-            className={`navSearch${searchOpen ? " isOpen" : ""}`}
-            onSubmit={submitSearch}
-            onClick={() => setSearchOpen(true)}
-          >
-            <span className="navSearchIcon">
-              <Search size={17} />
-            </span>
-            <input
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              placeholder="Search tasks and owners"
-              aria-label="Search tasks"
-            />
-          </form>
 
           <div className="navBellWrap" ref={remindersRef}>
             <button

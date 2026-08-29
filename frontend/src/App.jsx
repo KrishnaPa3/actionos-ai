@@ -1,8 +1,8 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { useEffect } from "react";
-import { motion } from "motion/react";
 import AuthCallback from "./pages/AuthCallback";
 import { useAuth } from "./auth/AuthContext";
+import Loading from "./components/ui/Loading";
 
 import AppLayout from "./layouts/AppLayout";
 
@@ -22,58 +22,6 @@ import Profile from "./pages/Profile";
 import ProtectedRoute from "./auth/ProtectedRoute";
 
 
-function LoadingScreen() {
-  return (
-    <div
-      style={{
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        justifyContent: "center",
-        minHeight: "100vh",
-        background: "#0B1120",
-        gap: "24px",
-      }}
-    >
-      <div style={{ display: "flex", alignItems: "center", gap: "7px", height: "58px" }}>
-        {[0, 1, 2, 3, 4].map((i) => (
-          <motion.span
-            key={i}
-            animate={{ scaleY: [0.28, 1, 0.28] }}
-            transition={{
-              duration: 1.1,
-              repeat: Infinity,
-              ease: "easeInOut",
-              delay: i * 0.12,
-            }}
-            style={{
-              display: "block",
-              width: "6px",
-              height: "58px",
-              borderRadius: "999px",
-              background: "linear-gradient(180deg, #7FB0FF, #3B82F6)",
-              transformOrigin: "center",
-            }}
-          />
-        ))}
-      </div>
-
-      <motion.p
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 0.3, duration: 0.6 }}
-        style={{
-          color: "#9CA3AF",
-          fontFamily: "var(--body)",
-          fontSize: "15px",
-          letterSpacing: "2px",
-        }}
-      >
-        LOADING
-      </motion.p>
-    </div>
-  );
-}
 
 function App() {
     const { user, loading } = useAuth();
@@ -83,7 +31,7 @@ function App() {
     }, [user]);
 
     if (loading) {
-        return <LoadingScreen />;
+        return <Loading label="Starting ActionOS" />;
     }
 
     return (
