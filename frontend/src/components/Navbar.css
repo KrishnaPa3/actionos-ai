@@ -133,34 +133,6 @@
     gap: 2px;
 }
 
-.navHalo {
-    position: absolute;
-    top: 0;
-    left: 0;
-
-    height: 46px;
-
-    border-radius: 999px;
-
-    background: rgba(59, 130, 246, .13);
-    box-shadow:
-        inset 0 0 0 1px rgba(59, 130, 246, .32),
-        0 6px 18px rgba(59, 130, 246, .12);
-
-    opacity: 0;
-
-    pointer-events: none;
-
-    transition:
-        transform .46s cubic-bezier(.22, 1, .36, 1),
-        width .46s cubic-bezier(.22, 1, .36, 1),
-        opacity .28s ease;
-}
-
-.navHalo.isOn {
-    opacity: 1;
-}
-
 .navSlot {
     position: relative;
 }
@@ -192,6 +164,8 @@
 
     transition:
         color .22s ease,
+        background .26s ease,
+        box-shadow .26s ease,
         transform .22s cubic-bezier(.22, 1, .36, 1),
         padding .38s cubic-bezier(.22, 1, .36, 1);
 }
@@ -203,6 +177,16 @@
 
 .navItem.isActive {
     color: #FFFDF8;
+
+    background: rgba(59, 130, 246, .13);
+
+    box-shadow:
+        inset 0 0 0 1px rgba(59, 130, 246, .32),
+        0 6px 18px rgba(59, 130, 246, .12);
+}
+
+.navItem.isActive:hover {
+    transform: none;
 }
 
 .navItem svg {

@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../auth/AuthContext";
 import { supabase } from "../lib/supabase";
@@ -89,62 +89,19 @@ export default function Navbar() {
   const [condensed, setCondensed] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [query, setQuery] = useState("");
-  const [halo, setHalo] = useState({ left: 0, width: 0, ready: false });
 
   const profileRef = useRef(null);
   const meetingsRef = useRef(null);
   const remindersRef = useRef(null);
   const searchRef = useRef(null);
-  const navRowRef = useRef(null);
-  const itemRefs = useRef({});
 
   const activeKey =
     (NAV_ITEMS.find((item) => item.isActive(location.pathname)) || {}).key || null;
 
-  /* ---- the halo that slides between tabs ---- */
-
-  useLayoutEffect(() => {
-    function place() {
-      const el = activeKey ? itemRefs.current[activeKey] : null;
-
-      if (!el) {
-        setHalo((h) => ({ ...h, ready: false }));
-        return;
-      }
-
-      setHalo({ left: el.offsetLeft, width: el.offsetWidth, ready: true });
-    }
-
-    place();
-
-    // Widths change while the condense transition runs, so measure again after it.
-    const settle = window.setTimeout(place, 340);
-
-    // EB Garamond loads asynchronously. Until it swaps in, the tabs are laid out
-    // in the fallback face at different widths — a halo measured then is the
-    // wrong size and sits off its tab.
-    if (document.fonts && document.fonts.ready) {
-      document.fonts.ready.then(place).catch(() => {});
-    }
-
-    // Anything else that reflows the row: a longer username, browser zoom. The
-    // halo is absolutely positioned, so re-measuring cannot feed back into the
-    // row size.
-    let observer;
-
-    if (typeof ResizeObserver !== "undefined" && navRowRef.current) {
-      observer = new ResizeObserver(place);
-      observer.observe(navRowRef.current);
-    }
-
-    window.addEventListener("resize", place);
-
-    return () => {
-      window.clearTimeout(settle);
-      if (observer) observer.disconnect();
-      window.removeEventListener("resize", place);
-    };
-  }, [activeKey, condensed]);
+  /* The active tab is highlighted with a plain CSS background rather than a
+     measured, absolutely-positioned element. Measuring meant the highlight
+     could disagree with the tab React had actually marked active — and it had
+     to be re-measured on font load, resize and the condense transition. */
 
   /* ---- the bar contracts once you scroll ---- */
 
@@ -287,15 +244,7 @@ export default function Navbar() {
         </div>
 
         {/* Navigation */}
-        <div className="nav-links" ref={navRowRef}>
-          <span
-            className={`navHalo${halo.ready ? " isOn" : ""}`}
-            style={{
-              transform: `translateX(${halo.left}px)`,
-              width: `${halo.width}px`,
-            }}
-            aria-hidden="true"
-          />
+        <div className="nav-links">
 
           {NAV_ITEMS.map((item) => {
             const active = item.key === activeKey;
@@ -309,7 +258,6 @@ export default function Navbar() {
               >
                 <button
                   type="button"
-                  ref={(el) => { itemRefs.current[item.key] = el; }}
                   className={`navItem${active ? " isActive" : ""}`}
                   onClick={() => handleNavClick(item)}
                   aria-current={active ? "page" : undefined}
