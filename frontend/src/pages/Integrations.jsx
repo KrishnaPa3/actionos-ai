@@ -398,7 +398,7 @@ export default function Integrations() {
           <h2>Notion</h2>
           <p className="integrationDescription">Sync confirmed tasks to Notion via OAuth 2.0.</p>
           {loading ? (
-            <div className="integrationLoading">Loading...</div>
+            <Loading label="Checking the connection" full={false} />
           ) : (
             <>
               <div className="integrationRow"><label>Status</label><p>{isConnected ? "Connected" : "Not connected"}</p></div>
@@ -501,7 +501,7 @@ export default function Integrations() {
           <h2>Google Calendar</h2>
           <p className="integrationDescription">Sync tasks to your Google Calendar via OAuth 2.0.</p>
           {googleStatus.loading ? (
-            <div className="integrationLoading">Loading...</div>
+            <Loading label="Checking the connection" full={false} />
           ) : (
             <>
               <div className="integrationRow">
