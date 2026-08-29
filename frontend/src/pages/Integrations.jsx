@@ -387,25 +387,25 @@ export default function Integrations() {
         {/* ── Notion Card ────────────────────────────────────────────── */}
         <div className="integrationCard">
           <div className="integrationTop">
-            <div className="integrationInfo">
-              <div className="integrationLogo">
+            <div className="integrationLogo">
                 <img src={notionLogo} alt="Notion" className="integrationLogoImage" />
               </div>
-              <div>
-                <h2>Notion</h2>
-                <p className="integrationDescription">Sync confirmed tasks to Notion via OAuth 2.0.</p>
-              </div>
-            </div>
             <span className={isConnected ? "status connected" : "status disconnected"}>
-              {isConnected ? "Connected" + (workspaceName ? " (" + workspaceName + ")" : "") : "Not Connected"}
+              {isConnected ? "Connected" : "Not connected"}
             </span>
           </div>
+
+          <h2>Notion</h2>
+          <p className="integrationDescription">Sync confirmed tasks to Notion via OAuth 2.0.</p>
           {loading ? (
             <div className="integrationLoading">Loading...</div>
           ) : (
             <>
               <div className="integrationRow"><label>Status</label><p>{isConnected ? "Connected" : "Not connected"}</p></div>
               <div className="integrationRow"><label>Auth</label><p>OAuth 2.0</p></div>
+              {workspaceName && (
+                <div className="integrationRow"><label>Workspace</label><p>{workspaceName}</p></div>
+              )}
 
               {isConnected && (
                 <div className="integrationRow">
@@ -488,21 +488,18 @@ export default function Integrations() {
         {/* ── Google Calendar Card ──────────────────────────────────── */}
         <div className="integrationCard">
           <div className="integrationTop">
-            <div className="integrationInfo">
-              <div className="integrationLogo">
+            <div className="integrationLogo">
                 <img src={googleCalendarLogo} alt="Google Calendar" className="integrationLogoImage" />
               </div>
-              <div>
-                <h2>Google Calendar</h2>
-                <p className="integrationDescription">Sync tasks to your Google Calendar via OAuth 2.0.</p>
-              </div>
-            </div>
             <span className={googleIsConnected ? "status connected" : "status disconnected"}>
               {googleIsConnected
-                ? "Connected" + (googleStatus.workspace_name ? " (" + googleStatus.workspace_name + ")" : "")
-                : "Not Connected"}
+                ? "Connected"
+                : "Not connected"}
             </span>
           </div>
+
+          <h2>Google Calendar</h2>
+          <p className="integrationDescription">Sync tasks to your Google Calendar via OAuth 2.0.</p>
           {googleStatus.loading ? (
             <div className="integrationLoading">Loading...</div>
           ) : (
@@ -541,19 +538,16 @@ export default function Integrations() {
         {/* ── Slack Card ────────────────────────────────────────────── */}
         <div className="integrationCard">
           <div className="integrationTop">
-            <div className="integrationInfo">
-              <div className="integrationLogo">
+            <div className="integrationLogo">
                 <img src={slackLogo} alt="Slack" className="integrationLogoImage" />
               </div>
-              <div>
-                <h2>Slack</h2>
-                <p className="integrationDescription">Send meeting summaries, tasks, and reminders to your Slack workspace.</p>
-              </div>
-            </div>
             <span className={slackConnected ? "status connected" : "status disconnected"}>
-              {slackConnected ? "Connected" : "Not Connected"}
+              {slackConnected ? "Connected" : "Not connected"}
             </span>
           </div>
+
+          <h2>Slack</h2>
+          <p className="integrationDescription">Send meeting summaries, tasks, and reminders to your Slack workspace.</p>
           {slackLoading ? (
             <div className="integrationLoading">Redirecting to Slack...</div>
           ) : (

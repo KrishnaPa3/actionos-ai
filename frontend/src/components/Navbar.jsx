@@ -120,10 +120,28 @@ export default function Navbar() {
     // Widths change while the condense transition runs, so measure again after it.
     const settle = window.setTimeout(place, 340);
 
+    // EB Garamond loads asynchronously. Until it swaps in, the tabs are laid out
+    // in the fallback face at different widths — a halo measured then is the
+    // wrong size and sits off its tab.
+    if (document.fonts && document.fonts.ready) {
+      document.fonts.ready.then(place).catch(() => {});
+    }
+
+    // Anything else that reflows the row: a longer username, browser zoom. The
+    // halo is absolutely positioned, so re-measuring cannot feed back into the
+    // row size.
+    let observer;
+
+    if (typeof ResizeObserver !== "undefined" && navRowRef.current) {
+      observer = new ResizeObserver(place);
+      observer.observe(navRowRef.current);
+    }
+
     window.addEventListener("resize", place);
 
     return () => {
       window.clearTimeout(settle);
+      if (observer) observer.disconnect();
       window.removeEventListener("resize", place);
     };
   }, [activeKey, condensed]);

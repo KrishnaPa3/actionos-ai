@@ -142,8 +142,10 @@
 
     border-radius: 999px;
 
-    background: rgba(59, 130, 246, .16);
-    box-shadow: inset 0 0 0 1px rgba(59, 130, 246, .42);
+    background: rgba(59, 130, 246, .13);
+    box-shadow:
+        inset 0 0 0 1px rgba(59, 130, 246, .32),
+        0 6px 18px rgba(59, 130, 246, .12);
 
     opacity: 0;
 
@@ -447,11 +449,11 @@
 
 .notificationCount {
     position: absolute;
-    top: -3px;
-    right: -3px;
+    top: -1px;
+    right: -1px;
 
-    min-width: 19px;
-    height: 19px;
+    min-width: 18px;
+    height: 18px;
     padding: 0 5px;
 
     display: flex;
