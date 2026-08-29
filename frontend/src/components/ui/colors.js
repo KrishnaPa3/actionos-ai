@@ -45,7 +45,7 @@ export const COLORS = {
 };
 
 export const FONTS = {
-  display: '"Instrument Serif", Georgia, "Times New Roman", serif',
-  body: '"Plus Jakarta Sans", "Segoe UI", system-ui, -apple-system, sans-serif',
+  display: '"EB Garamond", Garamond, Georgia, "Times New Roman", serif',
+  body: '"EB Garamond", Garamond, Georgia, "Times New Roman", serif',
   mono: 'ui-monospace, SFMono-Regular, Menlo, Consolas, monospace',
 };

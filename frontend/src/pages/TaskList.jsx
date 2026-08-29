@@ -265,7 +265,7 @@ useEffect(() => {
             borderRadius: "10px",
             boxShadow: "0 10px 20px rgba(0,0,0,0.2)",
             fontFamily: "var(--body)",
-            fontSize: "14px",
+            fontSize: "15px",
             fontWeight: 600,
             zIndex: 9999,
           }}

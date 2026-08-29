@@ -77,7 +77,7 @@ export default function SummarySection({ summary }) {
                             style={{
                                 lineHeight: 1.7,
                                 fontFamily: "var(--body)",
-                                fontSize: "16px"
+                                fontSize: "17px"
                             }}
                         >
                             {item}

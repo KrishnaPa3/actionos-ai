@@ -1,52 +1,55 @@
 import { FONTS } from "./colors";
 
+// EB Garamond sits small on the line, so every step is ~1px larger than a
+// sans would need at the same optical size.
+
 export const TYPOGRAPHY = {
 
     title: {
         fontFamily: FONTS.display,
-        fontSize: "56px",
-        fontWeight: 400,
-        letterSpacing: "-1px",
-        lineHeight: 1.03,
+        fontSize: "60px",
+        fontWeight: 500,
+        letterSpacing: "-.8px",
+        lineHeight: 1.05,
     },
 
     heading: {
         fontFamily: FONTS.display,
-        fontSize: "27px",
-        fontWeight: 400,
-        letterSpacing: "-.3px",
-        lineHeight: 1.12,
+        fontSize: "29px",
+        fontWeight: 500,
+        letterSpacing: "-.2px",
+        lineHeight: 1.16,
     },
 
     subheading: {
         fontFamily: FONTS.body,
-        fontSize: "15px",
-        fontWeight: 700,
-        letterSpacing: ".02em",
+        fontSize: "17px",
+        fontWeight: 600,
+        letterSpacing: ".01em",
     },
 
     body: {
         fontFamily: FONTS.body,
-        fontSize: "15px",
+        fontSize: "16.5px",
         fontWeight: 400,
-        lineHeight: 1.6,
+        lineHeight: 1.62,
     },
 
     small: {
         fontFamily: FONTS.body,
-        fontSize: "12.5px",
+        fontSize: "15px",
         fontWeight: 500,
     },
 
     meta: {
         fontFamily: FONTS.body,
-        fontSize: "11.5px",
+        fontSize: "14px",
         fontWeight: 500,
     },
 
     eyebrow: {
         fontFamily: FONTS.body,
-        fontSize: "10.5px",
+        fontSize: "12.5px",
         fontWeight: 600,
         letterSpacing: ".18em",
         textTransform: "uppercase",

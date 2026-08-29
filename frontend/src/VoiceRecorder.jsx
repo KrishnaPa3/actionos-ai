@@ -304,9 +304,9 @@ function VoiceRecorder() {
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3, ease: "easeOut" }}
       style={{
-        maxWidth: "950px",
-        margin: "40px auto",
-        padding: "20px",
+        maxWidth: "none",
+        margin: "0",
+        padding: "20px 0 64px",
       }}
     >
 

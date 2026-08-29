@@ -72,7 +72,7 @@ export default function ActionButtons({
         color: "#E2E8F0",
         cursor: "pointer",
         borderRadius: 6,
-        fontSize: 14,
+        fontSize: 15,
         fontFamily: "inherit",
         transition: "background .15s",
     };
@@ -335,7 +335,7 @@ export default function ActionButtons({
                                     style={{
                                         padding: "8px 12px",
                                         color: "#64748B",
-                                        fontSize: 12,
+                                        fontSize: 13,
                                         borderTop: "1px solid #334155",
                                         marginTop: 4,
                                         paddingTop: 8,

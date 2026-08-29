@@ -927,9 +927,9 @@ async function saveMeetingName() {
 
     <div
       style={{
-        maxWidth: "1100px",
-        margin: "40px auto",
-        padding: "0 20px",
+        maxWidth: "none",
+        margin: "0",
+        padding: "20px 0 64px",
       }}
     >
 
@@ -1305,7 +1305,7 @@ async function saveMeetingName() {
 
             fontFamily: "var(--body)",
 
-            fontSize: "14px",
+            fontSize: "15px",
 
             fontWeight: 600,
 

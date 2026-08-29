@@ -81,7 +81,7 @@ const textStyle = {
     color: "#d1d5db",
     lineHeight: 1.6,
     marginBottom: "28px",
-    fontSize: "16px",
+    fontSize: "17px",
 };
 
 const buttonRow = {
@@ -98,7 +98,7 @@ const cancelStyle = {
     padding: "10px 22px",
     cursor: "pointer",
     fontFamily: "var(--body)",
-    fontSize: "16px",
+    fontSize: "17px",
 };
 
 const deleteStyle = {
@@ -109,5 +109,5 @@ const deleteStyle = {
     padding: "10px 22px",
     cursor: "pointer",
     fontFamily: "var(--body)",
-    fontSize: "16px",
+    fontSize: "17px",
 };

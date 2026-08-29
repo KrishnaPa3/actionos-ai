@@ -151,7 +151,7 @@ const navigate = useNavigate();
 
                                             borderRadius: "999px",
 
-                                            fontSize: "11px",
+                                            fontSize: "12px",
 
                                             fontWeight: 700,
 

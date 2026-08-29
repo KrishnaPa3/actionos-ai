@@ -43,7 +43,7 @@ export default function SearchBar({
                     border: "none",
                     color: COLORS.text,
                     outline: "none",
-                    fontSize: "16px"
+                    fontSize: "17px"
                 }}
 
             />

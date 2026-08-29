@@ -75,7 +75,7 @@ export default function EmptySection({
 
                     fontFamily: "var(--body)",
 
-                    fontSize: "15px"
+                    fontSize: "16px"
                 }}
             >
                 {description}

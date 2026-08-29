@@ -18,10 +18,10 @@
     margin: 12px 0 0;
 
     font-family: var(--display);
-    font-weight: 400;
+    font-weight: 500;
     font-size: clamp(38px, 4.2vw, 64px);
     line-height: 1.02;
-    letter-spacing: -1.2px;
+    letter-spacing: -.5px;
 
     color: #FFFDF8;
 }

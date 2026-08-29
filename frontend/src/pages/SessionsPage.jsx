@@ -157,9 +157,9 @@ export default function SessionsPage() {
     return (
         <div
     style={{
-        maxWidth: "950px",
-        margin: "40px auto",
-        padding: "0 20px"
+        maxWidth: "none",
+        margin: "0",
+        padding: "20px 0 64px",
     }}
 >
 
@@ -277,7 +277,7 @@ export default function SessionsPage() {
                         cursor: "pointer",
                         fontWeight: 600,
                         fontFamily: "var(--body)",
-                        fontSize: "16px",
+                        fontSize: "17px",
                     }}
                 >
                     🗑 Delete
@@ -313,7 +313,7 @@ export default function SessionsPage() {
                         borderRadius: "10px",
                         boxShadow: "0 10px 20px rgba(0,0,0,0.2)",
                         fontFamily: "var(--body)",
-                        fontSize: "14px",
+                        fontSize: "15px",
                         fontWeight: 600,
                         zIndex: 9999,
                     }}

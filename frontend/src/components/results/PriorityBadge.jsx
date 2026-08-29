@@ -34,7 +34,7 @@ export default function PriorityBadge({ priority = "Medium" }) {
 
                 color: "#fff",
 
-                fontSize: "13px",
+                fontSize: "14px",
 
                 fontWeight: 600,
 

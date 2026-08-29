@@ -131,7 +131,7 @@ export default function RiskSection({
         color: "#fff",
         padding: "6px 12px",
         borderRadius: "999px",
-        fontSize: "12px",
+        fontSize: "13px",
         fontWeight: 700,
         letterSpacing: "0.5px",
         minWidth: "100px",

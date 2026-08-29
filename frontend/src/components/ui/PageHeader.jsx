@@ -24,7 +24,7 @@ export default function PageHeader({
                 display: "flex",
                 justifyContent: "space-between",
                 alignItems: "center",
-                marginBottom: "30px"
+                marginBottom: "34px"
             }}
         >
 
@@ -37,7 +37,7 @@ export default function PageHeader({
                         display: "flex",
                         alignItems: "center",
                         gap: "12px",
-                        marginBottom: "6px"
+                        marginBottom: "10px"
                     }}
                 >
 

@@ -81,19 +81,19 @@ export default function Button({
         sm: {
             height: "40px",
             padding: "0 15px",
-            fontSize: "13px"
+            fontSize: "14px"
         },
 
         md: {
             height: "46px",
             padding: "0 20px",
-            fontSize: "13.5px"
+            fontSize: "14.5px"
         },
 
         lg: {
             height: "52px",
             padding: "0 24px",
-            fontSize: "14px"
+            fontSize: "15px"
         }
 
     };

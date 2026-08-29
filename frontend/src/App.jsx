@@ -57,7 +57,7 @@ function LoadingScreen() {
         style={{
           color: "#9CA3AF",
           fontFamily: "var(--body)",
-          fontSize: "14px",
+          fontSize: "15px",
           letterSpacing: "2px",
         }}
       >
