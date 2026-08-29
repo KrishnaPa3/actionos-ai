@@ -1,0 +1,6 @@
+[accessibility]
+screen_reader = False
+[core]
+account = krishna.patri@workwall.com
+disable_usage_reporting = True
+project = krishna-test-504810

@@ -1,0 +1,12 @@
+---
+connectedProjects:
+- krishna-test-504810
+ipCidrRange: 10.8.0.0/28
+machineType: e2-micro
+maxInstances: 3
+maxThroughput: 300
+minInstances: 2
+minThroughput: 200
+name: projects/krishna-test-504810/locations/asia-south1/connectors/actionos-serverless
+network: default
+state: READY

@@ -1,0 +1,14 @@
+---
+createTime: '2026-08-14T07:50:42.923574Z'
+description: ActionOS Docker images
+format: DOCKER
+mode: STANDARD_REPOSITORY
+name: projects/krishna-test-504810/locations/asia-south1/repositories/actionos
+satisfiesPzi: true
+satisfiesPzs: true
+sizeBytes: '14204229318'
+updateTime: '2026-08-24T14:54:40.574046Z'
+vulnerabilityScanningConfig:
+  enablementState: SCANNING_DISABLED
+  enablementStateReason: API containerscanning.googleapis.com is not enabled.
+  lastEnableTime: '2026-08-14T07:50:17.850067555Z'
