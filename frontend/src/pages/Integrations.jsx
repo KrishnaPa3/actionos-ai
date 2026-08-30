@@ -4,6 +4,7 @@ import notionLogo from "../assets/integrations/notion-darkmode.svg";
 import googleCalendarLogo from "../assets/integrations/google-calendar.svg";
 import slackLogo from "../assets/integrations/slack-logo.svg";
 import { apiFetch, readErrorDetail } from "../lib/api";
+import Loading from "../components/ui/Loading";
 
 export default function Integrations() {
   // ── Notion state ──────────────────────────────────────────────────
@@ -403,7 +404,7 @@ export default function Integrations() {
             <>
               <div className="integrationRow"><label>Status</label><p>{isConnected ? "Connected" : "Not connected"}</p></div>
               <div className="integrationRow"><label>Auth</label><p>OAuth 2.0</p></div>
-              {workspaceName && (
+              {typeof workspaceName === "string" && workspaceName && (
                 <div className="integrationRow"><label>Workspace</label><p>{workspaceName}</p></div>
               )}
 

@@ -1,0 +1,11 @@
+# Normalize line endings: store LF in git, keep native in the working tree.
+# Without this every file shows as modified on Windows checkouts.
+* text=auto
+
+# Binary assets — never touch
+*.png binary
+*.svg text
+*.ttf binary
+*.otf binary
+*.webm binary
+*.ico binary
