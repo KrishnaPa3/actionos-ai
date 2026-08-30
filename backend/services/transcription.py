@@ -11,6 +11,7 @@ That works automatically on Cloud Run via the metadata server. Off Cloud Run
 - which is what you want when pointing at a worker running on localhost.
 """
 
+import time
 from typing import Any
 
 import httpx
@@ -21,6 +22,11 @@ from config import (
     GPU_WORKER_TIMEOUT,
     GPU_WORKER_URL,
 )
+
+
+# How long to keep retrying while a cold worker boots. Measured cold start is
+# around 80 seconds; this leaves room for a slow model load.
+COLD_START_GRACE_SECONDS = 180.0
 
 
 class TranscriptionUnavailable(RuntimeError):
@@ -70,17 +76,34 @@ def transcribe(audio_url: str) -> dict[str, Any]:
 
     payload: dict[str, Any] = {"audio_url": audio_url, **_speaker_bounds()}
 
-    try:
-        response = httpx.post(
-            endpoint,
-            json=payload,
-            timeout=GPU_WORKER_TIMEOUT,
-            headers=_auth_headers(base),
-        )
-    except httpx.HTTPError as exc:
-        raise TranscriptionUnavailable(
-            f"Could not reach the transcription service: {exc}"
-        ) from exc
+    # A cold worker takes ~80s to come up: CUDA, then Ollama, then WhisperX,
+    # then the diarization model. Until it is ready Cloud Run answers 429 (no
+    # instance available) or 503. Those are "not yet", not "no" - so wait them
+    # out rather than failing the upload one second into a wake-up.
+    deadline = time.monotonic() + COLD_START_GRACE_SECONDS
+    delay = 3.0
+    response = None
+
+    while True:
+        try:
+            response = httpx.post(
+                endpoint,
+                json=payload,
+                timeout=GPU_WORKER_TIMEOUT,
+                headers=_auth_headers(base),
+            )
+        except httpx.HTTPError as exc:
+            raise TranscriptionUnavailable(
+                f"Could not reach the transcription service: {exc}"
+            ) from exc
+
+        still_waking = response.status_code in (429, 503)
+
+        if not still_waking or time.monotonic() >= deadline:
+            break
+
+        time.sleep(delay)
+        delay = min(delay * 1.6, 20.0)
 
     if response.status_code >= 400:
         # Surface the worker's own message rather than a bare status code.
